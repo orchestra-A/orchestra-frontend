@@ -1,0 +1,15 @@
+:root {
+  --sidebar-bg: #0f172a;
+  --brand-color: #6366f1;
+  --surface-white: #ffffff;
+  --border-color: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --bg-color: #f8fafc;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
