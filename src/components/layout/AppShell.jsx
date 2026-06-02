@@ -4,19 +4,23 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
 export function AppShell() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [isHoveringSidebar, setIsHoveringsidebar] = useState(false);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-surface-2 transition-colors duration-200">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+    <div className="size-full flex bg-[#F5F6F8] min-h-screen">
+      <Sidebar 
+        sidebarCollapsed={sidebarCollapsed} 
+        setSidebarCollapsed={setSidebarCollapsed}
+        isHoveringSidebar={isHoveringSidebar}
+        setIsHoveringsidebar={setIsHoveringsidebar}
+      />
       
-      <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header />
         
-        <main className="flex-1 overflow-auto p-6 md:p-8 scroll-smooth">
-          <div className="max-w-[var(--content-max)] mx-auto">
-            <Outlet />
-          </div>
+        <main className="flex-1 p-8 overflow-auto">
+          <Outlet />
         </main>
       </div>
     </div>
