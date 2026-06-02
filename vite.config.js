@@ -6,5 +6,14 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     dedupe: ['react', 'react-dom']
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://web-production-30f40.up.railway.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   }
 })

@@ -8,6 +8,9 @@ import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
+import EmptyPage from './pages/EmptyPage';
+import ProjMarketingWorkflow from './pages/ProjMarketingWorkflow';
+import ProjOrchestraWorkflow from './pages/ProjOrchestraWorkflow';
 
 // A wrapper to protect routes
 function ProtectedRoute({ children }) {
@@ -42,6 +45,25 @@ export default function App() {
             <Route path="projects" element={<Projects />} />
             <Route path="team" element={<Team />} />
             <Route path="settings" element={<Settings />} />
+            
+            {/* Project Marketing Routes */}
+            <Route path="proj_marketing-workflow" element={<ProjMarketingWorkflow />} />
+            <Route path="proj_marketing-ai" element={<EmptyPage />} />
+            <Route path="proj_marketing-tasks" element={<EmptyPage />} />
+            <Route path="proj_marketing-team" element={<EmptyPage />} />
+
+            {/* Project Orchestra Routes */}
+            <Route path="proj_orchestra-workflow" element={<ProjOrchestraWorkflow />} />
+            <Route path="proj_orchestra-ai" element={<EmptyPage />} />
+            <Route path="proj_orchestra-tasks" element={<EmptyPage />} />
+            <Route path="proj_orchestra-team" element={<EmptyPage />} />
+
+            {/* Other Sidebar/Header Routes */}
+            <Route path="todo" element={<EmptyPage />} />
+            <Route path="calendar" element={<EmptyPage />} />
+            <Route path="archive" element={<EmptyPage />} />
+            <Route path="profile" element={<EmptyPage />} />
+            <Route path="help" element={<EmptyPage />} />
           </Route>
           
           {/* Redirect unknown routes */}

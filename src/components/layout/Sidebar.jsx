@@ -4,19 +4,19 @@ import { ChevronRight, ChevronLeft, Inbox, Archive, Home, Calendar, Settings, Us
 import { Badge } from '../ui/badge';
 
 export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSidebar, setIsHoveringsidebar }) {
-  const [expandedProject, setExpandedProject] = useState('project1');
+  const [expandedProject, setExpandedProject] = useState('proj_marketing');
   const location = useLocation();
   const currentPage = location.pathname.substring(1) || 'dashboard';
 
   const projects = [
     {
-      id: 'project1',
-      name: 'Project 1',
+      id: 'proj_marketing',
+      name: 'Project Marketing',
       items: ['Workflow', 'AI', 'Tasks', 'Team']
     },
     {
-      id: 'project2',
-      name: 'Project 2',
+      id: 'proj_orchestra',
+      name: 'Project Orchestra',
       items: ['Workflow', 'AI', 'Tasks', 'Team']
     }
   ];

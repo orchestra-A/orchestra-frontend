@@ -42,9 +42,9 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-        {/* Project 1 Card */}
+        {/* Project Marketing Card */}
         <button
-          onClick={() => navigate('/project1-overview')}
+          onClick={() => navigate('/proj_marketing-tasks')}
           className="group cursor-pointer text-left"
         >
           <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 h-full">
@@ -56,7 +56,7 @@ export default function Dashboard() {
                 Active
               </Badge>
             </div>
-            <h3 className="text-gray-900 font-semibold mb-2">Project 1</h3>
+            <h3 className="text-gray-900 font-semibold mb-2">Project Marketing</h3>
             <p className="text-sm text-gray-500 mb-4">Marketing campaign redesign and implementation</p>
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>8 tasks</span>
@@ -65,9 +65,9 @@ export default function Dashboard() {
           </div>
         </button>
 
-        {/* Project 2 Card */}
+        {/* Project Orchestra Card */}
         <button
-          onClick={() => navigate('/project2-overview')}
+          onClick={() => navigate('/proj_orchestra-tasks')}
           className="group cursor-pointer text-left"
         >
           <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 h-full">
@@ -79,8 +79,8 @@ export default function Dashboard() {
                 Active
               </Badge>
             </div>
-            <h3 className="text-gray-900 font-semibold mb-2">Project 2</h3>
-            <p className="text-sm text-gray-500 mb-4">Mobile app development and testing phase</p>
+            <h3 className="text-gray-900 font-semibold mb-2">Project Orchestra</h3>
+            <p className="text-sm text-gray-500 mb-4">Core platform development and orchestration</p>
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>12 tasks</span>
               <span>6 members</span>
