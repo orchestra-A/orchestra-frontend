@@ -109,7 +109,6 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
 
   return (
     <div className="w-full h-[700px] border border-gray-200 rounded-xl bg-[#F9FAFB] shadow-sm overflow-hidden relative group">
-    <div className="w-full h-[700px] border border-gray-200 rounded-xl bg-[#F9FAFB] shadow-sm overflow-hidden relative group">
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
@@ -117,6 +116,32 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
             ? 'bg-[#4A90E2] text-white hover:bg-[#3A7BC8]' 
             : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
         }`}
+      >
+        {isEditable ? (
+          <>
+            <Edit2 className="w-4 h-4" />
+            Editing Mode: ON
+          </>
+        ) : (
+          <>
+            <Lock className="w-4 h-4" />
+            Editing Mode: OFF
+          </>
+        )}
+      </button>
+
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        nodesDraggable={isEditable}
+        nodesConnectable={isEditable}
+        elementsSelectable={isEditable}
+        fitView
+        fitViewOptions={{ padding: 0.1 }}
       >
         <Background variant="dots" gap={20} size={2} color="#CBD5E1" />
         <Controls />
