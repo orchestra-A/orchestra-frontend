@@ -13,6 +13,13 @@ import ProjMarketingWorkflow from './pages/ProjMarketingWorkflow';
 import ProjOrchestraWorkflow from './pages/ProjOrchestraWorkflow';
 import LandingPage from './pages/LandingPage';
 import Profile from './pages/Profile';
+import Todo from './pages/Todo';
+import Calendar from './pages/Calendar';
+import Archive from './pages/Archive';
+import Help from './pages/Help';
+import ProjectTasks from './pages/ProjectTasks';
+import ProjectTeam from './pages/ProjectTeam';
+import ProjectAI from './pages/ProjectAI';
 
 // A wrapper to protect routes
 function ProtectedRoute({ children }) {
@@ -51,22 +58,22 @@ export default function App() {
             
             {/* Project Marketing Routes */}
             <Route path="proj_marketing-workflow" element={<ProjMarketingWorkflow />} />
-            <Route path="proj_marketing-ai" element={<EmptyPage />} />
-            <Route path="proj_marketing-tasks" element={<EmptyPage />} />
-            <Route path="proj_marketing-team" element={<EmptyPage />} />
+            <Route path="proj_marketing-ai" element={<ProjectAI projectName="Project Marketing" />} />
+            <Route path="proj_marketing-tasks" element={<ProjectTasks projectName="Project Marketing" />} />
+            <Route path="proj_marketing-team" element={<ProjectTeam projectName="Project Marketing" />} />
 
             {/* Project Orchestra Routes */}
             <Route path="proj_orchestra-workflow" element={<ProjOrchestraWorkflow />} />
-            <Route path="proj_orchestra-ai" element={<EmptyPage />} />
-            <Route path="proj_orchestra-tasks" element={<EmptyPage />} />
-            <Route path="proj_orchestra-team" element={<EmptyPage />} />
+            <Route path="proj_orchestra-ai" element={<ProjectAI projectName="Project Orchestra" />} />
+            <Route path="proj_orchestra-tasks" element={<ProjectTasks projectName="Project Orchestra" />} />
+            <Route path="proj_orchestra-team" element={<ProjectTeam projectName="Project Orchestra" />} />
 
             {/* Other Sidebar/Header Routes */}
-            <Route path="todo" element={<EmptyPage />} />
-            <Route path="calendar" element={<EmptyPage />} />
-            <Route path="archive" element={<EmptyPage />} />
+            <Route path="todo" element={<Todo />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="archive" element={<Archive />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="help" element={<EmptyPage />} />
+            <Route path="help" element={<Help />} />
           </Route>
           
           {/* Redirect unknown routes */}

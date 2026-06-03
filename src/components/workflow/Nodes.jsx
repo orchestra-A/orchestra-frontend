@@ -1,4 +1,5 @@
 import { Handle, Position } from '@xyflow/react';
+
 import { CheckSquare, Target, PauseCircle, Clock, User } from 'lucide-react';
 
 export function TaskNode({ data }) {
@@ -31,6 +32,7 @@ export function TaskNode({ data }) {
             {data.assigned_to}
           </div>
         )}
+        )}
       </div>
     </div>
   );
@@ -38,6 +40,7 @@ export function TaskNode({ data }) {
 
 export function TrunkNode({ data }) {
   const height = data.height || 600;
+
   const width = data.width || 16;
 
   return (
@@ -50,6 +53,7 @@ export function TrunkNode({ data }) {
           height: '100%',
           clipPath: `polygon(0 0, 50% 20px, 100% 0, 100% calc(100% - 30px), 50% 100%, 0 calc(100% - 30px))`
         }} 
+        }}
       />
       
       {/* Dynamic Branch Points (Handles) */}
@@ -59,7 +63,12 @@ export function TrunkNode({ data }) {
           type="source"
           id={bp.id}
           position={bp.position}
+
           className="!w-4 !h-4 !bg-white !border-2 !border-[#2F80ED] shadow-sm transition-transform hover:scale-125"
+          style={{ 
+            top: bp.top, 
+            left: bp.position === Position.Left ? -8 : undefined,
+            right: bp.position === Position.Right ? -8 : undefined,
           style={{ 
             top: bp.top, 
             left: bp.position === Position.Left ? -8 : undefined,
