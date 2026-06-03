@@ -11,12 +11,14 @@ import ForgotPassword from './pages/ForgotPassword';
 import EmptyPage from './pages/EmptyPage';
 import ProjMarketingWorkflow from './pages/ProjMarketingWorkflow';
 import ProjOrchestraWorkflow from './pages/ProjOrchestraWorkflow';
+import LandingPage from './pages/LandingPage';
+import Profile from './pages/Profile';
 
 // A wrapper to protect routes
 function ProtectedRoute({ children }) {
   const { currentUser } = useAuth();
   if (!currentUser) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/landing" replace />;
   }
   return children;
 }
@@ -35,6 +37,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/landing" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
@@ -62,7 +65,7 @@ export default function App() {
             <Route path="todo" element={<EmptyPage />} />
             <Route path="calendar" element={<EmptyPage />} />
             <Route path="archive" element={<EmptyPage />} />
-            <Route path="profile" element={<EmptyPage />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="help" element={<EmptyPage />} />
           </Route>
           

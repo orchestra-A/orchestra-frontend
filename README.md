@@ -1,6 +1,6 @@
-# Clover AI - Frontend Dashboard
+# Orchestra AI - Frontend Dashboard
 
-Welcome to the frontend interface for **Clover AI**, an automated software design blueprint and task-tracking ecosystem.
+Welcome to the frontend interface for **Orchestra AI**, an automated software design blueprint and task-tracking ecosystem.
 
 This repository specifically houses the **UI Shell and Dashboard Architecture**, meticulously built with React, Vite, and Tailwind CSS v4.
 
