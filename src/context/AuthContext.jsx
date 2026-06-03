@@ -64,11 +64,59 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('currentUser');
   };
 
+  const updatePassword = (currentPassword, newPassword) => {
+    return new Promise((resolve, reject) => {
+      if (currentUser.password !== currentPassword) {
+        return reject(new Error("Current password is incorrect."));
+      }
+      
+      const updatedUser = { ...currentUser, password: newPassword };
+      const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
+      
+      setUsers(updatedUsers);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      
+      setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      resolve(true);
+    });
+  };
+
+  const deleteAccount = () => {
+    return new Promise((resolve) => {
+      const updatedUsers = users.filter(u => u.id !== currentUser.id);
+      
+      setUsers(updatedUsers);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      
+      setCurrentUser(null);
+      localStorage.removeItem('currentUser');
+      resolve(true);
+    });
+  };
+
+  const updateProfile = (updates) => {
+    return new Promise((resolve) => {
+      const updatedUser = { ...currentUser, ...updates };
+      const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
+      
+      setUsers(updatedUsers);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      
+      setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      resolve(true);
+    });
+  };
+
   const value = {
     currentUser,
     signup,
     login,
-    logout
+    logout,
+    updatePassword,
+    deleteAccount,
+    updateProfile
   };
 
   return (

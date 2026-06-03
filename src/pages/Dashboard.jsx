@@ -44,7 +44,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
         {/* Project 1 Card */}
         <button
-          onClick={() => navigate('/project1-overview')}
+          onClick={() => navigate('/project1-tasks')}
           className="group cursor-pointer text-left"
         >
           <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 h-full">
@@ -67,7 +67,7 @@ export default function Dashboard() {
 
         {/* Project 2 Card */}
         <button
-          onClick={() => navigate('/project2-overview')}
+          onClick={() => navigate('/project2-tasks')}
           className="group cursor-pointer text-left"
         >
           <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 h-full">
