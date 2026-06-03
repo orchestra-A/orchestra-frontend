@@ -33,7 +33,7 @@ export default function Login() {
         <div className="max-w-lg relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 shadow-sm text-sm mb-6">
             <Clover className="w-4 h-4 text-[#4A90E2]" />
-            Clover Workspace
+            Orchestra Workspace
           </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
             Streamline your development workflow.
@@ -48,7 +48,7 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-24 xl:px-32 relative bg-white">
         <div className="absolute top-8 left-8 lg:hidden flex items-center gap-2">
           <Clover className="w-6 h-6 text-[#4A90E2]" />
-          <span className="font-semibold text-gray-900 text-lg">Clover</span>
+          <span className="font-semibold text-gray-900 text-lg">Orchestra</span>
         </div>
 
         <div className="max-w-md w-full mx-auto py-12 lg:py-0">

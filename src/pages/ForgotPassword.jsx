@@ -28,7 +28,7 @@ export default function ForgotPassword() {
     <div className="min-h-screen w-full flex items-center justify-center bg-[#1E2433] p-4 relative">
       <div className="absolute top-8 left-8 flex items-center gap-2">
         <Clover className="w-6 h-6 text-[#4A90E2]" />
-        <span className="font-medium text-white text-lg">Clover</span>
+        <span className="font-medium text-white text-lg">Orchestra</span>
       </div>
 
       <div className="max-w-md w-full bg-[#171B26] p-8 rounded-xl border border-white/5 shadow-2xl">

@@ -1,10 +1,10 @@
-# Clover AI - Frontend Dashboard
+# Orchestra AI - Frontend Dashboard
 
-Welcome to the frontend interface for **Clover AI**, an automated software design blueprint and task-tracking ecosystem.
+Welcome to the frontend interface for **Orchestra AI**, an automated software design blueprint and task-tracking ecosystem.
 
 This repository specifically houses the **UI Shell and Dashboard Architecture**, meticulously built with React, Vite, and Tailwind CSS v4.
 
-## 🚀 Project Overview (Week 1 Phase)
+## Project Overview (Week 1 Phase)
 
 This repository serves as the foundational frontend interface for the project, combining landing page components with a comprehensive dashboard shell.
 
@@ -42,7 +42,15 @@ This repository serves as the foundational frontend interface for the project, c
 
 ---
 
-## 💻 Getting Started
+## Current Status (Week 2 and 3 Tasks)
+
+- **Member 5 (Frontend)**: Binds the visual graph rendering canvas directly to the backend database endpoints to replace static mock files.
+- **Member 6 (Frontend)**: Implements the "Connect Workspaces" view UI, integrating the authentication screens for a team's tools.
+  - *They build the visible screens where users can click around to manage their team profiles. They also hook up the reactflowlayout to the backend, so the AI's generated task steps suddenly render as a gorgeous, interactive roadmap on the screen.*
+
+---
+
+## Getting Started
 
 Follow these steps to run the dashboard locally on your machine:
 
@@ -60,7 +68,7 @@ Follow these steps to run the dashboard locally on your machine:
 
 ---
 
-## 📁 Folder Structure
+## Folder Structure
 
 To help team members navigate the codebase:
 

@@ -1,32 +1,37 @@
 import { Handle, Position } from '@xyflow/react';
-import { CheckCircle2, User } from 'lucide-react';
+
+import { CheckSquare, Target, PauseCircle, Clock, User } from 'lucide-react';
 
 export function TaskNode({ data }) {
+  const getStatusConfig = (status) => {
+    switch(status) {
+      case 'completed': return { bg: 'bg-[#4CAF50]', icon: <CheckSquare className="w-6 h-6 text-white" /> };
+      case 'in_progress': return { bg: 'bg-[#FFB300]', icon: <Target className="w-6 h-6 text-white" /> };
+      case 'todo': return { bg: 'bg-[#2F80ED]', icon: <Clock className="w-6 h-6 text-white" /> };
+      case 'stopped': return { bg: 'bg-[#F44336]', icon: <PauseCircle className="w-6 h-6 text-white" /> };
+      default: return { bg: 'bg-[#9E9E9E]', icon: <User className="w-6 h-6 text-white" /> };
+    }
+  };
+  
+  const config = getStatusConfig(data.status);
+
   return (
-    <div className="bg-white text-gray-900 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] px-5 py-4 min-w-[220px] border border-gray-100 transition-all hover:shadow-[0_8px_30px_-4px_rgba(74,144,226,0.15)] hover:border-[#4A90E2]/30">
+    <div className={`${config.bg} text-white rounded-lg shadow-md px-4 py-3 min-w-[180px] flex items-center gap-3 border border-black/5`}>
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="!w-3 !h-3 !bg-[#4A90E2] !border-2 !border-white" 
+        className="!w-3 !h-3 !bg-white !border-2 !border-[#2F80ED]" 
       />
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-[#4A90E2]">
-            <CheckCircle2 className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-sm text-gray-900">{data.label}</h3>
-            <p className="text-xs text-gray-500">In Progress</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center pr-3 border-r border-white/40 shrink-0">
+        {config.icon}
       </div>
-      <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-        <div className="flex -space-x-2">
-          <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center overflow-hidden">
-            <User className="w-3 h-3 text-gray-500" />
+      <div className="font-medium text-base truncate max-w-[200px]" title={data.label}>
+        {data.label}
+        {data.assigned_to && (
+          <div className="text-xs font-normal text-white/80 mt-0.5 truncate max-w-[200px]" title={data.assigned_to}>
+            {data.assigned_to}
           </div>
-        </div>
-        <span className="text-[10px] font-medium px-2 py-1 bg-blue-50 text-[#4A90E2] rounded-full">High Priority</span>
+        )}
       </div>
     </div>
   );
@@ -34,29 +39,19 @@ export function TaskNode({ data }) {
 
 export function TrunkNode({ data }) {
   const height = data.height || 600;
-  const width = data.width || 40;
-  
-  const arrowHeadHeight = width;
-  const arrowHeadWidth = width * 1.5;
-  const trunkHeight = height - arrowHeadHeight;
+
+  const width = data.width || 16;
 
   return (
-    <div className="relative flex flex-col items-center" style={{ width: arrowHeadWidth, height }}>
-      {/* Trunk body with premium gradient */}
+    <div className="relative flex flex-col items-center" style={{ width, height }}>
+      {/* Solid Blue Trunk with sharper Chevron Cutout and Arrowhead */}
       <div 
-        className="bg-gradient-to-b from-[#4A90E2] via-[#6366F1] to-[#8B5CF6] rounded-t-full shadow-[0_0_15px_rgba(99,102,241,0.4)]" 
-        style={{ width, height: trunkHeight }} 
-      />
-      {/* Stylized Arrow head */}
-      <div 
-        style={{
-          width: 0,
-          height: 0,
-          borderLeft: `${arrowHeadWidth / 2}px solid transparent`,
-          borderRight: `${arrowHeadWidth / 2}px solid transparent`,
-          borderTop: `${arrowHeadHeight}px solid #8B5CF6`,
-          filter: 'drop-shadow(0px 8px 6px rgba(139,92,246,0.3))'
-        }}
+        className="bg-[#2F80ED] shadow-sm" 
+        style={{ 
+          width: '100%', 
+          height: '100%',
+          clipPath: `polygon(0 0, 50% 20px, 100% 0, 100% calc(100% - 30px), 50% 100%, 0 calc(100% - 30px))`
+        }} 
       />
       
       {/* Dynamic Branch Points (Handles) */}
@@ -66,11 +61,12 @@ export function TrunkNode({ data }) {
           type="source"
           id={bp.id}
           position={bp.position}
-          className="!w-4 !h-4 !bg-white !border-4 !border-[#6366F1] shadow-sm transition-transform hover:scale-125"
+
+          className="!w-4 !h-4 !bg-white !border-2 !border-[#2F80ED] shadow-sm transition-transform hover:scale-125"
           style={{ 
             top: bp.top, 
-            left: bp.position === Position.Left ? (arrowHeadWidth - width) / 2 - 8 : undefined,
-            right: bp.position === Position.Right ? (arrowHeadWidth - width) / 2 - 8 : undefined,
+            left: bp.position === Position.Left ? -8 : undefined,
+            right: bp.position === Position.Right ? -8 : undefined,
           }}
         />
       ))}

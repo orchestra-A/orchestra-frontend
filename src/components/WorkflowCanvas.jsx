@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { ReactFlow, Controls, Background, MarkerType, Position } from '@xyflow/react';
+
+import { useState, useEffect } from 'react';
+import { ReactFlow, Controls, Background, MarkerType, Position, useNodesState, useEdgesState } from '@xyflow/react';
 import { Edit2, Lock } from 'lucide-react';
 import '@xyflow/react/dist/style.css';
 import { TaskNode, TrunkNode } from './workflow/Nodes';
@@ -9,52 +10,105 @@ const nodeTypes = {
   trunk: TrunkNode,
 };
 
-const initialNodes = [
-  { 
-    id: 'trunk', 
-    type: 'trunk', 
-    position: { x: 400, y: 50 }, 
-    data: { 
-      height: 600,
-      width: 24,
-      branchPoints: [
-        { id: 'bp-1', position: Position.Left, top: 100 },
-        { id: 'bp-2', position: Position.Right, top: 220 },
-        { id: 'bp-3', position: Position.Left, top: 380 },
-        { id: 'bp-4', position: Position.Right, top: 480 },
-      ]
-    } 
-  },
-  { id: 'task-1', type: 'task', position: { x: 30, y: 160 }, data: { label: 'Design System' } },
-  { id: 'task-2', type: 'task', position: { x: 550, y: 280 }, data: { label: 'API Integration' } },
-  { id: 'task-3', type: 'task', position: { x: 30, y: 440 }, data: { label: 'User Testing' } },
-  { id: 'task-4', type: 'task', position: { x: 550, y: 540 }, data: { label: 'Deployment' } },
-];
-
 const defaultEdgeOptions = {
   type: 'smoothstep',
-  style: { stroke: '#94A3B8', strokeWidth: 3, borderRadius: 24 },
+  style: { stroke: '#2F80ED', strokeWidth: 4, borderRadius: 24 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    color: '#94A3B8',
-    width: 20,
-    height: 20,
+    color: '#2F80ED',
   },
 };
 
-const initialEdges = [
-  { id: 'e-1', source: 'trunk', target: 'task-1', sourceHandle: 'bp-1' },
-  { id: 'e-2', source: 'trunk', target: 'task-2', sourceHandle: 'bp-2' },
-  { id: 'e-3', source: 'trunk', target: 'task-3', sourceHandle: 'bp-3' },
-  { id: 'e-4', source: 'trunk', target: 'task-4', sourceHandle: 'bp-4' },
-];
-
-export function WorkflowCanvas() {
+export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   const [isEditable, setIsEditable] = useState(false);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTasks() {
+      try {
+        setLoading(true);
+        // Using the Vite proxy (/api) to avoid CORS issues from the backend
+        const res = await fetch('/api/tasks');
+        const data = await res.json();
+        
+        // Filter and sort by order
+        const projectTasks = data.tasks
+          .filter(t => t.project_id === projectId)
+          .sort((a, b) => a.order - b.order);
+
+        // Layout Geometry
+        const trunkY = 50;
+        const taskSpacingY = 160; 
+        const trunkHeight = Math.max(600, projectTasks.length * taskSpacingY + 100);
+
+        const branchPoints = [];
+        const generatedNodes = [];
+        const generatedEdges = [];
+
+        projectTasks.forEach((task, index) => {
+          const isLeft = index % 2 === 0;
+          const yOffset = index * taskSpacingY; 
+          const branchPointTop = 70 + yOffset;
+          // Drop 40px to give smoothstep enough room to curve
+          const taskNodeY = trunkY + branchPointTop + 40; 
+          
+          branchPoints.push({
+            id: `bp-${task.id}`,
+            position: isLeft ? Position.Left : Position.Right,
+            top: branchPointTop
+          });
+
+          generatedNodes.push({
+            id: task.id,
+            type: 'task',
+            position: { x: isLeft ? 30 : 550, y: taskNodeY },
+            data: { 
+              label: task.title, 
+              status: task.status,
+              assigned_to: task.assigned_to 
+            }
+          });
+
+          generatedEdges.push({
+            id: `e-trunk-${task.id}`,
+            source: 'trunk',
+            target: task.id,
+            sourceHandle: `bp-${task.id}`
+          });
+        });
+
+        // Add trunk node
+        generatedNodes.unshift({
+          id: 'trunk',
+          type: 'trunk',
+          position: { x: 400, y: trunkY },
+          data: {
+            height: trunkHeight,
+            width: 16,
+            branchPoints
+          }
+        });
+
+        setNodes(generatedNodes);
+        setEdges(generatedEdges);
+      } catch (err) {
+        console.error("Failed to load tasks", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTasks();
+  }, [projectId, setNodes, setEdges]);
+
+  if (loading) {
+    return <div className="w-full h-[700px] flex items-center justify-center bg-[#F9FAFB] rounded-xl border border-gray-200 text-gray-500">Loading workflow...</div>;
+  }
 
   return (
     <div className="w-full h-[700px] border border-gray-200 rounded-xl bg-[#F9FAFB] shadow-sm overflow-hidden relative group">
-      {/* Top Right Toggle Button */}
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
@@ -77,9 +131,11 @@ export function WorkflowCanvas() {
       </button>
 
       <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
-        defaultNodes={initialNodes}
-        defaultEdges={initialEdges}
         defaultEdgeOptions={defaultEdgeOptions}
         nodesDraggable={isEditable}
         nodesConnectable={isEditable}

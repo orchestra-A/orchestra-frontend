@@ -582,7 +582,7 @@ export default function LandingPage() {
               },
               {
                 icon: <svg fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
-                title: 'Clover AI Assistant',
+                title: 'Orchestra AI Assistant',
                 desc: 'Ask complex questions like "Who changed this file last night and why?" and get contextual answers with direct links and summaries.'
               },
               {

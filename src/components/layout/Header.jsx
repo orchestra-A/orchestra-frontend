@@ -65,7 +65,7 @@ export function Header() {
             <DropdownMenuLabel>
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{currentUser?.name || "Guest User"}</span>
-                <span className="text-xs text-gray-500 font-normal">{currentUser?.email || "guest@clover.app"}</span>
+                <span className="text-xs text-gray-500 font-normal">{currentUser?.email || "guest@orchestra.app"}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
