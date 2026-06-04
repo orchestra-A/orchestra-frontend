@@ -12,6 +12,9 @@ export default function Profile() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
+  
+  // Dialog state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const navigate = useNavigate();
   const { currentUser, updatePassword, deleteAccount } = useAuth();
@@ -33,11 +36,10 @@ export default function Profile() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (window.confirm("Are you sure you want to permanently delete your account? This cannot be undone.")) {
-      await deleteAccount();
-      navigate('/');
-    }
+  const confirmDeleteAccount = async () => {
+    setShowDeleteDialog(false);
+    await deleteAccount();
+    navigate('/');
   };
 
   const tabs = [
@@ -110,9 +112,8 @@ export default function Profile() {
             <h1 className="text-[26px] font-bold text-gray-800 mb-2">Platforms</h1>
             <p className="text-gray-500 text-[15px] mb-10">You can update and verify your platform details here.</p>
 
-            <div className="mb-10">
-              <h2 className="text-[19px] font-bold text-gray-800 mb-6">Development</h2>
-              <div className="flex items-center gap-4 border-b border-gray-200 pb-6">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-4">
                 <div className="w-[190px] flex items-center gap-3 flex-shrink-0 ml-2">
                   <div className="w-[22px] h-[22px] flex items-center justify-center">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-gray-800">
@@ -136,11 +137,6 @@ export default function Profile() {
                   Submit
                 </button>
               </div>
-            </div>
-
-            <div>
-              <h2 className="text-[19px] font-bold text-gray-800 mb-6">Problem Solving</h2>
-              <div className="flex flex-col gap-5">
                 {platforms.map((platform) => (
                   <div key={platform.id} className="flex items-center gap-4">
                     <div className="w-[190px] flex items-center gap-3 flex-shrink-0 ml-2">
@@ -169,7 +165,6 @@ export default function Profile() {
                     </button>
                   </div>
                 ))}
-              </div>
             </div>
           </div>
         );
@@ -251,7 +246,7 @@ export default function Profile() {
                 <h2 className="text-lg font-bold text-red-600 mb-2">Danger Zone</h2>
                 <p className="text-sm text-gray-500 mb-5">Once you delete your account, there is no going back. Please be certain.</p>
                 <button 
-                  onClick={handleDeleteAccount}
+                  onClick={() => setShowDeleteDialog(true)}
                   className="px-6 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-medium rounded-lg transition-colors text-sm"
                 >
                   Delete Account
@@ -303,6 +298,32 @@ export default function Profile() {
       <div className="flex-1 p-8 overflow-y-auto bg-white">
         {renderContent()}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Account</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to permanently delete your account? This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowDeleteDialog(false)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDeleteAccount}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm shadow-sm"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
