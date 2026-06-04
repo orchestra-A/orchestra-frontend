@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Inbox, Archive, Home, Calendar, Settings, Users, Clover } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Inbox, Archive, Home, Calendar, Settings, Users, Clover, Plug } from 'lucide-react';
 import { Badge } from '../ui/badge';
 
 export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSidebar, setIsHoveringsidebar }) {
@@ -133,6 +133,18 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
           </div>
         )}
 
+        <NavLink
+          to="/workspaces"
+          className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
+              ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
+              : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+            }`}
+          title={!isSidebarExpanded ? 'Workspaces' : ''}
+        >
+          <Plug className="w-4 h-4" />
+          {isSidebarExpanded && 'Workspaces'}
+        </NavLink>
+
         {/* Other Nav Items */}
         <NavLink
           to="/todo"
@@ -186,7 +198,19 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
           {isSidebarExpanded && 'Archive'}
         </NavLink>
 
-
+      </div>
+      
+      {/* User Profile */}
+      <div className="mt-auto pt-4 border-t border-[#2A3142] p-2 shrink-0">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-medium shrink-0">IM</div>
+          {isSidebarExpanded && (
+            <div className="overflow-hidden">
+              <p className="text-white text-xs font-medium truncate">Isha Mahadev</p>
+              <p className="text-white/50 text-[10px] truncate">Interface Developer</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
