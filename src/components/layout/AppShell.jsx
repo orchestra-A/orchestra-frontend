@@ -8,7 +8,7 @@ export function AppShell() {
   const [isHoveringSidebar, setIsHoveringsidebar] = useState(false);
 
   return (
-    <div className="size-full flex bg-[#F5F6F8] min-h-screen">
+    <div className="size-full flex bg-[#F5F6F8] h-screen overflow-hidden">
       <Sidebar 
         sidebarCollapsed={sidebarCollapsed} 
         setSidebarCollapsed={setSidebarCollapsed}
