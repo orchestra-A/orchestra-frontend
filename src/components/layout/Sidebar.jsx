@@ -200,18 +200,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
 
       </div>
       
-      {/* User Profile */}
-      <div className="mt-auto pt-4 border-t border-[#2A3142] p-2 shrink-0">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-medium shrink-0">IM</div>
-          {isSidebarExpanded && (
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">Isha Mahadev</p>
-              <p className="text-white/50 text-[10px] truncate">Interface Developer</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* End of Sidebar */}
     </div>
   );
 }
