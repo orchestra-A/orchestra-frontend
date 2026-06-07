@@ -41,6 +41,7 @@ export function Header() {
       <div className="flex items-center gap-3">
         <Button
           size="sm"
+          onClick={() => navigate('/blueprint')}
           className="bg-[#4A90E2] hover:bg-[#3D7EC8] text-white shadow-sm h-9 px-4 cursor-pointer"
         >
           New Project

@@ -1,25 +1,27 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Inbox, Archive, Home, Calendar, Settings, Users, Clover, Plug } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronRight, ChevronLeft, Inbox, Archive, Home, Calendar, Settings, Users, Clover, Plug, Trash2, X } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { useProject } from '../../context/ProjectContext';
 
 export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSidebar, setIsHoveringsidebar }) {
   const [expandedProject, setExpandedProject] = useState('proj_marketing');
   const location = useLocation();
   const currentPage = location.pathname.substring(1) || 'dashboard';
 
-  const projects = [
-    {
-      id: 'proj_marketing',
-      name: 'Project Marketing',
-      items: ['Workflow', 'AI', 'Tasks', 'Team']
-    },
-    {
-      id: 'proj_orchestra',
-      name: 'Project Orchestra',
-      items: ['Workflow', 'AI', 'Tasks', 'Team']
+  const navigate = useNavigate();
+  const { projects, deleteProject } = useProject();
+  const [projectToDelete, setProjectToDelete] = useState(null);
+
+  const confirmDelete = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete.id);
+      setProjectToDelete(null);
+      if (location.pathname.includes(projectToDelete.id)) {
+        navigate('/');
+      }
     }
-  ];
+  };
 
   const handleSidebarInteraction = () => {
     if (sidebarCollapsed) {
@@ -89,15 +91,28 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                 handleSidebarInteraction();
                 setExpandedProject(expandedProject === project.id ? null : project.id);
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/[0.06] transition-colors group"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/[0.06] transition-colors group relative"
               title={!isSidebarExpanded ? project.name : ''}
             >
-              {isSidebarExpanded && <span className="text-[13px] text-white/90">{project.name}</span>}
+              {isSidebarExpanded && <span className="text-[13px] text-white/90 truncate mr-6">{project.name}</span>}
               {!isSidebarExpanded && <span className="text-base font-semibold text-white/90">{project.name.charAt(0)}</span>}
+              
               {isSidebarExpanded && (
-                <ChevronRight
-                  className={`w-4 h-4 text-white/40 transition-transform ${expandedProject === project.id ? 'rotate-90' : ''}`}
-                />
+                <div className="absolute right-2 flex items-center gap-1 bg-[#1E2433] group-hover:bg-[#2A3142] transition-colors">
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProjectToDelete(project);
+                    }}
+                    className="p-1 rounded-md text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all"
+                    title="Delete Project"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </div>
+                  <ChevronRight
+                    className={`w-4 h-4 text-white/40 transition-transform ${expandedProject === project.id ? 'rotate-90' : ''}`}
+                  />
+                </div>
               )}
             </button>
 
@@ -118,6 +133,15 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                     </NavLink>
                   )
                 })}
+                <NavLink
+                  to={`/blueprint/${project.id}`}
+                  className={({ isActive }) => `w-full flex text-left px-3 py-1.5 rounded-md text-[13px] transition-colors ${isActive
+                      ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
+                      : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+                    }`}
+                >
+                  Modify
+                </NavLink>
               </div>
             )}
           </div>
@@ -200,7 +224,36 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
 
       </div>
       
-      {/* End of Sidebar */}
+      {/* Delete Confirmation Dialog */}
+      {projectToDelete && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Project?</h3>
+              <p className="text-gray-500 mb-6">
+                Are you sure you want to delete <span className="font-semibold text-gray-800">"{projectToDelete.name}"</span>? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setProjectToDelete(null)}
+                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors cursor-pointer"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,11 +1,23 @@
-import { FolderOpen, AlertCircle, PlayCircle, Clock } from 'lucide-react';
+import { FolderOpen, AlertCircle, PlayCircle, Clock, Plus, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../context/AuthContext';
+import { useProject } from '../context/ProjectContext';
+import { useState } from 'react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { projects, deleteProject } = useProject();
+  
+  const [projectToDelete, setProjectToDelete] = useState(null);
+
+  const confirmDelete = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete.id);
+      setProjectToDelete(null);
+    }
+  };
 
   const mockTasks = [
     { id: 1, title: 'Finalize Database Schema', project: 'Project Orchestra', status: 'stopped', deadline: '2026-06-01' },
@@ -63,7 +75,7 @@ export default function Dashboard() {
                 <FolderOpen className="w-5 h-5 text-[#4A90E2]" />
               </div>
             </div>
-            <div className="text-5xl font-bold text-gray-900">2</div>
+            <div className="text-5xl font-bold text-gray-900">{projects.length}</div>
             <div className="text-sm text-gray-500 mt-2">Currently being tracked</div>
           </div>
 
@@ -71,27 +83,40 @@ export default function Dashboard() {
           <div className="flex-1">
             <h2 className="text-gray-900 font-bold mb-3 text-sm">Your Projects</h2>
             <div className="grid grid-cols-2 gap-4">
-              {/* Project Marketing Card */}
-              <button
-                onClick={() => navigate('/proj_marketing-tasks')}
-                className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 text-left flex flex-col items-center justify-center aspect-square group"
-              >
-                <div className="w-10 h-10 bg-[#4A90E2]/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <FolderOpen className="w-5 h-5 text-[#4A90E2]" />
+              
+              {/* Dynamic Project Cards */}
+              {projects.map(project => (
+                <div key={project.id} className="relative group">
+                  <button
+                    onClick={() => navigate(`/${project.id}-tasks`)}
+                    className="w-full bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 text-left flex flex-col items-center justify-center aspect-square group/btn"
+                  >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover/btn:scale-110 transition-transform" style={{ backgroundColor: `${project.color}15` }}>
+                      <FolderOpen className="w-5 h-5" style={{ color: project.color }} />
+                    </div>
+                    <h3 className="text-gray-900 font-semibold text-xs text-center line-clamp-2 px-2">{project.name}</h3>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProjectToDelete(project);
+                    }}
+                    className="absolute top-2 right-2 p-1.5 rounded-md bg-white border border-gray-200 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 hover:border-red-200 hover:bg-red-50 z-10"
+                    title="Delete Project"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <h3 className="text-gray-900 font-semibold text-xs text-center line-clamp-2 px-2">Project Marketing</h3>
+              ))}
+
+              {/* New Project Card */}
+              <button onClick={() => navigate('/blueprint')} className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4 shadow-sm transition-all hover:border-[#4A90E2] hover:bg-gray-50 flex flex-col items-center justify-center aspect-square group">
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Plus className="w-5 h-5 text-gray-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 text-center px-2">New Project</span>
               </button>
 
-              {/* Project Orchestra Card */}
-              <button
-                onClick={() => navigate('/proj_orchestra-tasks')}
-                className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 text-left flex flex-col items-center justify-center aspect-square group"
-              >
-                <div className="w-10 h-10 bg-[#9B59B6]/10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <FolderOpen className="w-5 h-5 text-[#9B59B6]" />
-                </div>
-                <h3 className="text-gray-900 font-semibold text-xs text-center line-clamp-2 px-2">Project Orchestra</h3>
-              </button>
             </div>
           </div>
         </div>
@@ -119,6 +144,38 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {projectToDelete && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 page-enter">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Project?</h3>
+              <p className="text-gray-500 mb-6">
+                Are you sure you want to delete <span className="font-semibold text-gray-800">"{projectToDelete.name}"</span>? This action cannot be undone and all associated tasks and data will be permanently removed.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setProjectToDelete(null)}
+                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors cursor-pointer"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
