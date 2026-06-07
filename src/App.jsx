@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProjectProvider } from './context/ProjectContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { AppShell } from './components/layout/AppShell';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
-import Workspaces from './pages/Workspaces';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -44,10 +44,11 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ProjectProvider>
-        <BrowserRouter>
-          <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <ProjectProvider>
+          <BrowserRouter>
+            <Routes>
             <Route path="/landing" element={<PublicRoute><LandingPage /></PublicRoute>} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
@@ -59,7 +60,6 @@ export default function App() {
               <Route path="projects" element={<Projects />} />
               <Route path="team" element={<Team />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="workspaces" element={<Workspaces />} />
               <Route path="blueprint" element={<Blueprint />} />
               <Route path="blueprint/:projectId" element={<Blueprint />} />
               
@@ -95,5 +95,6 @@ export default function App() {
         </BrowserRouter>
       </ProjectProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }

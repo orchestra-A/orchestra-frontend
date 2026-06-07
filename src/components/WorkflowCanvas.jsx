@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ReactFlow, Controls, Background, MarkerType, Position, useNodesState, useEdgesState } from '@xyflow/react';
 import { Edit2, Lock } from 'lucide-react';
@@ -24,17 +23,19 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
+  const [menu, setMenu] = useState(null);
 
   useEffect(() => {
     async function fetchTasks() {
       try {
         setLoading(true);
-        // Using the Vite proxy (/api) to avoid CORS issues from the backend
         const res = await fetch('/api/tasks');
         const data = await res.json();
         
+        const tasksArray = Array.isArray(data) ? data : (data.tasks || []);
+
         // Filter and sort by order
-        const projectTasks = data.tasks
+        const projectTasks = tasksArray
           .filter(t => t.project_id === projectId)
           .sort((a, b) => a.order - b.order);
 
@@ -51,7 +52,6 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
           const isLeft = index % 2 === 0;
           const yOffset = index * taskSpacingY; 
           const branchPointTop = 70 + yOffset;
-          // Drop 40px to give smoothstep enough room to curve
           const taskNodeY = trunkY + branchPointTop + 40; 
           
           branchPoints.push({
@@ -103,12 +103,51 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
     fetchTasks();
   }, [projectId, setNodes, setEdges]);
 
+  const onNodeContextMenu = (event, node) => {
+    event.preventDefault();
+    if (node.type !== 'task') return;
+    
+    setMenu({
+      id: node.id,
+      top: event.clientY,
+      left: event.clientX,
+    });
+  };
+
+  const closeMenu = () => setMenu(null);
+
+  const handleStatusChange = async (status) => {
+    if (!menu) return;
+    const taskId = menu.id;
+    
+    // Optimistic UI update
+    setNodes((nds) => 
+      nds.map((node) => {
+        if (node.id === taskId) {
+          return { ...node, data: { ...node.data, status } };
+        }
+        return node;
+      })
+    );
+    closeMenu();
+
+    try {
+      await fetch(`/api/tasks/${taskId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+    } catch (err) {
+      console.error("Failed to update status", err);
+    }
+  };
+
   if (loading) {
-    return <div className="w-full h-[700px] flex items-center justify-center bg-[#F9FAFB] rounded-xl border border-gray-200 text-gray-500">Loading workflow...</div>;
+    return <div className="w-full h-[700px] flex items-center justify-center bg-white dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50">Loading workflow...</div>;
   }
 
   return (
-    <div className="w-full h-[700px] border border-gray-200 rounded-xl bg-[#F9FAFB] shadow-sm overflow-hidden relative group">
+    <div className="w-full h-[700px] border border-gray-200 dark:border-[#2A3142] rounded-xl bg-white dark:bg-[#1A1E2E] shadow-sm overflow-hidden relative group">
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
@@ -130,7 +169,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
         )}
       </button>
 
-      <ReactFlow
+        <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -140,12 +179,38 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
         nodesDraggable={isEditable}
         nodesConnectable={isEditable}
         elementsSelectable={isEditable}
+        onNodeContextMenu={onNodeContextMenu}
+        onPaneClick={closeMenu}
         fitView
         fitViewOptions={{ padding: 0.1 }}
-      >
-        <Background variant="dots" gap={20} size={2} color="#CBD5E1" />
-        <Controls />
-      </ReactFlow>
+        proOptions={{ hideAttribution: true }}
+      />
+
+      {menu && (
+        <div 
+          className="fixed z-50 bg-white rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden"
+          style={{ top: menu.top, left: menu.left }}
+        >
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 font-medium"
+            onClick={() => handleStatusChange('todo')}
+          >
+            Set Pending
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 font-medium"
+            onClick={() => handleStatusChange('in_progress')}
+          >
+            Set In Progress
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 font-medium"
+            onClick={() => handleStatusChange('completed')}
+          >
+            Set Completed
+          </button>
+        </div>
+      )}
     </div>
   );
 }
