@@ -38,7 +38,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
 
   return (
     <div
-      className={`${isSidebarExpanded ? 'w-48' : 'w-14'} bg-[#1E2433] text-white flex flex-col transition-all duration-300 border-r border-[#2A3142] h-screen shrink-0`}
+      className={`${isSidebarExpanded ? 'w-48' : 'w-14'} bg-[#1A1E2E] text-white flex flex-col transition-all duration-300 border-r border-[#2A3142] h-screen shrink-0`}
       onMouseEnter={() => setIsHoveringsidebar(true)}
       onMouseLeave={() => setIsHoveringsidebar(false)}
     >
@@ -98,7 +98,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
               {!isSidebarExpanded && <span className="text-base font-semibold text-white/90">{project.name.charAt(0)}</span>}
               
               {isSidebarExpanded && (
-                <div className="absolute right-2 flex items-center gap-1 bg-[#1E2433] group-hover:bg-[#2A3142] transition-colors">
+                <div className="absolute right-2 flex items-center gap-1 bg-[#1A1E2E] group-hover:bg-[#2A3142] transition-colors">
                   <div
                     onClick={(e) => {
                       e.stopPropagation();
@@ -150,24 +150,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         {/* Divider */}
         <div className="h-px bg-white/5 my-3"></div>
 
-        {/* Workspace Label */}
-        {isSidebarExpanded && (
-          <div className="px-3 py-2 text-[11px] text-white/40 uppercase tracking-wider font-medium">
-            Workspace
-          </div>
-        )}
 
-        <NavLink
-          to="/workspaces"
-          className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-              ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-              : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
-            }`}
-          title={!isSidebarExpanded ? 'Workspaces' : ''}
-        >
-          <Plug className="w-4 h-4" />
-          {isSidebarExpanded && 'Workspaces'}
-        </NavLink>
 
         {/* Other Nav Items */}
         <NavLink

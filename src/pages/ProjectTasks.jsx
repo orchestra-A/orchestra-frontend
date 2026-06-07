@@ -14,17 +14,16 @@ export default function ProjectTasks({ projectName = "Project" }) {
     <div className="max-w-7xl mx-auto h-full flex flex-col">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-gray-900 text-2xl font-bold mb-2">{projectName} - Tasks</h1>
-          <p className="text-gray-500">Manage tasks and track progress for this project.</p>
+          <h1 className="text-gray-900 dark:text-white/90 text-2xl font-bold">{projectName} - Tasks</h1>
         </div>
         <Button className="bg-[#4A90E2] hover:bg-[#3D7EC8] text-white">
           <Plus className="w-4 h-4 mr-2" /> Add Task
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-[#1A1E2E] rounded-lg border border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-sm">
         <table className="w-full text-left text-sm text-gray-600">
-          <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase text-xs font-semibold">
+          <thead className="bg-gray-50 dark:bg-[#141824] border-b border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50 uppercase text-xs font-semibold">
             <tr>
               <th className="px-6 py-4">Task Name</th>
               <th className="px-6 py-4">Status</th>
@@ -33,16 +32,16 @@ export default function ProjectTasks({ projectName = "Project" }) {
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 dark:divide-[#2A3142]">
             {tasks.map((task) => (
-              <tr key={task.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={task.id} className="hover:bg-gray-50 dark:hover:bg-[#2A3142] transition-colors">
                 <td className="px-6 py-4 flex items-center gap-3">
                   {task.status === 'completed' ? (
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                   ) : (
                     <Circle className="w-5 h-5 text-gray-400" />
                   )}
-                  <span className={`font-medium ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                  <span className={`font-medium ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-white/90'}`}>
                     {task.title}
                   </span>
                 </td>

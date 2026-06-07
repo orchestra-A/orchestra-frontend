@@ -143,11 +143,11 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   };
 
   if (loading) {
-    return <div className="w-full h-[700px] flex items-center justify-center bg-[#F9FAFB] rounded-xl border border-gray-200 text-gray-500">Loading workflow...</div>;
+    return <div className="w-full h-[700px] flex items-center justify-center bg-white dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50">Loading workflow...</div>;
   }
 
   return (
-    <div className="w-full h-[700px] border border-gray-200 rounded-xl bg-[#F9FAFB] shadow-sm overflow-hidden relative group">
+    <div className="w-full h-[700px] border border-gray-200 dark:border-[#2A3142] rounded-xl bg-white dark:bg-[#1A1E2E] shadow-sm overflow-hidden relative group">
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
@@ -169,7 +169,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
         )}
       </button>
 
-      <ReactFlow
+        <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -183,10 +183,8 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
         onPaneClick={closeMenu}
         fitView
         fitViewOptions={{ padding: 0.1 }}
-      >
-        <Background variant="dots" gap={20} size={2} color="#CBD5E1" />
-        <Controls />
-      </ReactFlow>
+        proOptions={{ hideAttribution: true }}
+      />
 
       {menu && (
         <div 

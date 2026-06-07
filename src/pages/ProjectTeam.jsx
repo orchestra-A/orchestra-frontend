@@ -12,23 +12,22 @@ export default function ProjectTeam({ projectName = "Project" }) {
     <div className="max-w-7xl mx-auto h-full flex flex-col">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-gray-900 text-2xl font-bold mb-2">{projectName} - Team</h1>
-          <p className="text-gray-500">View members assigned to this project.</p>
+          <h1 className="text-gray-900 dark:text-white/90 text-2xl font-bold">{projectName} - Team</h1>
         </div>
-        <Button className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm">
+        <Button className="bg-white dark:bg-[#1A1E2E] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#2A3142] hover:bg-gray-50 dark:hover:bg-[#2A3142] shadow-sm">
           <UserPlus className="w-4 h-4 mr-2" /> Add Member
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {mockTeam.map(member => (
-          <div key={member.id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex items-center gap-4">
+          <div key={member.id} className="bg-white dark:bg-[#1A1E2E] border border-gray-200 dark:border-[#2A3142] rounded-xl p-6 shadow-sm flex items-center gap-4">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${member.color}`}>
               {member.initials}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{member.name}</h3>
-              <p className="text-sm text-gray-500">{member.role}</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white/90">{member.name}</h3>
+              <p className="text-sm text-gray-500 dark:text-white/50">{member.role}</p>
             </div>
           </div>
         ))}
