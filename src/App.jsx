@@ -23,6 +23,9 @@ import ProjectTasks from './pages/ProjectTasks';
 import ProjectTeam from './pages/ProjectTeam';
 import ProjectAI from './pages/ProjectAI';
 import Blueprint from './pages/Blueprint';
+import Workspaces from './pages/Workspaces';
+import WorkspaceDetail from './pages/WorkspaceDetail';
+import OAuthCallback from './pages/OAuthCallback';
 
 // A wrapper to protect routes
 function ProtectedRoute({ children }) {
@@ -53,6 +56,7 @@ export default function App() {
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
             <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
             
             {/* Main App Routes */}
             <Route path="/" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
@@ -60,6 +64,8 @@ export default function App() {
               <Route path="projects" element={<Projects />} />
               <Route path="team" element={<Team />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="workspaces" element={<Workspaces />} />
+              <Route path="workspaces/:id" element={<WorkspaceDetail />} />
               <Route path="blueprint" element={<Blueprint />} />
               <Route path="blueprint/:projectId" element={<Blueprint />} />
               
