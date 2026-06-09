@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const ProjectContext = createContext();
 
@@ -7,26 +7,59 @@ export function useProject() {
 }
 
 export function ProjectProvider({ children }) {
-  const [projects, setProjects] = useState([
-    {
-      id: 'proj_marketing',
-      name: 'Project Marketing',
-      description: 'Marketing campaign redesign and implementation',
-      taskCount: 8,
-      memberCount: 4,
-      color: '#4A90E2',
-      items: ['Workflow', 'AI', 'Tasks', 'Team']
-    },
-    {
-      id: 'proj_orchestra',
-      name: 'Project Orchestra',
-      description: 'Core platform development and orchestration',
-      taskCount: 12,
-      memberCount: 6,
-      color: '#9B59B6',
-      items: ['Workflow', 'AI', 'Tasks', 'Team']
-    }
-  ]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjectsFromTasks = async () => {
+      try {
+        const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://orchestra-backend-2v5a.onrender.com/tasks'));
+        const data = await response.json();
+        
+        if (data && data.tasks) {
+          const projectMap = {};
+          
+          data.tasks.forEach(task => {
+            const pid = task.project_id;
+            if (!projectMap[pid]) {
+              // Generate a readable name from project_id (e.g., 'proj_orchestra' -> 'Project Orchestra')
+              const nameParts = pid.split('_');
+              const readableName = nameParts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+              
+              projectMap[pid] = {
+                id: pid,
+                name: readableName,
+                description: `Automatically generated project from tasks.`,
+                taskCount: 0,
+                uniqueMembers: new Set(),
+                color: ['#4A90E2', '#9B59B6', '#F59E42', '#34D399', '#EC4899', '#8B5CF6'][Object.keys(projectMap).length % 6],
+                items: ['Workflow', 'AI', 'Tasks', 'Team']
+              };
+            }
+            
+            projectMap[pid].taskCount += 1;
+            if (task.assigned_to) {
+              projectMap[pid].uniqueMembers.add(task.assigned_to);
+            }
+          });
+          
+          const computedProjects = Object.values(projectMap).map(p => ({
+            ...p,
+            memberCount: p.uniqueMembers.size,
+            uniqueMembers: undefined // remove the set
+          }));
+          
+          setProjects(computedProjects);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tasks to build projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProjectsFromTasks();
+  }, []);
 
   const addProject = (projectData) => {
     const colors = ['#F59E42', '#34D399', '#EC4899', '#8B5CF6', '#F87171', '#38BDF8'];

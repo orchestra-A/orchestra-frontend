@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -19,20 +19,32 @@ export default function Dashboard() {
     }
   };
 
-  const mockTasks = [
-    { id: 1, title: 'Finalize Database Schema', project: 'Project Orchestra', status: 'stopped', deadline: '2026-06-01' },
-    { id: 2, title: 'Fix Auth Bugs', project: 'Project Orchestra', status: 'stopped', deadline: '2026-06-03' },
-    { id: 3, title: 'Implement Kanban Board', project: 'General', status: 'in_progress', deadline: '2026-06-05' },
-    { id: 4, title: 'Review Marketing Copy', project: 'Project Marketing', status: 'in_progress', deadline: '2026-06-07' },
-    { id: 5, title: 'Client Feedback Sync', project: 'Project Marketing', status: 'in_progress', deadline: '2026-06-08' },
-  ];
+  const [apiTasks, setApiTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://orchestra-backend-2v5a.onrender.com/tasks'))
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.tasks) {
+          setApiTasks(data.tasks);
+        } else {
+          setApiTasks([]);
+        }
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch tasks:", err);
+        setIsLoading(false);
+      });
+  }, []);
 
   const sortTasks = (tasks) => {
     return [...tasks].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
   };
 
-  const delayedTasks = sortTasks(mockTasks.filter(t => t.status === 'stopped' || t.status === 'delayed')).slice(0, 3);
-  const inProgressTasks = sortTasks(mockTasks.filter(t => t.status === 'in_progress')).slice(0, 3);
+  const delayedTasks = sortTasks(apiTasks.filter(t => t.status === 'stopped' || t.status === 'delayed')).slice(0, 3);
+  const inProgressTasks = sortTasks(apiTasks.filter(t => t.status === 'in_progress')).slice(0, 3);
 
   const TaskCard = ({ task, colorClass }) => (
     <div
@@ -44,7 +56,7 @@ export default function Dashboard() {
       </div>
       <div className="flex items-center justify-between mt-2">
         <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100 text-gray-600">
-          {task.project}
+          {projects.find(p => p.id === task.project_id)?.name || task.project_id || 'General'}
         </Badge>
         <div className="flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
           <Clock className="w-3 h-3" />

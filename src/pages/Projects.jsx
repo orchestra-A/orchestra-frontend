@@ -2,14 +2,10 @@ import { FolderOpen, Plus, Search } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { useProject } from '../context/ProjectContext';
 
 export default function Projects() {
-  const mockProjects = [
-    { id: 1, name: 'Project 1', desc: 'Marketing campaign redesign and implementation', status: 'Active', color: '#4A90E2', tasks: 8, members: 4 },
-    { id: 1, name: 'Project 1', description: 'Marketing campaign redesign and implementation', status: 'Active', color: '#4A90E2', tasks: 8, members: 4 },
-    { id: 2, name: 'Project 2', description: 'Mobile app development and testing phase', status: 'Active', color: '#9B59B6', tasks: 12, members: 6 },
-    { id: 3, name: 'Q3 Product Roadmap', description: 'Planning and execution for Q3 deliverables', status: 'Planning', color: '#F59E42', tasks: 0, members: 2 },
-  ];
+  const { projects } = useProject();
 
   return (
     <div className="max-w-7xl mx-auto h-full flex flex-col">
@@ -30,14 +26,14 @@ export default function Projects() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {mockProjects.map(project => (
+        {projects.map(project => (
           <div key={project.id} className="bg-white dark:bg-[#1A1E2E] rounded-lg border border-gray-200 dark:border-[#2A3142] p-6 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 flex flex-col">
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${project.color}15` }}>
                 <FolderOpen className="w-5 h-5" style={{ color: project.color }} />
               </div>
-              <Badge variant="secondary" className={project.status === 'Active' ? "bg-green-50 text-green-700 border-green-200" : "bg-orange-50 text-orange-700 border-orange-200"}>
-                {project.status}
+              <Badge variant="secondary" className={project.taskCount > 0 ? "bg-green-50 text-green-700 border-green-200" : "bg-orange-50 text-orange-700 border-orange-200"}>
+                {project.taskCount > 0 ? 'Active' : 'Planning'}
               </Badge>
             </div>
             <h3 className="text-gray-900 dark:text-white/90 font-semibold mb-2">{project.name}</h3>
@@ -45,8 +41,8 @@ export default function Projects() {
             
             <div className="mt-auto">
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-white/50 mb-4 pb-4 border-b border-gray-100 dark:border-[#2A3142]">
-                <span>{project.tasks} tasks</span>
-                <span>{project.members} members</span>
+                <span>{project.taskCount} tasks</span>
+                <span>{project.memberCount} members</span>
               </div>
             </div>
           </div>
