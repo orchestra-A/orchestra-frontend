@@ -47,7 +47,7 @@ export default function Workspaces() {
           <div 
             key={p.id} 
             onClick={() => navigateToDetail(p.id)}
-            className="flex items-center justify-between bg-white dark:bg-[#2A3142] border border-slate-200 dark:border-white/10 rounded-xl px-5 py-4 cursor-pointer hover:border-slate-300 dark:hover:border-white/20 transition-all"
+            className="flex items-center justify-between bg-[#6B905F] dark:bg-[#2A3142] border border-slate-200 dark:border-white/10 rounded-xl px-5 py-4 cursor-pointer hover:border-slate-300 dark:hover:border-white/20 transition-all"
           >
             <div className="flex items-center gap-4">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${p.color}`}>
@@ -63,7 +63,7 @@ export default function Workspaces() {
               className={`text-xs font-medium px-4 py-2 rounded-lg transition-colors ${
                 connected[p.id]
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
-                  : 'border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5'
+                  : 'border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-[#6B905F] dark:bg-[#4A90E2]/5'
               }`}
             >
               {connected[p.id] ? 'Connected' : 'Connect'}

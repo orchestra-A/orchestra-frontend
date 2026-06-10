@@ -28,30 +28,93 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState(null);
 
-  const { rawNodes, rawEdges } = useProject();
+  const { tasks } = useProject();
 
   useEffect(() => {
     function loadTasks() {
       try {
         setLoading(true);
-        if (!rawNodes || !rawEdges) return;
+        if (!tasks || tasks.length === 0) return;
 
         const decodedId = decodeURIComponent(projectId || "").trim();
-        // Filter nodes by project
-        const projectNodes = rawNodes.filter(node => {
-          const pName = (node.data?.project_name || "Project 1").trim();
+        
+        // Filter tasks by project
+        const projectTasks = tasks.filter(t => {
+          const pName = (t.project_id || "Project 1").trim();
           return pName === decodedId || pName === projectId;
         });
 
-        const projectNodeIds = new Set(projectNodes.map(n => n.id));
+        if (projectTasks.length === 0) {
+           setNodes([]);
+           setEdges([]);
+           return;
+        }
 
-        // Filter edges that connect project nodes
-        const projectEdges = rawEdges.filter(edge => 
-          projectNodeIds.has(edge.source) && projectNodeIds.has(edge.target)
-        );
+        // Group by order to create layers
+        const layers = {};
+        let maxOrder = 0;
+        
+        projectTasks.forEach(t => {
+          // If order is null, we'll put it at the bottom layer later
+          const order = t.order || 999; 
+          if (!layers[order]) layers[order] = [];
+          layers[order].push(t);
+          if (order > maxOrder && order !== 999) maxOrder = order;
+        });
+        
+        // If there were tasks with null order, place them in maxOrder + 1
+        if (layers[999]) {
+           layers[maxOrder + 1] = layers[999];
+           delete layers[999];
+        }
 
-        setNodes(projectNodes);
-        setEdges(projectEdges);
+        const newNodes = [];
+        const newEdges = [];
+
+        // Build Nodes
+        Object.keys(layers).sort((a, b) => Number(a) - Number(b)).forEach((orderStr, layerIndex) => {
+          const group = layers[orderStr];
+          const yPosition = layerIndex * 220; // Vertical spacing between layers increased
+          
+          group.forEach((t, i) => {
+            // Center the nodes horizontally.
+            const xPosition = (i - (group.length - 1) / 2) * 350; // Horizontal spacing increased
+            
+            newNodes.push({
+              id: t.id,
+              type: "task",
+              position: { x: xPosition, y: yPosition },
+              data: {
+                label: t.title,
+                status: t.status,
+                assigned_to: t.assigned_to,
+                project_name: t.project_id || "Project 1",
+              }
+            });
+          });
+        });
+
+        // Build Edges based on depends_on
+        const projectNodeIds = new Set(newNodes.map(n => n.id));
+        
+        projectTasks.forEach(t => {
+          if (t.depends_on && t.depends_on.length > 0) {
+            t.depends_on.forEach(dep => {
+               // Only draw edges if the dependency is also in this project view
+               if (projectNodeIds.has(dep) && projectNodeIds.has(t.id)) {
+                 newEdges.push({
+                   id: `e-${dep}-${t.id}`,
+                   source: dep,
+                   target: t.id,
+                   type: "smoothstep"
+                 });
+               }
+            });
+          }
+        });
+
+        setNodes(newNodes);
+        setEdges(newEdges);
       } catch (err) {
         console.error("Failed to load tasks for workflow graph", err);
       } finally {
@@ -59,12 +122,8 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
       }
     }
 
-    if (rawNodes && rawNodes.length > 0) {
-      loadTasks();
-    } else {
-      setLoading(false);
-    }
-  }, [projectId, rawNodes, rawEdges, setNodes, setEdges]);
+    loadTasks();
+  }, [projectId, tasks, setNodes, setEdges]);
 
   const onNodeContextMenu = (event, node) => {
     event.preventDefault();
@@ -106,17 +165,17 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   };
 
   if (loading) {
-    return <div className="w-full h-[700px] flex items-center justify-center bg-white dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50">Loading workflow...</div>;
+    return <div className="w-full h-full flex items-center justify-center bg-[#F4F1EB] dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50">Loading workflow...</div>;
   }
 
   return (
-    <div className="w-full h-[700px] border border-gray-200 dark:border-[#2A3142] rounded-xl bg-white dark:bg-[#1A1E2E] shadow-sm overflow-hidden relative group">
+    <div className="w-full h-full border border-gray-200 dark:border-[#2A3142] rounded-xl bg-[#F4F1EB] dark:bg-[#1A1E2E] shadow-sm overflow-hidden relative group">
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
           isEditable 
-            ? 'bg-[#4A90E2] text-white hover:bg-[#3A7BC8]' 
-            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+            ? 'bg-white dark:bg-[#4A90E2] text-[#6B905F] dark:text-white hover:bg-gray-50' 
+            : 'bg-white dark:bg-[#4A90E2] text-gray-600 border border-gray-200 hover:bg-gray-50'
         }`}
       >
         {isEditable ? (
@@ -131,10 +190,6 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
           </>
         )}
       </button>
-
-      <div className="absolute bottom-4 left-4 z-10 bg-white dark:bg-[#2A3142] px-3 py-1 rounded-md text-sm font-bold shadow-md border border-gray-200 dark:border-gray-700">
-        Nodes: {nodes.length} | Edges: {edges.length} | rawNodes: {rawNodes?.length || 0}
-      </div>
 
       <ReactFlow
         nodes={nodes}
@@ -155,7 +210,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
 
       {menu && (
         <div 
-          className="fixed z-50 bg-white rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden"
+          className="fixed z-50 bg-[#6B905F] dark:bg-[#4A90E2] rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden"
           style={{ top: menu.top, left: menu.left }}
         >
           <button 

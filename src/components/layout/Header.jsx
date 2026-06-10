@@ -16,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 export function Header() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-  
+
   const handleLogout = () => {
     logout();
   };
@@ -27,13 +27,13 @@ export function Header() {
   };
 
   return (
-    <div className="h-16 bg-white dark:bg-[#1A1E2E] px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#2A3142] shrink-0">
+    <div className="h-16 bg-[#F4F1EB] dark:bg-[#1A1E2E] px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#2A3142] shrink-0">
       {/* Search */}
       <div className="flex-1 max-w-md relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
         <Input
           placeholder="Search projects, tasks..."
-          className="w-full pl-10 bg-gray-50 dark:bg-[#141824] border-gray-200 dark:border-[#2A3142] text-gray-900 dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/40 focus-visible:ring-[#4A90E2]/30 focus-visible:border-[#4A90E2]/30 h-9"
+          className="w-full pl-10 bg-[#F3F7F1] dark:bg-[#141824] border-gray-200 dark:border-[#2A3142] text-[#1D1E1B] dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/40 focus-visible:ring-[#6B905F] dark:ring-[#4A90E2]/30 focus-visible:border-[#6B905F] dark:border-[#4A90E2]/30 h-9"
         />
       </div>
 
@@ -42,7 +42,7 @@ export function Header() {
         <Button
           size="sm"
           onClick={() => navigate('/blueprint')}
-          className="bg-[#4A90E2] hover:bg-[#3D7EC8] text-white shadow-sm h-9 px-4 cursor-pointer"
+          className="bg-[#6B905F] dark:bg-[#4A90E2] hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8] text-white shadow-sm h-9 px-4 cursor-pointer"
         >
           New Project
         </Button>
@@ -55,8 +55,8 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="focus:outline-none cursor-pointer">
-              <Avatar className="w-8 h-8 border border-gray-200 dark:border-[#2A3142] hover:border-[#4A90E2] dark:hover:border-[#4A90E2] transition-colors cursor-pointer">
-                <AvatarFallback className="bg-[#4A90E2] text-white text-xs">
+              <Avatar className="w-8 h-8 border border-gray-200 dark:border-[#2A3142] hover:border-[#6B905F] dark:border-[#4A90E2] dark:hover:border-[#6B905F] dark:border-[#4A90E2] transition-colors cursor-pointer">
+                <AvatarFallback className="bg-[#6B905F] dark:bg-[#4A90E2] text-white text-xs">
                   {getInitials(currentUser?.name)}
                 </AvatarFallback>
               </Avatar>

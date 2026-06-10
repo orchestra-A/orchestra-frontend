@@ -38,22 +38,22 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
 
   return (
     <div
-      className={`${isSidebarExpanded ? 'w-48' : 'w-14'} bg-[#1A1E2E] text-white flex flex-col transition-all duration-300 border-r border-[#2A3142] h-screen shrink-0`}
+      className={`${isSidebarExpanded ? 'w-48' : 'w-14'} bg-[#F4F1EB] dark:bg-[#1A1E2E] text-[#1D1E1B] dark:text-white flex flex-col transition-all duration-300 border-r border-[#2A3142] h-screen shrink-0`}
       onMouseEnter={() => setIsHoveringsidebar(true)}
       onMouseLeave={() => setIsHoveringsidebar(false)}
     >
       {/* Sidebar Header */}
       <div className={`h-16 flex items-center border-b border-white/5 shrink-0 ${isSidebarExpanded ? 'px-4 justify-between' : 'justify-center'}`}>
         <div className="flex items-center gap-2">
-          <Clover className="w-6 h-6 text-[#4A90E2]" />
+          <Clover className="w-6 h-6 text-[#51DD15] dark:text-[#4A90E2]" />
           {isSidebarExpanded && <span className="font-medium text-[15px]">Orchestra</span>}
         </div>
         {isSidebarExpanded && !sidebarCollapsed && (
           <button
             onClick={() => setSidebarCollapsed(true)}
-            className="p-1.5 hover:bg-white/5 rounded-md transition-colors ml-auto shrink-0"
+            className="p-1.5 hover:bg-[#6B905F] dark:bg-[#4A90E2]/5 rounded-md transition-colors ml-auto shrink-0"
           >
-            <ChevronLeft className="w-4 h-4 text-white/70" />
+            <ChevronLeft className="w-4 h-4 text-[#1D1E1B]" />
           </button>
         )}
       </div>
@@ -64,8 +64,8 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] mb-2 ${isActive
-              ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-              : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+            ? 'bg-[#6B905F] dark:bg-[#4A90E2]/15 text-[#51DD15] dark:text-[#6BA7F0] font-medium'
+            : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'Home' : ''}
         >
@@ -74,11 +74,11 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         </NavLink>
 
         {/* Divider */}
-        <div className="h-px bg-white/5 my-3"></div>
+        <div className="h-px bg-[#6B905F] dark:bg-[#4A90E2]/5 my-3"></div>
 
         {/* Projects Label */}
         {isSidebarExpanded && (
-          <div className="px-3 py-2 text-[11px] text-white/40 uppercase tracking-wider font-medium">
+          <div className="px-3 py-2 text-[11px] text-[#1D1E1B] uppercase tracking-wider font-medium">
             Projects
           </div>
         )}
@@ -91,26 +91,26 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                 handleSidebarInteraction();
                 setExpandedProject(expandedProject === project.id ? null : project.id);
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/[0.06] transition-colors group relative"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 transition-colors group relative"
               title={!isSidebarExpanded ? project.name : ''}
             >
-              {isSidebarExpanded && <span className="text-[13px] text-white/90 truncate mr-6">{project.name}</span>}
-              {!isSidebarExpanded && <span className="text-base font-semibold text-white/90">{project.name.charAt(0)}</span>}
-              
+              {isSidebarExpanded && <span className="text-[13px] text-[#1D1E1B] font-medium dark:text-white/90 truncate mr-6">{project.name}</span>}
+              {!isSidebarExpanded && <span className="text-base font-semibold text-[#1D1E1B] dark:text-white/90">{project.name.charAt(0)}</span>}
+
               {isSidebarExpanded && (
-                <div className="absolute right-2 flex items-center gap-1 bg-[#1A1E2E] group-hover:bg-[#2A3142] transition-colors">
+                <div className="absolute right-2 flex items-center gap-1 bg-transparent group-hover:bg-[#6B905F]/10 dark:group-hover:bg-white/10 transition-colors rounded-md p-0.5">
                   <div
                     onClick={(e) => {
                       e.stopPropagation();
                       setProjectToDelete(project);
                     }}
-                    className="p-1 rounded-md text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all"
+                    className="p-1 rounded-md text-[#1D1E1B]/50 dark:text-white/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-all"
                     title="Delete Project"
                   >
                     <X className="w-3.5 h-3.5" />
                   </div>
                   <ChevronRight
-                    className={`w-4 h-4 text-white/40 transition-transform ${expandedProject === project.id ? 'rotate-90' : ''}`}
+                    className={`w-4 h-4 text-[#1D1E1B]/70 dark:text-white/70 transition-transform ${expandedProject === project.id ? 'rotate-90' : ''}`}
                   />
                 </div>
               )}
@@ -125,8 +125,8 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                       key={item}
                       to={`/${path}`}
                       className={({ isActive }) => `w-full flex text-left px-3 py-1.5 rounded-md text-[13px] transition-colors ${isActive
-                          ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-                          : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+                        ? 'bg-[#6B905F] dark:bg-[#4A90E2]/15 text-[#51DD15] dark:text-[#6BA7F0] font-medium'
+                        : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
                         }`}
                     >
                       {item}
@@ -136,8 +136,8 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                 <NavLink
                   to={`/blueprint/${project.id}`}
                   className={({ isActive }) => `w-full flex text-left px-3 py-1.5 rounded-md text-[13px] transition-colors ${isActive
-                      ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-                      : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+                    ? 'bg-[#6B905F] dark:bg-[#4A90E2]/15 text-[#51DD15] dark:text-[#6BA7F0] font-medium'
+                    : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
                     }`}
                 >
                   Modify
@@ -148,7 +148,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         ))}
 
         {/* Divider */}
-        <div className="h-px bg-white/5 my-3"></div>
+        <div className="h-px bg-[#6B905F] dark:bg-[#4A90E2]/5 my-3"></div>
 
 
 
@@ -156,8 +156,8 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/todo"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-              ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-              : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+            ? 'bg-[#6B905F] dark:bg-[#4A90E2]/15 text-[#51DD15] dark:text-[#6BA7F0] font-medium'
+            : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'To Do' : ''}
         >
@@ -174,8 +174,8 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/calendar"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-              ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-              : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+            ? 'bg-[#6B905F] dark:bg-[#4A90E2]/15 text-[#51DD15] dark:text-[#6BA7F0] font-medium'
+            : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'Calendar' : ''}
         >
@@ -185,8 +185,8 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/team"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-              ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-              : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+            ? 'bg-[#6B905F] dark:bg-[#4A90E2]/15 text-[#51DD15] dark:text-[#6BA7F0] font-medium'
+            : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'Team' : ''}
         >
@@ -196,8 +196,8 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/archive"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-              ? 'bg-[#4A90E2]/15 text-[#6BA7F0] font-medium'
-              : 'text-white/60 hover:bg-white/[0.06] hover:text-white/90'
+            ? 'bg-[#6B905F] dark:bg-[#4A90E2]/15 text-[#51DD15] dark:text-[#6BA7F0] font-medium'
+            : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'Archive' : ''}
         >
@@ -206,23 +206,23 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         </NavLink>
 
       </div>
-      
+
       {/* Delete Confirmation Dialog */}
       {projectToDelete && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#F4F1EB] dark:bg-[#1A1E2E] border border-gray-200 dark:border-[#2A3142] rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6">
               <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
                 <Trash2 className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Project?</h3>
-              <p className="text-gray-500 mb-6">
-                Are you sure you want to delete <span className="font-semibold text-gray-800">"{projectToDelete.name}"</span>? This action cannot be undone.
+              <h3 className="text-xl font-bold text-[#1D1E1B] dark:text-white mb-2">Delete Project?</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Are you sure you want to delete <span className="font-bold text-[#6B905F] dark:text-[#4A90E2]">"{projectToDelete.name}"</span>? This action cannot be undone.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setProjectToDelete(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors cursor-pointer"
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-[#2A3142] hover:bg-gray-300 dark:hover:bg-[#3A4152] text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

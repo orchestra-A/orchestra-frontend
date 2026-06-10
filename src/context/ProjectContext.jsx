@@ -16,30 +16,22 @@ export function ProjectProvider({ children }) {
   useEffect(() => {
     const fetchProjectsFromTasks = async () => {
       try {
-        const response = await fetch('https://orchestra-ai-36zm.onrender.com/graph');
+        const response = await fetch('/api/tasks');
         const data = await response.json();
         
-        if (data && data.nodes) {
-          setRawNodes(data.nodes);
-          setRawEdges(data.edges || []);
-
-          const newTasks = data.nodes.map(node => ({
-            id: node.id,
-            title: node.data.label,
-            status: node.data.status,
-            assigned_to: node.data.assigned_to,
-            project_id: node.data.project_name || "Project 1"
-          }));
-
-          setTasks(newTasks); // Store mapped tasks for global use
+        if (data && data.tasks) {
           const projectMap = {};
           
-          newTasks.forEach(task => {
-            const pid = task.project_id;
+          data.tasks.forEach(t => {
+            const pid = t.project_id || "Project 1";
+            
             if (!projectMap[pid]) {
+              // Create a formatted name, e.g., proj_marketing -> Marketing
+              const formattedName = pid === "Project 1" ? "Project 1" : pid.replace("proj_", "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              
               projectMap[pid] = {
                 id: pid,
-                name: pid, // Using project_id as name directly since it defaults to "Project 1"
+                name: formattedName,
                 description: `Automatically generated project from tasks.`,
                 taskCount: 0,
                 membersMap: {}, 
@@ -49,15 +41,16 @@ export function ProjectProvider({ children }) {
             }
             
             projectMap[pid].taskCount += 1;
-            if (task.assigned_to) {
-              if (!projectMap[pid].membersMap[task.assigned_to]) {
+            
+            if (t.assigned_to) {
+              if (!projectMap[pid].membersMap[t.assigned_to]) {
                 const colors = ['bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-green-100 text-green-700', 'bg-orange-100 text-orange-700', 'bg-pink-100 text-pink-700'];
-                const colorHash = task.assigned_to.length % colors.length;
+                const colorHash = t.assigned_to.length % colors.length;
 
-                projectMap[pid].membersMap[task.assigned_to] = {
-                  id: task.assigned_to,
-                  name: task.assigned_to,
-                  initials: task.assigned_to.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
+                projectMap[pid].membersMap[t.assigned_to] = {
+                  id: t.assigned_to,
+                  name: t.assigned_to,
+                  initials: t.assigned_to.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
                   color: colors[colorHash]
                 };
               }
@@ -71,7 +64,13 @@ export function ProjectProvider({ children }) {
             membersMap: undefined 
           }));
           
+          // Store raw tasks globally so components can compute their own logic
+          setTasks(data.tasks);
           setProjects(computedProjects);
+          
+          // Empty these out since ProjectWorkflow will compute them per-project now
+          setRawNodes([]);
+          setRawEdges([]);
         }
       } catch (error) {
         console.error("Failed to fetch tasks to build projects:", error);
