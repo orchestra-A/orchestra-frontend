@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import './globals.css';
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --font-size: 16px;

@@ -4,7 +4,7 @@ import { ArrowLeft, User, Contact, LayoutGrid, Lock, Fingerprint, ChevronRight }
 import { useAuth } from '../context/AuthContext';
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState('platform');
+  const [activeTab, setActiveTab] = useState('basic');
   const [isPublic, setIsPublic] = useState(true);
   const [showEmail, setShowEmail] = useState(false);
   const [connected, setConnected] = useState({});

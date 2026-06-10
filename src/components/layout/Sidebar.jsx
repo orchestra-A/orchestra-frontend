@@ -119,7 +119,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
             {isSidebarExpanded && expandedProject === project.id && project.items.length > 0 && (
               <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/5 pl-3">
                 {project.items.map((item) => {
-                  const path = `${project.id}-${item.toLowerCase()}`;
+                  const path = `project/${project.id}/${item.toLowerCase()}`;
                   return (
                     <NavLink
                       key={item}

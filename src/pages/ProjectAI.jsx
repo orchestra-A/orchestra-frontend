@@ -1,8 +1,15 @@
 import { Bot, Send } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { useParams } from 'react-router-dom';
+import { useProject } from '../context/ProjectContext';
 
-export default function ProjectAI({ projectName = "Project" }) {
+export default function ProjectAI() {
+  const { projectId } = useParams();
+  const { projects } = useProject();
+  const decodedId = decodeURIComponent(projectId || "");
+  const project = projects.find(p => p.id === decodedId || p.id === projectId);
+  const projectName = project ? project.name : "Project";
   return (
     <div className="max-w-4xl mx-auto h-full flex flex-col">
       <div className="mb-6 shrink-0">

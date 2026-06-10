@@ -8,30 +8,41 @@ export function useProject() {
 
 export function ProjectProvider({ children }) {
   const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [rawNodes, setRawNodes] = useState([]);
+  const [rawEdges, setRawEdges] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProjectsFromTasks = async () => {
       try {
-        const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://orchestra-backend-2v5a.onrender.com/tasks'));
+        const response = await fetch('https://orchestra-ai-36zm.onrender.com/graph');
         const data = await response.json();
         
-        if (data && data.tasks) {
+        if (data && data.nodes) {
+          setRawNodes(data.nodes);
+          setRawEdges(data.edges || []);
+
+          const newTasks = data.nodes.map(node => ({
+            id: node.id,
+            title: node.data.label,
+            status: node.data.status,
+            assigned_to: node.data.assigned_to,
+            project_id: node.data.project_name || "Project 1"
+          }));
+
+          setTasks(newTasks); // Store mapped tasks for global use
           const projectMap = {};
           
-          data.tasks.forEach(task => {
+          newTasks.forEach(task => {
             const pid = task.project_id;
             if (!projectMap[pid]) {
-              // Generate a readable name from project_id (e.g., 'proj_orchestra' -> 'Project Orchestra')
-              const nameParts = pid.split('_');
-              const readableName = nameParts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-              
               projectMap[pid] = {
                 id: pid,
-                name: readableName,
+                name: pid, // Using project_id as name directly since it defaults to "Project 1"
                 description: `Automatically generated project from tasks.`,
                 taskCount: 0,
-                uniqueMembers: new Set(),
+                membersMap: {}, 
                 color: ['#4A90E2', '#9B59B6', '#F59E42', '#34D399', '#EC4899', '#8B5CF6'][Object.keys(projectMap).length % 6],
                 items: ['Workflow', 'AI', 'Tasks', 'Team']
               };
@@ -39,14 +50,25 @@ export function ProjectProvider({ children }) {
             
             projectMap[pid].taskCount += 1;
             if (task.assigned_to) {
-              projectMap[pid].uniqueMembers.add(task.assigned_to);
+              if (!projectMap[pid].membersMap[task.assigned_to]) {
+                const colors = ['bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-green-100 text-green-700', 'bg-orange-100 text-orange-700', 'bg-pink-100 text-pink-700'];
+                const colorHash = task.assigned_to.length % colors.length;
+
+                projectMap[pid].membersMap[task.assigned_to] = {
+                  id: task.assigned_to,
+                  name: task.assigned_to,
+                  initials: task.assigned_to.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
+                  color: colors[colorHash]
+                };
+              }
             }
           });
           
           const computedProjects = Object.values(projectMap).map(p => ({
             ...p,
-            memberCount: p.uniqueMembers.size,
-            uniqueMembers: undefined // remove the set
+            memberCount: Object.keys(p.membersMap).length,
+            teamMembers: Object.values(p.membersMap),
+            membersMap: undefined 
           }));
           
           setProjects(computedProjects);
@@ -103,7 +125,7 @@ export function ProjectProvider({ children }) {
   };
 
   return (
-    <ProjectContext.Provider value={{ projects, addProject, updateProject, deleteProject }}>
+    <ProjectContext.Provider value={{ projects, tasks, rawNodes, rawEdges, addProject, updateProject, deleteProject }}>
       {children}
     </ProjectContext.Provider>
   );

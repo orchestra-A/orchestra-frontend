@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { projects, deleteProject } = useProject();
+  const { projects, tasks, deleteProject } = useProject();
 
   const [projectToDelete, setProjectToDelete] = useState(null);
 
@@ -19,32 +19,8 @@ export default function Dashboard() {
     }
   };
 
-  const [apiTasks, setApiTasks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://orchestra-backend-2v5a.onrender.com/tasks'))
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.tasks) {
-          setApiTasks(data.tasks);
-        } else {
-          setApiTasks([]);
-        }
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch tasks:", err);
-        setIsLoading(false);
-      });
-  }, []);
-
-  const sortTasks = (tasks) => {
-    return [...tasks].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-  };
-
-  const delayedTasks = sortTasks(apiTasks.filter(t => t.status === 'stopped' || t.status === 'delayed')).slice(0, 3);
-  const inProgressTasks = sortTasks(apiTasks.filter(t => t.status === 'in_progress')).slice(0, 3);
+  const delayedTasks = tasks.filter(t => t.status === 'stopped' || t.status === 'delayed').slice(0, 3);
+  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').slice(0, 3);
 
   const TaskCard = ({ task, colorClass }) => (
     <div
@@ -58,10 +34,6 @@ export default function Dashboard() {
         <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100 text-gray-600">
           {projects.find(p => p.id === task.project_id)?.name || task.project_id || 'General'}
         </Badge>
-        <div className="flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
-          <Clock className="w-3 h-3" />
-          <span>{task.deadline}</span>
-        </div>
       </div>
     </div>
   );
@@ -130,24 +102,26 @@ export default function Dashboard() {
         <div className="lg:col-span-2 bg-gray-50/50 dark:bg-[#1A1E2E] rounded-2xl p-4 border border-gray-200 dark:border-[#2A3142]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
             {/* Middle Column: Behind Tasks Widget */}
-            <div className="flex flex-col bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-md dark:shadow-black/40 transition-shadow hover:shadow-lg h-full">
-              <div className="p-3 border-b border-gray-100 dark:border-[#2A3142] flex items-center gap-2 sticky top-0 z-10 bg-transparent">
+            <div className="flex flex-col bg-gray-50/50 dark:bg-[#1A1E2E] rounded-xl border-2 border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-inner h-full">
+              <div className="p-3 border-b-2 border-gray-200 dark:border-[#2A3142] bg-gray-100 dark:bg-[#141824] flex items-center gap-2 sticky top-0 z-10">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Behind / Delayed</h2>
+                <span className="ml-auto bg-gray-200 dark:bg-[#2A3142] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-50 border-red-200" />)}
+                {delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-200 border-red-300" />)}
               </div>
             </div>
 
             {/* Right Column: In Progress Tasks Widget */}
-            <div className="flex flex-col bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-md dark:shadow-black/40 transition-shadow hover:shadow-lg h-full">
-              <div className="p-3 border-b border-gray-100 dark:border-[#2A3142] flex items-center gap-2 sticky top-0 z-10 bg-transparent">
+            <div className="flex flex-col bg-gray-50/50 dark:bg-[#1A1E2E] rounded-xl border-2 border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-inner h-full">
+              <div className="p-3 border-b-2 border-gray-200 dark:border-[#2A3142] bg-gray-100 dark:bg-[#141824] flex items-center gap-2 sticky top-0 z-10">
                 <PlayCircle className="w-4 h-4 text-amber-500" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">In Progress</h2>
+                <span className="ml-auto bg-gray-200 dark:bg-[#2A3142] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-amber-50 border-amber-200" />)}
+                {inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-amber-200 border-amber-300" />)}
               </div>
             </div>
           </div>

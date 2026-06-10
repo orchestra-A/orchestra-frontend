@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { ReactFlow, Controls, Background, MarkerType, Position, useNodesState, useEdgesState } from '@xyflow/react';
 import { Edit2, Lock } from 'lucide-react';
 import '@xyflow/react/dist/style.css';
-import { TaskNode, TrunkNode } from './workflow/Nodes';
+import { TaskNode, TrunkNode, DeveloperNode, SkillNode } from './workflow/Nodes';
+import { useProject } from '../context/ProjectContext';
 
 const nodeTypes = {
   task: TaskNode,
   trunk: TrunkNode,
+  developer: DeveloperNode,
+  skill: SkillNode,
 };
 
 const defaultEdgeOptions = {
@@ -25,83 +28,43 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState(null);
 
+  const { rawNodes, rawEdges } = useProject();
+
   useEffect(() => {
-    async function fetchTasks() {
+    function loadTasks() {
       try {
         setLoading(true);
-        const res = await fetch('/api/tasks');
-        const data = await res.json();
-        
-        const tasksArray = Array.isArray(data) ? data : (data.tasks || []);
+        if (!rawNodes || !rawEdges) return;
 
-        // Filter and sort by order
-        const projectTasks = tasksArray
-          .filter(t => t.project_id === projectId)
-          .sort((a, b) => a.order - b.order);
-
-        // Layout Geometry
-        const trunkY = 50;
-        const taskSpacingY = 160; 
-        const trunkHeight = Math.max(600, projectTasks.length * taskSpacingY + 100);
-
-        const branchPoints = [];
-        const generatedNodes = [];
-        const generatedEdges = [];
-
-        projectTasks.forEach((task, index) => {
-          const isLeft = index % 2 === 0;
-          const yOffset = index * taskSpacingY; 
-          const branchPointTop = 70 + yOffset;
-          const taskNodeY = trunkY + branchPointTop + 40; 
-          
-          branchPoints.push({
-            id: `bp-${task.id}`,
-            position: isLeft ? Position.Left : Position.Right,
-            top: branchPointTop
-          });
-
-          generatedNodes.push({
-            id: task.id,
-            type: 'task',
-            position: { x: isLeft ? 30 : 550, y: taskNodeY },
-            data: { 
-              label: task.title, 
-              status: task.status,
-              assigned_to: task.assigned_to 
-            }
-          });
-
-          generatedEdges.push({
-            id: `e-trunk-${task.id}`,
-            source: 'trunk',
-            target: task.id,
-            sourceHandle: `bp-${task.id}`
-          });
+        const decodedId = decodeURIComponent(projectId || "").trim();
+        // Filter nodes by project
+        const projectNodes = rawNodes.filter(node => {
+          const pName = (node.data?.project_name || "Project 1").trim();
+          return pName === decodedId || pName === projectId;
         });
 
-        // Add trunk node
-        generatedNodes.unshift({
-          id: 'trunk',
-          type: 'trunk',
-          position: { x: 400, y: trunkY },
-          data: {
-            height: trunkHeight,
-            width: 16,
-            branchPoints
-          }
-        });
+        const projectNodeIds = new Set(projectNodes.map(n => n.id));
 
-        setNodes(generatedNodes);
-        setEdges(generatedEdges);
+        // Filter edges that connect project nodes
+        const projectEdges = rawEdges.filter(edge => 
+          projectNodeIds.has(edge.source) && projectNodeIds.has(edge.target)
+        );
+
+        setNodes(projectNodes);
+        setEdges(projectEdges);
       } catch (err) {
-        console.error("Failed to load tasks", err);
+        console.error("Failed to load tasks for workflow graph", err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTasks();
-  }, [projectId, setNodes, setEdges]);
+    if (rawNodes && rawNodes.length > 0) {
+      loadTasks();
+    } else {
+      setLoading(false);
+    }
+  }, [projectId, rawNodes, rawEdges, setNodes, setEdges]);
 
   const onNodeContextMenu = (event, node) => {
     event.preventDefault();
@@ -169,7 +132,11 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
         )}
       </button>
 
-        <ReactFlow
+      <div className="absolute bottom-4 left-4 z-10 bg-white dark:bg-[#2A3142] px-3 py-1 rounded-md text-sm font-bold shadow-md border border-gray-200 dark:border-gray-700">
+        Nodes: {nodes.length} | Edges: {edges.length} | rawNodes: {rawNodes?.length || 0}
+      </div>
+
+      <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}

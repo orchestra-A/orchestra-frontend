@@ -1,41 +1,33 @@
 import { Clock, AlertCircle, PlayCircle, CalendarClock } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
+import { useProject } from '../context/ProjectContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Todo() {
-  const mockTasks = [
-    { id: 1, title: 'Finalize Database Schema', project: 'Project Orchestra', status: 'stopped', deadline: '2026-06-01' },
-    { id: 2, title: 'Fix Auth Bugs', project: 'Project Orchestra', status: 'stopped', deadline: '2026-06-03' },
-    { id: 3, title: 'Implement Kanban Board', project: 'General', status: 'in_progress', deadline: '2026-06-05' },
-    { id: 4, title: 'Review Marketing Copy', project: 'Project Marketing', status: 'in_progress', deadline: '2026-06-07' },
-    { id: 5, title: 'Prepare Q3 Roadmap Slides', project: 'General', status: 'todo', deadline: '2026-06-10' },
-    { id: 6, title: 'Update Dependencies', project: 'Project 2', status: 'todo', deadline: '2026-06-15' },
-    { id: 7, title: 'Onboard New Developer', project: 'Project Orchestra', status: 'todo', deadline: '2026-06-12' },
-  ];
+  const { tasks, projects } = useProject();
+  const { currentUser } = useAuth();
 
-  const sortTasks = (tasks) => {
-    return [...tasks].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-  };
+  const myTasks = tasks.filter(t => t.assigned_to === (currentUser?.name || "Guest"));
 
-  const delayedTasks = sortTasks(mockTasks.filter(t => t.status === 'stopped' || t.status === 'delayed'));
-  const inProgressTasks = sortTasks(mockTasks.filter(t => t.status === 'in_progress'));
-  const upcomingTasks = sortTasks(mockTasks.filter(t => t.status === 'todo' || t.status === 'upcoming'));
+  const delayedTasks = myTasks.filter(t => t.status === 'stopped' || t.status === 'delayed');
+  const inProgressTasks = myTasks.filter(t => t.status === 'in_progress');
+  const upcomingTasks = myTasks.filter(t => t.status === 'todo' || t.status === 'upcoming');
 
-  const TaskCard = ({ task, colorClass }) => (
-    <div className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}>
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-900 text-sm leading-snug">{task.title}</h3>
-      </div>
-      <div className="flex items-center justify-between mt-3">
-        <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100 text-gray-600 border-none">
-          {task.project}
-        </Badge>
-        <div className="flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
-          <Clock className="w-3 h-3" />
-          <span>{task.deadline}</span>
+  const TaskCard = ({ task, colorClass }) => {
+    const projectName = projects.find(p => p.id === task.project_id)?.name || task.project_id || 'General';
+    return (
+      <div className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}>
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="font-semibold text-gray-900 text-sm leading-snug">{task.title}</h3>
+        </div>
+        <div className="flex items-center justify-between mt-3">
+          <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100 text-gray-600 border-none">
+            {projectName}
+          </Badge>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="max-w-[1400px] mx-auto h-full flex flex-col">
