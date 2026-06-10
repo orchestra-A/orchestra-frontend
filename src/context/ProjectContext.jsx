@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const ProjectContext = createContext();
 
@@ -7,26 +7,81 @@ export function useProject() {
 }
 
 export function ProjectProvider({ children }) {
-  const [projects, setProjects] = useState([
-    {
-      id: 'proj_marketing',
-      name: 'Project Marketing',
-      description: 'Marketing campaign redesign and implementation',
-      taskCount: 8,
-      memberCount: 4,
-      color: '#4A90E2',
-      items: ['Workflow', 'AI', 'Tasks', 'Team']
-    },
-    {
-      id: 'proj_orchestra',
-      name: 'Project Orchestra',
-      description: 'Core platform development and orchestration',
-      taskCount: 12,
-      memberCount: 6,
-      color: '#9B59B6',
-      items: ['Workflow', 'AI', 'Tasks', 'Team']
-    }
-  ]);
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [rawNodes, setRawNodes] = useState([]);
+  const [rawEdges, setRawEdges] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjectsFromTasks = async () => {
+      try {
+        const response = await fetch('https://orchestra-ai-36zm.onrender.com/graph');
+        const data = await response.json();
+        
+        if (data && data.nodes) {
+          setRawNodes(data.nodes);
+          setRawEdges(data.edges || []);
+
+          const newTasks = data.nodes.map(node => ({
+            id: node.id,
+            title: node.data.label,
+            status: node.data.status,
+            assigned_to: node.data.assigned_to,
+            project_id: node.data.project_name || "Project 1"
+          }));
+
+          setTasks(newTasks); // Store mapped tasks for global use
+          const projectMap = {};
+          
+          newTasks.forEach(task => {
+            const pid = task.project_id;
+            if (!projectMap[pid]) {
+              projectMap[pid] = {
+                id: pid,
+                name: pid, // Using project_id as name directly since it defaults to "Project 1"
+                description: `Automatically generated project from tasks.`,
+                taskCount: 0,
+                membersMap: {}, 
+                color: ['#4A90E2', '#9B59B6', '#F59E42', '#34D399', '#EC4899', '#8B5CF6'][Object.keys(projectMap).length % 6],
+                items: ['Workflow', 'AI', 'Tasks', 'Team']
+              };
+            }
+            
+            projectMap[pid].taskCount += 1;
+            if (task.assigned_to) {
+              if (!projectMap[pid].membersMap[task.assigned_to]) {
+                const colors = ['bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-green-100 text-green-700', 'bg-orange-100 text-orange-700', 'bg-pink-100 text-pink-700'];
+                const colorHash = task.assigned_to.length % colors.length;
+
+                projectMap[pid].membersMap[task.assigned_to] = {
+                  id: task.assigned_to,
+                  name: task.assigned_to,
+                  initials: task.assigned_to.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
+                  color: colors[colorHash]
+                };
+              }
+            }
+          });
+          
+          const computedProjects = Object.values(projectMap).map(p => ({
+            ...p,
+            memberCount: Object.keys(p.membersMap).length,
+            teamMembers: Object.values(p.membersMap),
+            membersMap: undefined 
+          }));
+          
+          setProjects(computedProjects);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tasks to build projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProjectsFromTasks();
+  }, []);
 
   const addProject = (projectData) => {
     const colors = ['#F59E42', '#34D399', '#EC4899', '#8B5CF6', '#F87171', '#38BDF8'];
@@ -70,7 +125,7 @@ export function ProjectProvider({ children }) {
   };
 
   return (
-    <ProjectContext.Provider value={{ projects, addProject, updateProject, deleteProject }}>
+    <ProjectContext.Provider value={{ projects, tasks, rawNodes, rawEdges, addProject, updateProject, deleteProject }}>
       {children}
     </ProjectContext.Provider>
   );

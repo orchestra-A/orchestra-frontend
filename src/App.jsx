@@ -11,8 +11,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import EmptyPage from './pages/EmptyPage';
-import ProjMarketingWorkflow from './pages/ProjMarketingWorkflow';
-import ProjOrchestraWorkflow from './pages/ProjOrchestraWorkflow';
+import ProjectWorkflow from './pages/ProjectWorkflow';
 import LandingPage from './pages/LandingPage';
 import Profile from './pages/Profile';
 import Todo from './pages/Todo';
@@ -69,23 +68,11 @@ export default function App() {
               <Route path="blueprint" element={<Blueprint />} />
               <Route path="blueprint/:projectId" element={<Blueprint />} />
               
-              {/* Project Marketing Routes */}
-              <Route path="proj_marketing-workflow" element={<ProjMarketingWorkflow />} />
-              <Route path="proj_marketing-ai" element={<ProjectAI projectName="Project Marketing" />} />
-              <Route path="proj_marketing-tasks" element={<ProjectTasks projectName="Project Marketing" />} />
-              <Route path="proj_marketing-team" element={<ProjectTeam projectName="Project Marketing" />} />
-
-              {/* Project Orchestra Routes */}
-              <Route path="proj_orchestra-workflow" element={<ProjOrchestraWorkflow />} />
-              <Route path="proj_orchestra-ai" element={<ProjectAI projectName="Project Orchestra" />} />
-              <Route path="proj_orchestra-tasks" element={<ProjectTasks projectName="Project Orchestra" />} />
-              <Route path="proj_orchestra-team" element={<ProjectTeam projectName="Project Orchestra" />} />
-
               {/* Dynamic Project Routes */}
-              <Route path=":projectId-workflow" element={<ProjOrchestraWorkflow />} />
-              <Route path=":projectId-ai" element={<ProjectAI projectName="Dynamic Project" />} />
-              <Route path=":projectId-tasks" element={<ProjectTasks projectName="Dynamic Project" />} />
-              <Route path=":projectId-team" element={<ProjectTeam projectName="Dynamic Project" />} />
+              <Route path="project/:projectId/workflow" element={<ProjectWorkflow />} />
+              <Route path="project/:projectId/ai" element={<ProjectAI />} />
+              <Route path="project/:projectId/tasks" element={<ProjectTasks />} />
+              <Route path="project/:projectId/team" element={<ProjectTeam />} />
 
               {/* Other Sidebar/Header Routes */}
               <Route path="todo" element={<Todo />} />

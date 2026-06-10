@@ -256,11 +256,10 @@ export default function Blueprint() {
   if (viewState === 'centered') {
     return (
       <div className="h-full flex flex-col page-enter">
-        {pageHeading}
         <div className="flex-1 flex items-center justify-center pb-4 min-h-0">
-          <div className="w-[380px] min-w-[300px] max-w-full bg-white dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] shadow-2xl flex flex-col max-h-[95%] transition-shadow resize-x overflow-hidden">
+          <div className="w-[800px] max-w-[95%] bg-white dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] shadow-2xl flex flex-col max-h-[95%] transition-shadow overflow-hidden">
             {windowHeader}
-            <div className="p-3 flex flex-col flex-1 overflow-hidden">
+            <div className="p-5 flex flex-col flex-1 overflow-hidden">
               {formContent}
             </div>
           </div>
