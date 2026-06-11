@@ -2,8 +2,21 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Clover } from 'lucide-react';
+import { Clover, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+const LabelWithTooltip = ({ label, tooltip }) => (
+  <div className="flex items-center gap-1.5 w-fit">
+    <label className="text-sm font-medium text-[#4a4a45]">{label}</label>
+    <div className="relative group flex items-center">
+      <Info className="w-3 h-3 text-[#8a8a82] opacity-60 cursor-pointer transition-opacity group-hover:opacity-100" />
+      <div className="absolute left-[-8px] top-full mt-2 hidden group-hover:block w-[200px] bg-[#1c1c1a] text-white text-xs rounded p-2 z-50 shadow-lg leading-relaxed font-normal">
+        {tooltip}
+        <div className="absolute left-[10px] bottom-full w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-b-4 border-b-[#1c1c1a]"></div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -48,16 +61,18 @@ export default function Signup() {
       {/* Left Description Side */}
       <div className="hidden lg:flex w-1/2 bg-[#eef5eb] border-r border-[#eae6df] items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#5a7a4e]/5 via-transparent to-transparent"></div>
+
         <div className="max-w-lg relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F4F1EB] border border-[#eae6df] text-[#4a4a45] shadow-sm text-sm mb-6">
-            <Clover className="w-4 h-4 text-[#6b8f5e]" />
-            Orchestra Workspace
+          <div className="absolute bottom-full left-0 mb-4 inline-flex items-center gap-2 text-[#4a4a45] font-semibold text-lg" style={{ fontFamily: '"Playfair Display", Georgia, serif', letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+            <Clover className="w-5 h-5 text-[#6b8f5e]" />
+            Orchestra
           </div>
+          
           <h2 className="text-4xl font-bold text-[#6b8f5e] mb-6 leading-tight" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>
             Streamline your development workflow.
           </h2>
           <p className="text-lg text-[#4a4a45] leading-relaxed">
-            Input your project details, and our platform intelligently crafts a custom, actionable plan. We track your Figma design updates and GitHub commits in real-time, automatically assigning tasks based on team skillsets to keep everyone aligned and productive.
+            Input your project details, and our platform intelligently crafts a custom, actionable plan. We track your Figma design updates, GitHub commits, and Discord conversations in real-time, automatically assigning tasks based on team skillsets to keep everyone aligned and productive.
           </p>
         </div>
       </div>
@@ -69,48 +84,48 @@ export default function Signup() {
           <span className="font-semibold text-[#1c1c1a] text-lg" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Orchestra</span>
         </div>
 
-        <div className="max-w-md w-full mx-auto py-12">
-          <h1 className="text-2xl font-bold text-[#1c1c1a] mb-8" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Create an Account</h1>
+        <div className="max-w-[400px] w-full mx-auto py-8">
+          <h1 className="text-2xl font-bold text-[#1c1c1a] mb-6 mt-0" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Create an Account</h1>
 
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={handleSignup} className="space-y-3">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              <div className="bg-red-50 text-red-600 p-2 rounded-md text-sm">
                 {error}
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#4a4a45]">Name</label>
-                <Input name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11" />
+                <LabelWithTooltip label="Name" tooltip="This name will be visible to others on your profile and projects." />
+                <Input name="name" value={formData.name} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#4a4a45]">Username</label>
-                <Input name="username" value={formData.username} onChange={handleChange} placeholder="johndoe" required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11" />
+                <LabelWithTooltip label="Username" tooltip="Choose a unique username to make your profile easily searchable." />
+                <Input name="username" value={formData.username} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#4a4a45]">Email</label>
-              <Input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11" />
+              <LabelWithTooltip label="Email" tooltip="Enter your primary work email used for project collaboration." />
+              <Input name="email" type="email" value={formData.email} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#4a4a45]">Password</label>
-              <Input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11" />
+              <LabelWithTooltip label="Password" tooltip="Must be at least 8 characters long, containing uppercase, lowercase, numbers, and symbols." />
+              <Input name="password" type="password" value={formData.password} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#4a4a45]">Confirm Password</label>
-              <Input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11" />
+              <LabelWithTooltip label="Confirm Password" tooltip="Re-enter your password to ensure it matches." />
+              <Input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
             </div>
 
-            <Button type="submit" className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-11 mt-6">
+            <Button type="submit" className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-10 mt-4">
               Sign Up
             </Button>
           </form>
 
-          <p className="text-center text-[#8a8a82] mt-8 text-sm">
+          <p className="text-center text-[#8a8a82] mt-6 text-sm">
             Already have an account? <Link to="/login" className="text-[#6b8f5e] hover:text-[#5a7a4e] font-medium transition-colors">Log in</Link>
           </p>
         </div>
