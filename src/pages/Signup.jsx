@@ -49,7 +49,7 @@ export default function Signup() {
       <div className="hidden lg:flex w-1/2 bg-[#eef5eb] border-r border-[#eae6df] items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#5a7a4e]/5 via-transparent to-transparent"></div>
         <div className="max-w-lg relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#eae6df] text-[#4a4a45] shadow-sm text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F4F1EB] border border-[#eae6df] text-[#4a4a45] shadow-sm text-sm mb-6">
             <Clover className="w-4 h-4 text-[#6b8f5e]" />
             Orchestra Workspace
           </div>
@@ -63,7 +63,7 @@ export default function Signup() {
       </div>
 
       {/* Right Form Side */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-24 xl:px-32 relative bg-white">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-24 xl:px-32 relative bg-[#F4F1EB]">
         <div className="absolute top-8 left-8 lg:hidden flex items-center gap-2">
           <Clover className="w-6 h-6 text-[#6b8f5e]" />
           <span className="font-semibold text-[#1c1c1a] text-lg" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Orchestra</span>

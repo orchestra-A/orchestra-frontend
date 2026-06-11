@@ -68,18 +68,18 @@ export default function Profile() {
             <div className="space-y-6">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-gray-700">Full Name</label>
-                <input type="text" defaultValue={currentUser?.name || 'John Doe'} className="w-full max-w-md px-4 py-2.5 bg-white dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-gray-900 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] transition-all shadow-sm" />
+                <input type="text" defaultValue={currentUser?.name || 'John Doe'} className="w-full max-w-md px-4 py-2.5 bg-[#F4F1EB] dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#6B905F] dark:ring-[#4A90E2] transition-all shadow-sm" />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-gray-700">Email Address</label>
-                <input type="email" defaultValue={currentUser?.email || 'johndoe@example.com'} className="w-full max-w-md px-4 py-2.5 bg-gray-50 dark:bg-[#141824]/50 border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-gray-500 dark:text-white/50" disabled />
+                <input type="email" defaultValue={currentUser?.email || 'johndoe@example.com'} className="w-full max-w-md px-4 py-2.5 bg-[#F3F7F1] dark:bg-[#141824]/50 border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-gray-500 dark:text-white/50" disabled />
                 <span className="text-xs text-gray-500 dark:text-white/50">Email address cannot be changed here.</span>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-gray-700">Location</label>
-                <input type="text" defaultValue="San Francisco, CA" className="w-full max-w-md px-4 py-2.5 bg-white dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-gray-900 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] transition-all shadow-sm" />
+                <input type="text" defaultValue="San Francisco, CA" className="w-full max-w-md px-4 py-2.5 bg-[#F4F1EB] dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#6B905F] dark:ring-[#4A90E2] transition-all shadow-sm" />
               </div>
-              <button className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white font-medium rounded-lg transition-colors text-sm shadow-sm mt-4">
+              <button className="px-6 py-2.5 bg-[#6B905F] dark:bg-[#4A90E2] hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8] text-white font-medium rounded-lg transition-colors text-sm shadow-sm mt-4">
                 Save Changes
               </button>
             </div>
@@ -94,13 +94,13 @@ export default function Profile() {
             <div className="space-y-6">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-gray-700">Job Title</label>
-                <input type="text" defaultValue="Senior Developer" className="w-full max-w-md px-4 py-2.5 bg-white dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-gray-900 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] transition-all shadow-sm" />
+                <input type="text" defaultValue="Senior Developer" className="w-full max-w-md px-4 py-2.5 bg-[#F4F1EB] dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#6B905F] dark:ring-[#4A90E2] transition-all shadow-sm" />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-gray-700">Bio</label>
-                <textarea rows={4} defaultValue="Passionate developer building beautiful web applications." className="w-full max-w-lg px-4 py-2.5 bg-white dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-gray-900 dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#4A90E2] transition-all resize-none shadow-sm"></textarea>
+                <textarea rows={4} defaultValue="Passionate developer building beautiful web applications." className="w-full max-w-lg px-4 py-2.5 bg-[#F4F1EB] dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-2 focus:ring-[#6B905F] dark:ring-[#4A90E2] transition-all resize-none shadow-sm"></textarea>
               </div>
-              <button className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white font-medium rounded-lg transition-colors text-sm shadow-sm mt-4">
+              <button className="px-6 py-2.5 bg-[#6B905F] dark:bg-[#4A90E2] hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8] text-white font-medium rounded-lg transition-colors text-sm shadow-sm mt-4">
                 Update Profile
               </button>
             </div>
@@ -114,7 +114,7 @@ export default function Profile() {
 
             <div className="flex flex-col gap-3">
               {workspacePlatforms.map(p => (
-                <div key={p.id} className="flex items-center justify-between bg-white dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-xl px-5 py-4 shadow-sm">
+                <div key={p.id} className="flex items-center justify-between bg-[#F4F1EB] dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-xl px-5 py-4 shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${p.color}`}>
                       {p.name[0]}
@@ -129,7 +129,7 @@ export default function Profile() {
                     className={`text-xs font-medium px-4 py-2 rounded-lg transition-colors ${
                       connected[p.id]
                         ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
-                        : 'border border-gray-200 dark:border-[#2A3142] text-gray-600 dark:text-white/70 hover:bg-gray-50 dark:hover:bg-[#2A3142]'
+                        : 'border border-gray-200 dark:border-[#2A3142] text-gray-600 dark:text-white/70 hover:bg-[#F3F7F1] dark:hover:bg-[#2A3142]'
                     }`}
                   >
                     {connected[p.id] ? 'Connected' : 'Connect'}
@@ -138,7 +138,7 @@ export default function Profile() {
               ))}
             </div>
 
-            <div className="mt-8 bg-gray-50 dark:bg-[#141824] border border-gray-100 dark:border-[#2A3142] rounded-xl p-5 shadow-sm">
+            <div className="mt-8 bg-[#F3F7F1] dark:bg-[#141824] border border-gray-100 dark:border-[#2A3142] rounded-xl p-5 shadow-sm">
               <p className="text-xs font-medium text-gray-500 mb-2">
                 Active connections ({Object.values(connected).filter(Boolean).length}/3)
               </p>
@@ -156,28 +156,28 @@ export default function Profile() {
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Visibility</h1>
             
             <div className="space-y-6">
-              <div className="flex items-center justify-between max-w-md p-5 border border-gray-200 dark:border-[#2A3142] rounded-lg bg-white dark:bg-[#141824] shadow-sm">
+              <div className="flex items-center justify-between max-w-md p-5 border border-gray-200 dark:border-[#2A3142] rounded-lg bg-[#F4F1EB] dark:bg-[#141824] shadow-sm">
                 <div>
                   <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm mb-1">Public Profile</h3>
                   <p className="text-xs text-gray-500 dark:text-white/50">Allow anyone to view your profile</p>
                 </div>
                 <div 
                   onClick={() => setIsPublic(!isPublic)}
-                  className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ease-in-out ${isPublic ? 'bg-[#4A90E2]' : 'bg-gray-200'}`}
+                  className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ease-in-out ${isPublic ? 'bg-[#6B905F] dark:bg-[#4A90E2]' : 'bg-gray-200'}`}
                 >
-                  <div className={`w-4 h-4 bg-white rounded-full absolute left-1 top-1 shadow-sm transition-transform duration-200 ease-in-out ${isPublic ? 'translate-x-5' : 'translate-x-0 border border-gray-100'}`}></div>
+                  <div className={`w-4 h-4 bg-[#F4F1EB] rounded-full absolute left-1 top-1 shadow-sm transition-transform duration-200 ease-in-out ${isPublic ? 'translate-x-5' : 'translate-x-0 border border-gray-100'}`}></div>
                 </div>
               </div>
-              <div className="flex items-center justify-between max-w-md p-5 border border-gray-200 dark:border-[#2A3142] rounded-lg bg-white dark:bg-[#141824] shadow-sm">
+              <div className="flex items-center justify-between max-w-md p-5 border border-gray-200 dark:border-[#2A3142] rounded-lg bg-[#F4F1EB] dark:bg-[#141824] shadow-sm">
                 <div>
                   <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm mb-1">Show Email</h3>
                   <p className="text-xs text-gray-500 dark:text-white/50">Display your email address to others</p>
                 </div>
                 <div 
                   onClick={() => setShowEmail(!showEmail)}
-                  className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ease-in-out ${showEmail ? 'bg-[#4A90E2]' : 'bg-gray-200'}`}
+                  className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ease-in-out ${showEmail ? 'bg-[#6B905F] dark:bg-[#4A90E2]' : 'bg-gray-200'}`}
                 >
-                  <div className={`w-4 h-4 bg-white rounded-full absolute left-1 top-1 shadow-sm transition-transform duration-200 ease-in-out ${showEmail ? 'translate-x-5' : 'translate-x-0 border border-gray-100'}`}></div>
+                  <div className={`w-4 h-4 bg-[#F4F1EB] rounded-full absolute left-1 top-1 shadow-sm transition-transform duration-200 ease-in-out ${showEmail ? 'translate-x-5' : 'translate-x-0 border border-gray-100'}`}></div>
                 </div>
               </div>
             </div>
@@ -198,14 +198,14 @@ export default function Profile() {
                     placeholder="Current Password" 
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A90E2] shadow-sm text-gray-900 dark:text-white/90" 
+                    className="w-full px-4 py-2.5 bg-[#F4F1EB] dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6B905F] dark:ring-[#4A90E2] shadow-sm text-[#1D1E1B] dark:text-white/90" 
                   />
                   <input 
                     type="password" 
                     placeholder="New Password" 
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4A90E2] shadow-sm text-gray-900 dark:text-white/90" 
+                    className="w-full px-4 py-2.5 bg-[#F4F1EB] dark:bg-[#141824] border border-gray-200 dark:border-[#2A3142] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6B905F] dark:ring-[#4A90E2] shadow-sm text-[#1D1E1B] dark:text-white/90" 
                   />
                   {passwordMsg.text && (
                     <p className={`text-sm ${passwordMsg.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
@@ -214,7 +214,7 @@ export default function Profile() {
                   )}
                   <button 
                     onClick={handleUpdatePassword}
-                    className="px-6 py-2.5 bg-gray-100 dark:bg-[#2A3142] hover:bg-gray-200 dark:hover:bg-[#2A3142]/80 text-gray-800 dark:text-white/90 font-medium rounded-lg transition-colors text-sm"
+                    className="px-6 py-2.5 bg-[#6B905F] dark:bg-[#4A90E2] hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8] text-white font-medium rounded-lg transition-colors text-sm shadow-sm"
                   >
                     Update Password
                   </button>
@@ -243,10 +243,10 @@ export default function Profile() {
   return (
     <div className="flex bg-[#F8F9FA] dark:bg-[#1A1E2E] h-full rounded-lg overflow-hidden border border-gray-200 dark:border-[#2A3142]">
       {/* Left Sidebar */}
-      <div className="w-[280px] bg-white dark:bg-[#141824] border-r border-gray-200 dark:border-[#2A3142] p-6 flex flex-col flex-shrink-0">
+      <div className="w-[280px] bg-[#F4F1EB] dark:bg-[#141824] border-r border-gray-200 dark:border-[#2A3142] p-6 flex flex-col flex-shrink-0">
         <div 
           onClick={() => navigate('/')}
-          className="text-[#4A90E2] font-medium flex items-center gap-2 mb-8 cursor-pointer hover:text-[#3A78C4] transition-colors text-sm"
+          className="text-[#6B905F] dark:text-[#4A90E2] font-medium flex items-center gap-2 mb-8 cursor-pointer hover:text-[#3A78C4] transition-colors text-sm"
         >
           <ArrowLeft size={16} /> Back to Dashboard
         </div>
@@ -261,8 +261,8 @@ export default function Profile() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-4 px-4 py-3 rounded-lg text-[15px] font-medium transition-colors ${
                   isActive 
-                    ? 'bg-[#F3F4F6] dark:bg-[#2A3142] text-gray-900 dark:text-white/90' 
-                    : 'text-gray-500 dark:text-white/50 hover:bg-gray-50 dark:hover:bg-[#2A3142]/50 hover:text-gray-700 dark:hover:text-white/70'
+                    ? 'bg-[#F3F4F6] dark:bg-[#2A3142] text-[#1D1E1B] dark:text-white/90' 
+                    : 'text-[#1D1E1B] dark:text-white/50 hover:bg-[#F3F7F1] dark:hover:bg-[#2A3142]/50 hover:text-[#1D1E1B] dark:hover:text-white/70'
                 }`}
               >
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-gray-700' : 'text-gray-400'} />
@@ -274,15 +274,15 @@ export default function Profile() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 p-8 overflow-y-auto bg-white dark:bg-[#1A1E2E]">
+      <div className="flex-1 p-8 overflow-y-auto bg-[#F4F1EB] dark:bg-[#1A1E2E]">
         {renderContent()}
       </div>
 
       {/* Delete Confirmation Dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#1A1E2E] rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 border border-gray-100 dark:border-[#2A3142]">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white/90 mb-2">Delete Account</h3>
+          <div className="bg-[#F4F1EB] dark:bg-[#1A1E2E] rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 border border-gray-100 dark:border-[#2A3142]">
+            <h3 className="text-lg font-bold text-[#1D1E1B] dark:text-white/90 mb-2">Delete Account</h3>
             <p className="text-sm text-gray-500 dark:text-white/50 mb-6">
               Are you sure you want to permanently delete your account? This cannot be undone.
             </p>

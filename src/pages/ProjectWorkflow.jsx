@@ -13,9 +13,9 @@ export default function ProjectWorkflow() {
   return (
     <div className="max-w-7xl mx-auto h-full flex flex-col">
       <div className="mb-6">
-        <h1 className="text-gray-900 dark:text-white/90 text-2xl font-bold">{projectName} - Workflow</h1>
+        <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Workflow</h1>
       </div>
-      <div className="flex-1 min-h-[700px]">
+      <div className="flex-1 min-h-[500px]">
         <WorkflowCanvas projectId={projectId} />
       </div>
     </div>

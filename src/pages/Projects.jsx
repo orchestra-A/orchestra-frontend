@@ -11,9 +11,9 @@ export default function Projects() {
     <div className="max-w-7xl mx-auto h-full flex flex-col">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-gray-900 dark:text-white/90 text-2xl font-bold">Workspaces & Projects</h1>
+          <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">Workspaces & Projects</h1>
         </div>
-        <Button className="bg-[#4A90E2] hover:bg-[#3D7EC8] text-white">
+        <Button className="bg-[#6B905F] dark:bg-[#4A90E2] hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8] text-white">
           <Plus className="w-4 h-4 mr-2" /> New Project
         </Button>
       </div>
@@ -27,7 +27,7 @@ export default function Projects() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {projects.map(project => (
-          <div key={project.id} className="bg-white dark:bg-[#1A1E2E] rounded-lg border border-gray-200 dark:border-[#2A3142] p-6 shadow-sm transition-all hover:shadow-md hover:border-[#4A90E2]/30 flex flex-col">
+          <div key={project.id} className="bg-[#F4F1EB] dark:bg-[#1A1E2E] rounded-lg border border-gray-200 dark:border-[#2A3142] p-6 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#4A90E2]/30 flex flex-col">
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${project.color}15` }}>
                 <FolderOpen className="w-5 h-5" style={{ color: project.color }} />
@@ -36,7 +36,7 @@ export default function Projects() {
                 {project.taskCount > 0 ? 'Active' : 'Planning'}
               </Badge>
             </div>
-            <h3 className="text-gray-900 dark:text-white/90 font-semibold mb-2">{project.name}</h3>
+            <h3 className="text-[#1D1E1B] dark:text-white/90 font-semibold mb-2">{project.name}</h3>
             <p className="text-sm text-gray-500 dark:text-white/50 mb-6 flex-1 line-clamp-2">{project.description}</p>
             
             <div className="mt-auto">

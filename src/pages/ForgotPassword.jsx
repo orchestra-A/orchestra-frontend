@@ -31,7 +31,7 @@ export default function ForgotPassword() {
         <span className="font-semibold text-[#1c1c1a] text-lg" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Orchestra</span>
       </div>
 
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl border border-[#eae6df] shadow-sm">
+      <div className="max-w-md w-full bg-[#F4F1EB] p-8 rounded-2xl border border-[#eae6df] shadow-sm">
         {step === 1 && (
           <div>
             <Link to="/login" className="inline-flex items-center text-[#8a8a82] hover:text-[#4a4a45] mb-6 text-sm transition-colors">
