@@ -13,9 +13,13 @@ import {
 } from '../ui/dropdown-menu';
 import { useAuth } from '../../context/AuthContext';
 
+// Global Top Navigation Bar
+// Contains global search, quick-action buttons (like Blueprint), notifications, and the user profile dropdown.
 export function Header() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
+
+  // Clears the current user session and redirects to login (handled by PublicRoute logic)
 
   const handleLogout = () => {
     logout();

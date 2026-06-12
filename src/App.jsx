@@ -40,7 +40,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// A wrapper to redirect logged-in users away from auth pages
+// A wrapper to redirect logged-in users away from auth pages (e.g. preventing access to Login if already authenticated)
 function PublicRoute({ children }) {
   const { currentUser } = useAuth();
   if (currentUser) {
@@ -49,6 +49,8 @@ function PublicRoute({ children }) {
   return children;
 }
 
+// Main Application Entry Point
+// Sets up the global contexts (Theme, Auth, Project) and defining the application's routing map.
 export default function App() {
   return (
     <ThemeProvider>

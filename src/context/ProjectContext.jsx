@@ -2,10 +2,13 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ProjectContext = createContext();
 
+// Custom hook to consume the project data context
 export function useProject() {
   return useContext(ProjectContext);
 }
 
+// Provider component that manages global state for Projects, Tasks, and Workflow Data.
+// It fetches initial data from an API and provides methods to create or delete projects.
 export function ProjectProvider({ children }) {
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);

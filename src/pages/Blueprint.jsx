@@ -5,10 +5,14 @@ import { useProject } from '../context/ProjectContext';
 
 const techOptions = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Tailwind CSS', 'Next.js', 'PostgreSQL', 'MongoDB', 'Docker'];
 
+// Blueprint Page Configuration
+// Handles creation of new projects or editing existing projects' metadata (name, description, tech stack, team members).
 export default function Blueprint() {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const { projects, addProject, updateProject } = useProject();
+  
+  // Local UI and Form States
   const [viewState, setViewState] = useState('centered');
   const [isEditing, setIsEditing] = useState(true);
   const [projectName, setProjectName] = useState('Project');

@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Contact, LayoutGrid, Lock, Fingerprint, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+// User Profile Page
+// Allows the authenticated user to view their info, update their password, 
+// manage workspace integrations, and configure privacy settings.
 export default function Profile() {
+  // Local state for tab navigation (basic, integrations, privacy)
   const [activeTab, setActiveTab] = useState('basic');
   const [isPublic, setIsPublic] = useState(true);
   const [showEmail, setShowEmail] = useState(false);
@@ -21,6 +25,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { currentUser, updatePassword, deleteAccount } = useAuth();
 
+  // Validate and submit password update request to the AuthContext
   const handleUpdatePassword = async () => {
     setPasswordMsg({ type: '', text: '' });
     if (!currentPassword || !newPassword) {
@@ -38,6 +43,7 @@ export default function Profile() {
     }
   };
 
+  // Permanently delete user account and redirect to home
   const confirmDeleteAccount = async () => {
     setShowDeleteDialog(false);
     await deleteAccount();

@@ -2,23 +2,26 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Clover } from 'lucide-react';
+import { Clover, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  
+  // Local state for authentication credentials and error messages
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Handle user authentication and redirection
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     try {
       await login(identifier, password);
       // App.jsx will automatically handle the redirect because of PublicRoute
-      // or we can explicitly navigate
+      // or we can explicitly navigate to the dashboard
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -54,6 +57,9 @@ export default function Login() {
         </div>
 
         <div className="max-w-[400px] w-full mx-auto py-8 lg:py-0">
+          <Link to="/" className="inline-flex items-center text-[#8a8a82] hover:text-[#4a4a45] mb-6 text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to home
+          </Link>
           <h1 className="text-2xl font-bold text-[#1c1c1a] mb-6 mt-0" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Welcome Back</h1>
 
           <form onSubmit={handleLogin} className="space-y-3">
@@ -129,7 +135,7 @@ export default function Login() {
                 </Button>
               </a>
               <a href="https://orchestra-backend-2v5a.onrender.com/auth/figma" className="w-full block">
-                <Button type="button" className="w-full bg-[#0f95c8] hover:bg-[#0c7da8] border-transparent shadow-sm text-white h-10 cursor-pointer transition-all">
+                <Button type="button" variant="outline" className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-10 cursor-pointer transition-all">
                   <svg className="w-4 h-5 mr-2" viewBox="0 0 38 57" fill="none"><path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" fill="#1ABCFE"/><path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z" fill="#F24E1E"/><path d="M19 0v19h9.5A9.5 9.5 0 1 0 19 0z" fill="#FF7262"/><path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z" fill="#A259FF"/><path d="M0 47.5A9.5 9.5 0 0 0 9.5 57 9.5 9.5 0 0 0 19 47.5v-9.5H9.5A9.5 9.5 0 0 0 0 47.5z" fill="#0ACF83"/></svg>
                   Figma
                 </Button>

@@ -335,6 +335,9 @@ const LANDING_CSS = `
 }
 `;
 
+// Public-facing Landing Page
+// Renders the marketing page for unauthenticated users.
+// Note: Uses an injected string of CSS (LANDING_CSS) to isolate its styling from the main application.
 export default function LandingPage() {
   const navigate = useNavigate();
   const wrapperRef = useRef(null);

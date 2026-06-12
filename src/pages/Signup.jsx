@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Clover, Info } from 'lucide-react';
+import { Clover, Info, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+// Custom component to render form labels alongside an informational tooltip
 const LabelWithTooltip = ({ label, tooltip }) => (
   <div className="flex items-center gap-1.5 w-fit">
     <label className="text-sm font-medium text-[#4a4a45]">{label}</label>
@@ -22,6 +23,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const { signup } = useAuth();
   
+  // Local state for managing form inputs and submission errors
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -31,10 +33,12 @@ export default function Signup() {
   });
   const [error, setError] = useState('');
 
+  // Update specific form fields on user input
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Handle user registration process
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
@@ -79,15 +83,18 @@ export default function Signup() {
 
       {/* Right Form Side */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-24 xl:px-32 relative bg-[#F4F1EB]">
-        <div className="absolute top-8 left-8 lg:hidden flex items-center gap-2">
+        <div className="absolute top-6 left-8 lg:hidden flex items-center gap-2">
           <Clover className="w-6 h-6 text-[#6b8f5e]" />
           <span className="font-semibold text-[#1c1c1a] text-lg" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Orchestra</span>
         </div>
 
-        <div className="max-w-[400px] w-full mx-auto py-8">
+        <div className="max-w-[400px] w-full mx-auto py-8 lg:py-0">
+          <Link to="/login" className="inline-flex items-center text-[#8a8a82] hover:text-[#4a4a45] mb-6 text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to login
+          </Link>
           <h1 className="text-2xl font-bold text-[#1c1c1a] mb-6 mt-0" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Create an Account</h1>
 
-          <form onSubmit={handleSignup} className="space-y-3">
+          <form onSubmit={handleSignup} className="space-y-2.5">
             {error && (
               <div className="bg-red-50 text-red-600 p-2 rounded-md text-sm">
                 {error}
@@ -95,37 +102,44 @@ export default function Signup() {
             )}
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <LabelWithTooltip label="Name" tooltip="This name will be visible to others on your profile and projects." />
                 <Input name="name" value={formData.name} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <LabelWithTooltip label="Username" tooltip="Choose a unique username to make your profile easily searchable." />
                 <Input name="username" value={formData.username} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <LabelWithTooltip label="Email" tooltip="Enter your primary work email used for project collaboration." />
               <Input name="email" type="email" value={formData.email} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
             </div>
             
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <LabelWithTooltip label="Password" tooltip="Must be at least 8 characters long, containing uppercase, lowercase, numbers, and symbols." />
               <Input name="password" type="password" value={formData.password} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <LabelWithTooltip label="Confirm Password" tooltip="Re-enter your password to ensure it matches." />
               <Input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} required className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] h-10" />
             </div>
 
-            <Button type="submit" className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-10 mt-4">
+            <div className="flex items-center gap-2 pt-0.5 pb-0.5">
+              <input type="checkbox" id="terms" required className="w-4 h-4 accent-[#6b8f5e] cursor-pointer" />
+              <label htmlFor="terms" className="text-sm text-[#4a4a45] cursor-pointer select-none">
+                I agree to the <a href="#" className="text-[#6b8f5e] hover:underline">Terms & Conditions</a>
+              </label>
+            </div>
+
+            <Button type="submit" className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-10 mt-1">
               Sign Up
             </Button>
           </form>
 
-          <p className="text-center text-[#8a8a82] mt-6 text-sm">
+          <p className="text-center text-[#8a8a82] mt-4 text-sm">
             Already have an account? <Link to="/login" className="text-[#6b8f5e] hover:text-[#5a7a4e] font-medium transition-colors">Log in</Link>
           </p>
         </div>
