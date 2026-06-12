@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProjectProvider } from './context/ProjectContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -29,8 +29,13 @@ import OAuthCallback from './pages/OAuthCallback';
 // A wrapper to protect routes
 function ProtectedRoute({ children }) {
   const { currentUser } = useAuth();
+  const location = useLocation();
+
   if (!currentUser) {
-    return <Navigate to="/landing" replace />;
+    if (location.pathname === '/') {
+      return <LandingPage />;
+    }
+    return <Navigate to="/" replace />;
   }
   return children;
 }
@@ -51,7 +56,7 @@ export default function App() {
         <ProjectProvider>
           <BrowserRouter>
             <Routes>
-            <Route path="/landing" element={<PublicRoute><LandingPage /></PublicRoute>} />
+            <Route path="/landing" element={<Navigate to="/" replace />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
             <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />

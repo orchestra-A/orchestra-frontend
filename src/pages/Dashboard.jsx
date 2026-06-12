@@ -42,7 +42,7 @@ export default function Dashboard() {
     <div className="max-w-[1400px] mx-auto h-full flex flex-col">
       {/* Welcome Section */}
       <div className="mb-4 shrink-0">
-        <h1 className="text-[#1D1E1B] dark:text-white/90 text-lg font-bold mb-0.5">Welcome back, {currentUser?.name || "Guest"}</h1>
+        <h1 className="text-[#1D1E1B] dark:text-white/90 text-lg font-bold mb-0.5">Welcome back</h1>
       </div>
 
       {/* Main Grid: 3 columns */}
