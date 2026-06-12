@@ -2,10 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
+// Custom hook to consume the authentication context
 export function useAuth() {
   return useContext(AuthContext);
 }
 
+// Provider component that manages user authentication state (login, signup, logout)
+// and persists sessions using localStorage.
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);

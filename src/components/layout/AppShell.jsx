@@ -3,6 +3,8 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
+// Main layout wrapper for the authenticated application.
+// Handles the positioning of the Sidebar, Header, and the main scrollable content area (<Outlet />).
 export function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isHoveringSidebar, setIsHoveringsidebar] = useState(false);

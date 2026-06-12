@@ -5,11 +5,16 @@ import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
 import { useState, useEffect } from 'react';
 
+// Main Dashboard Page
+// Displays an overview of user projects, current tasks, and recent alerts.
 export default function Dashboard() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  
+  // Consume global project and task data from the ProjectContext
   const { projects, tasks, deleteProject } = useProject();
 
+  // Local state for managing project deletion confirmation modal
   const [projectToDelete, setProjectToDelete] = useState(null);
 
   const confirmDelete = () => {

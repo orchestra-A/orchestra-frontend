@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
 
+// Provider component that manages the application's global theme (light, dark, system).
+// It automatically updates the DOM and persists the preference in localStorage.
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     // Check local storage for saved theme, default to 'dark' for now

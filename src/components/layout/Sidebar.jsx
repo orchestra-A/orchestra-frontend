@@ -4,7 +4,10 @@ import { ChevronRight, ChevronLeft, Inbox, Archive, Home, Calendar, Settings, Us
 import { Badge } from '../ui/badge';
 import { useProject } from '../../context/ProjectContext';
 
+// Main Navigation Sidebar
+// Supports collapsing/expanding on hover, and dynamically renders the list of active projects.
 export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSidebar, setIsHoveringsidebar }) {
+  // Local state for the currently expanded project folder in the sidebar
   const [expandedProject, setExpandedProject] = useState('proj_marketing');
   const location = useLocation();
   const currentPage = location.pathname.substring(1) || 'dashboard';
@@ -13,6 +16,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
   const { projects, deleteProject } = useProject();
   const [projectToDelete, setProjectToDelete] = useState(null);
 
+  // Delete project handler - redirects to home if the currently viewed project is deleted
   const confirmDelete = () => {
     if (projectToDelete) {
       deleteProject(projectToDelete.id);
