@@ -31,13 +31,13 @@ export function Header() {
   };
 
   return (
-    <div className="h-16 bg-[#F4F1EB] dark:bg-[#1A1E2E] px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#2A3142] shrink-0">
+    <div className="h-16 bg-[#F4F1EB] dark:bg-[#121910] px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#2B3B26] shrink-0">
       {/* Search */}
       <div className="flex-1 max-w-md relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
         <Input
           placeholder="Search projects, tasks..."
-          className="w-full pl-10 bg-[#F3F7F1] dark:bg-[#141824] border-gray-200 dark:border-[#2A3142] text-[#1D1E1B] dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/40 focus-visible:ring-[#6B905F] dark:ring-[#4A90E2]/30 focus-visible:border-[#6B905F] dark:border-[#4A90E2]/30 h-9"
+          className="w-full pl-10 bg-[#F3F7F1] dark:bg-[#1C2618] border-gray-200 dark:border-[#2B3B26] text-[#1D1E1B] dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/40 focus-visible:ring-[#6B905F] dark:ring-[#6B905F]/30 focus-visible:border-[#6B905F] dark:border-[#6B905F]/30 h-9"
         />
       </div>
 
@@ -46,12 +46,12 @@ export function Header() {
         <Button
           size="sm"
           onClick={() => navigate('/blueprint')}
-          className="bg-[#6B905F] dark:bg-[#4A90E2] hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8] text-white shadow-sm h-9 px-4 cursor-pointer"
+          className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white shadow-sm h-9 px-4 cursor-pointer"
         >
           New Project
         </Button>
 
-        <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-[#2A3142] rounded-md transition-colors cursor-pointer">
+        <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-[#2B3B26] rounded-md transition-colors cursor-pointer">
           <Bell className="w-[18px] h-[18px] text-gray-600 dark:text-white/70" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#E74C3C] rounded-full"></span>
         </button>
@@ -59,14 +59,14 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="focus:outline-none cursor-pointer">
-              <Avatar className="w-8 h-8 border border-gray-200 dark:border-[#2A3142] hover:border-[#6B905F] dark:border-[#4A90E2] dark:hover:border-[#6B905F] dark:border-[#4A90E2] transition-colors cursor-pointer">
-                <AvatarFallback className="bg-[#6B905F] dark:bg-[#4A90E2] text-white text-xs">
+              <Avatar className="w-8 h-8 border border-gray-200 dark:border-[#2B3B26] hover:border-[#6B905F] dark:border-[#6B905F] dark:hover:border-[#6B905F] dark:border-[#6B905F] transition-colors cursor-pointer">
+                <AvatarFallback className="bg-[#6B905F] dark:bg-[#6B905F] text-white text-xs">
                   {getInitials(currentUser?.name)}
                 </AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 dark:bg-[#1A1E2E] dark:border-[#2A3142]">
+          <DropdownMenuContent align="end" className="w-56 dark:bg-[#121910] dark:border-[#2B3B26]">
             <DropdownMenuLabel>
               <div className="flex flex-col">
                 <span className="text-sm font-medium dark:text-white/90">{currentUser?.name || "Guest User"}</span>

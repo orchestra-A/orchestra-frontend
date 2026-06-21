@@ -165,17 +165,17 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   };
 
   if (loading) {
-    return <div className="w-full h-full flex items-center justify-center bg-[#F4F1EB] dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50">Loading workflow...</div>;
+    return <div className="w-full h-full flex items-center justify-center bg-[#F4F1EB] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26] text-gray-500 dark:text-white/50">Loading workflow...</div>;
   }
 
   return (
-    <div className="w-full h-full border border-gray-200 dark:border-[#2A3142] rounded-xl bg-[#F4F1EB] dark:bg-[#1A1E2E] shadow-sm overflow-hidden relative group">
+    <div className="w-full h-full border border-gray-200 dark:border-[#2B3B26] rounded-xl bg-[#F4F1EB] dark:bg-[#121910] shadow-sm overflow-hidden relative group">
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
           isEditable 
-            ? 'bg-white dark:bg-[#4A90E2] text-[#6B905F] dark:text-white hover:bg-gray-50' 
-            : 'bg-white dark:bg-[#4A90E2] text-gray-600 border border-gray-200 hover:bg-gray-50'
+            ? 'bg-white dark:bg-[#6B905F] text-[#6B905F] dark:text-white hover:bg-gray-50' 
+            : 'bg-white dark:bg-[#6B905F] text-gray-600 border border-gray-200 hover:bg-gray-50'
         }`}
       >
         {isEditable ? (
@@ -210,7 +210,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
 
       {menu && (
         <div 
-          className="fixed z-50 bg-[#6B905F] dark:bg-[#4A90E2] rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden"
+          className="fixed z-50 bg-[#6B905F] dark:bg-[#6B905F] rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden"
           style={{ top: menu.top, left: menu.left }}
         >
           <button 

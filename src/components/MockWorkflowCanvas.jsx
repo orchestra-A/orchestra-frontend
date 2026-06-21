@@ -74,17 +74,17 @@ export function MockWorkflowCanvas() {
   });
 
   if (loading) {
-    return <div className="w-full h-[700px] flex items-center justify-center bg-[#6B905F] dark:bg-[#1A1E2E] rounded-xl border border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50">Loading workflow...</div>;
+    return <div className="w-full h-[700px] flex items-center justify-center bg-[#6B905F] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26] text-gray-500 dark:text-white/50">Loading workflow...</div>;
   }
 
   return (
-    <div className="w-full h-[700px] border border-gray-200 dark:border-[#2A3142] rounded-xl bg-[#6B905F] dark:bg-[#1A1E2E] shadow-sm overflow-hidden relative group">
+    <div className="w-full h-[700px] border border-gray-200 dark:border-[#2B3B26] rounded-xl bg-[#6B905F] dark:bg-[#121910] shadow-sm overflow-hidden relative group">
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
           isEditable 
-            ? 'bg-[#6B905F] dark:bg-[#4A90E2] text-white hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8]' 
-            : 'bg-[#6B905F] dark:bg-[#4A90E2] text-gray-600 border border-gray-200 hover:bg-[#F3F7F1]'
+            ? 'bg-[#6B905F] dark:bg-[#6B905F] text-white hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F]' 
+            : 'bg-[#6B905F] dark:bg-[#6B905F] text-gray-600 border border-gray-200 hover:bg-[#F3F7F1]'
         }`}
       >
         {isEditable ? (
