@@ -28,21 +28,27 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signup = (user) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // Check if user already exists
-      const exists = users.find(u => u.email === user.email || u.username === user.username);
-      if (exists) {
-        return reject(new Error("User with that email or username already exists."));
+      const existingIndex = users.findIndex(u => u.email === user.email || u.username === user.username);
+      
+      let updatedUsers = [...users];
+      let finalUser;
+
+      if (existingIndex >= 0) {
+        finalUser = { ...users[existingIndex], ...user };
+        updatedUsers[existingIndex] = finalUser;
+      } else {
+        finalUser = { ...user, id: user.id || Date.now().toString() };
+        updatedUsers.push(finalUser);
       }
 
-      const newUser = { ...user, id: Date.now().toString() };
-      const updatedUsers = [...users, newUser];
       setUsers(updatedUsers);
       localStorage.setItem('users', JSON.stringify(updatedUsers));
       
-      setCurrentUser(newUser);
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
-      resolve(newUser);
+      setCurrentUser(finalUser);
+      localStorage.setItem('currentUser', JSON.stringify(finalUser));
+      resolve(finalUser);
     });
   };
 

@@ -28,7 +28,7 @@ export default function Workspaces() {
       alert("Figma integration coming soon!");
       return;
     }
-    window.location.href = `https://orchestra-backend-2v5a.onrender.com/auth/${id}`;
+    window.location.href = `https://orchestra-backend-30fy.onrender.com/auth/${id}`;
   }
 
   const navigateToDetail = (id) => {
