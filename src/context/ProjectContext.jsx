@@ -19,7 +19,7 @@ export function ProjectProvider({ children }) {
   useEffect(() => {
     const fetchProjectsFromTasks = async () => {
       try {
-        const response = await fetch('/api/tasks');
+        const response = await fetch('https://orchestra-backend-30fy.onrender.com/tasks');
         const data = await response.json();
         
         if (data && data.tasks) {

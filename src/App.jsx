@@ -8,8 +8,7 @@ import Projects from './pages/Projects';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
-import ForgotPassword from './pages/ForgotPassword';
+import Onboarding from './pages/Onboarding';
 import EmptyPage from './pages/EmptyPage';
 import ProjectWorkflow from './pages/ProjectWorkflow';
 import LandingPage from './pages/LandingPage';
@@ -60,8 +59,7 @@ export default function App() {
             <Routes>
             <Route path="/landing" element={<Navigate to="/" replace />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
             
             {/* Main App Routes */}
