@@ -33,14 +33,14 @@ export default function ProjectTasks() {
         <div>
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Tasks ({targetUser})</h1>
         </div>
-        <Button className="bg-[#6B905F] dark:bg-[#4A90E2] hover:bg-[#5A7A4F] dark:hover:bg-[#3A7BC8] text-white">
+        <Button className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white">
           <Plus className="w-4 h-4 mr-2" /> Add Task
         </Button>
       </div>
 
-      <div className="bg-[#F4F1EB] dark:bg-[#1A1E2E] rounded-lg border border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-sm">
+      <div className="bg-[#F4F1EB] dark:bg-[#121910] rounded-lg border border-gray-200 dark:border-[#2B3B26] overflow-hidden shadow-sm">
         <table className="w-full text-left text-sm text-gray-600">
-          <thead className="bg-[#F3F7F1] dark:bg-[#141824] border-b border-gray-200 dark:border-[#2A3142] text-gray-500 dark:text-white/50 uppercase text-xs font-semibold">
+          <thead className="bg-[#F3F7F1] dark:bg-[#1C2618] border-b border-gray-200 dark:border-[#2B3B26] text-gray-500 dark:text-white/50 uppercase text-xs font-semibold">
             <tr>
               <th className="px-6 py-4">Task Name</th>
               <th className="px-6 py-4">Status</th>
@@ -49,9 +49,9 @@ export default function ProjectTasks() {
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-[#2A3142]">
+          <tbody className="divide-y divide-gray-200 dark:divide-[#2B3B26]">
             {projectTasks.map((task) => (
-              <tr key={task.id} className="hover:bg-[#F3F7F1] dark:hover:bg-[#2A3142] transition-colors">
+              <tr key={task.id} className="hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] transition-colors">
                 <td className="px-6 py-4 flex items-center gap-3">
                   {task.status === 'completed' ? (
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
