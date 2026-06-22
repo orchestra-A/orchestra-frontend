@@ -38,7 +38,7 @@ export function ProjectProvider({ children }) {
                 description: `Automatically generated project from tasks.`,
                 taskCount: 0,
                 membersMap: {}, 
-                color: ['#4A90E2', '#9B59B6', '#F59E42', '#34D399', '#EC4899', '#8B5CF6'][Object.keys(projectMap).length % 6],
+                color: ['#6B905F', '#9B59B6', '#F59E42', '#34D399', '#EC4899', '#8B5CF6'][Object.keys(projectMap).length % 6],
                 items: ['Workflow', 'AI', 'Tasks', 'Team']
               };
             }

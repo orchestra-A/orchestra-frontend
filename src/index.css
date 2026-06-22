@@ -150,9 +150,28 @@ html {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #2A3142;
+  background: #2B3B26;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #3f4a63;
+  background: #2B3B26;
+}
+
+/* Fix Autofill background colors replacing theme colors */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #F4F1EB inset !important;
+    -webkit-text-fill-color: #1D1E1B !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover, 
+.dark input:-webkit-autofill:focus, 
+.dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #1C2618 inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
 }

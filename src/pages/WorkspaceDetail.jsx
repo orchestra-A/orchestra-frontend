@@ -23,7 +23,7 @@ export default function WorkspaceDetail() {
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Workspaces
       </button>
 
-      <div className="bg-[#6B905F] dark:bg-[#2A3142] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
+      <div className="bg-[#6B905F] dark:bg-[#2B3B26] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-white/10">
           <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-white ${platform.color}`}>
             {platform.name[0]}
@@ -31,7 +31,7 @@ export default function WorkspaceDetail() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">{platform.name}</h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`w-2 h-2 rounded-full ${platform.status === 'Connected' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-[#6B905F] dark:bg-[#4A90E2]/30'}`}></span>
+              <span className={`w-2 h-2 rounded-full ${platform.status === 'Connected' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-[#6B905F] dark:bg-[#6B905F]/30'}`}></span>
               <span className="text-sm text-slate-500 dark:text-white/60">{platform.status}</span>
             </div>
           </div>

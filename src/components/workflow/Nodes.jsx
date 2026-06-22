@@ -46,12 +46,12 @@ export function TaskNode({ data }) {
 export function DeveloperNode({ data }) {
   return (
     <div className="bg-[#9B59B6] text-white rounded-full shadow-md px-4 py-2 min-w-[120px] flex items-center justify-center gap-2 border border-black/5">
-      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#4A90E2] !border-[#9B59B6]" />
+      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#6B905F] !border-[#9B59B6]" />
       <User className="w-4 h-4 text-white" />
       <div className="font-medium text-sm truncate max-w-[150px]" title={data.label}>
         {data.label}
       </div>
-      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#4A90E2] !border-[#9B59B6]" />
+      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#6B905F] !border-[#9B59B6]" />
     </div>
   );
 }
@@ -59,12 +59,12 @@ export function DeveloperNode({ data }) {
 export function SkillNode({ data }) {
   return (
     <div className="bg-[#F59E42] text-white rounded-full shadow-md px-3 py-1.5 min-w-[100px] flex items-center justify-center gap-2 border border-black/5">
-      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#4A90E2] !border-[#F59E42]" />
+      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#6B905F] !border-[#F59E42]" />
       <Code2 className="w-3 h-3 text-white" />
       <div className="font-medium text-xs truncate max-w-[120px]" title={data.label}>
         {data.label}
       </div>
-      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#4A90E2] !border-[#F59E42]" />
+      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-[#6B905F] dark:bg-[#6B905F] !border-[#F59E42]" />
     </div>
   );
 }

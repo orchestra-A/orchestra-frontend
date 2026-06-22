@@ -37,11 +37,11 @@ export default function Todo() {
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden pb-6">
         {/* Column 1: Behind/Delayed/Stopped */}
-        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#1A1E2E] rounded-xl border-2 border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-inner">
-          <div className="p-3 border-b-2 border-gray-200 dark:border-[#2A3142] bg-gray-100 dark:bg-[#141824] flex items-center gap-2 sticky top-0">
+        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#121910] rounded-xl border-2 border-gray-200 dark:border-[#2B3B26] overflow-hidden shadow-inner">
+          <div className="p-3 border-b-2 border-gray-200 dark:border-[#2B3B26] bg-gray-100 dark:bg-[#1C2618] flex items-center gap-2 sticky top-0">
             <AlertCircle className="w-4 h-4 text-red-600" />
             <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Behind / Delayed / Stopped</h2>
-            <span className="ml-auto bg-gray-200 dark:bg-[#2A3142] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
+            <span className="ml-auto bg-gray-200 dark:bg-[#2B3B26] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-200 border-red-300" />)}
@@ -49,11 +49,11 @@ export default function Todo() {
         </div>
 
         {/* Column 2: In Progress */}
-        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#1A1E2E] rounded-xl border-2 border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-inner">
-          <div className="p-3 border-b-2 border-gray-200 dark:border-[#2A3142] bg-gray-100 dark:bg-[#141824] flex items-center gap-2 sticky top-0">
+        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#121910] rounded-xl border-2 border-gray-200 dark:border-[#2B3B26] overflow-hidden shadow-inner">
+          <div className="p-3 border-b-2 border-gray-200 dark:border-[#2B3B26] bg-gray-100 dark:bg-[#1C2618] flex items-center gap-2 sticky top-0">
             <PlayCircle className="w-4 h-4 text-amber-500" />
             <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">In Progress</h2>
-            <span className="ml-auto bg-gray-200 dark:bg-[#2A3142] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
+            <span className="ml-auto bg-gray-200 dark:bg-[#2B3B26] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-amber-200 border-amber-300" />)}
@@ -61,11 +61,11 @@ export default function Todo() {
         </div>
 
         {/* Column 3: Upcoming */}
-        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#1A1E2E] rounded-xl border-2 border-gray-200 dark:border-[#2A3142] overflow-hidden shadow-inner">
-          <div className="p-3 border-b-2 border-gray-200 dark:border-[#2A3142] bg-gray-100 dark:bg-[#141824] flex items-center gap-2 sticky top-0">
+        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#121910] rounded-xl border-2 border-gray-200 dark:border-[#2B3B26] overflow-hidden shadow-inner">
+          <div className="p-3 border-b-2 border-gray-200 dark:border-[#2B3B26] bg-gray-100 dark:bg-[#1C2618] flex items-center gap-2 sticky top-0">
             <CalendarClock className="w-4 h-4 text-blue-500" />
             <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Upcoming</h2>
-            <span className="ml-auto bg-gray-200 dark:bg-[#2A3142] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{upcomingTasks.length}</span>
+            <span className="ml-auto bg-gray-200 dark:bg-[#2B3B26] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{upcomingTasks.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {upcomingTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-blue-200 border-blue-300" />)}
