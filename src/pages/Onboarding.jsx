@@ -221,7 +221,7 @@ export default function Onboarding() {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => handleConnectPlatform('google')}
+                    onClick={() => handlePopupConnect('google', `https://orchestra-backend-30fy.onrender.com/auth/google?user_id=${currentUser?.id}`)}
                     disabled={connectedPlatforms['google']}
                     className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-10 transition-all text-xs"
                   >
