@@ -162,15 +162,15 @@ export default function Onboarding() {
       </div>
 
       {/* Right Form Side */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-24 xl:px-32 relative bg-[#F4F1EB]">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 lg:px-12 xl:px-16 relative bg-[#F4F1EB]">
         <div className="absolute top-8 left-8 lg:hidden flex items-center gap-2">
           <Clover className="w-6 h-6 text-[#6b8f5e]" />
           <span className="font-semibold text-[#1c1c1a] text-lg" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Orchestra</span>
         </div>
 
-        <div className="max-w-[400px] w-full mx-auto py-8 lg:py-0">
-          <h1 className="text-2xl font-bold text-[#1c1c1a] mb-2 mt-0" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Almost there!</h1>
-          <p className="text-[#8a8a82] mb-6 text-sm">Please provide some basic info.</p>
+        <div className="max-w-[550px] w-full mx-auto py-8 lg:py-0">
+          <h1 className="text-3xl font-bold text-[#1c1c1a] mb-2 mt-0" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Almost there!</h1>
+          <p className="text-[#8a8a82] mb-6 text-base">Please provide some basic info.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -180,50 +180,50 @@ export default function Onboarding() {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#4a4a45]">Full Name</label>
+              <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Full Name</label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your full name"
                 required
-                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-10"
+                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#4a4a45]">Username</label>
+              <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Username</label>
               <Input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Choose a unique username"
                 required
-                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-10"
+                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#4a4a45]">Email Address</label>
+              <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Email Address</label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
-                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-10"
+                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
               />
             </div>
 
             {/* Integrations Section */}
             <div className="pt-4 border-t border-[#e8e4dc]">
-              <label className="text-sm font-medium text-[#4a4a45] mb-2 block">Connect other platforms</label>
-              <div className="grid grid-cols-2 gap-2">
+              <label className="text-sm lg:text-base font-medium text-[#4a4a45] mb-2 block">Connect other platforms</label>
+              <div className="grid grid-cols-2 gap-2 lg:gap-3">
                 {currentUser?.platform !== 'google' && (
                   <Button 
                     type="button" 
                     variant="outline" 
                     onClick={() => handlePopupConnect('google', `https://orchestra-backend-30fy.onrender.com/auth/google?user_id=${currentUser?.id}`)}
                     disabled={connectedPlatforms['google']}
-                    className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-10 transition-all text-xs"
+                    className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-11 lg:h-12 transition-all text-xs lg:text-sm"
                   >
                     {connectedPlatforms['google'] ? 'Google Connected' : 'Connect Google'}
                   </Button>
@@ -234,7 +234,7 @@ export default function Onboarding() {
                     type="button" 
                     onClick={() => handlePopupConnect('discord', `https://orchestra-backend-30fy.onrender.com/auth/discord?user_id=${currentUser?.id}`)}
                     disabled={connectedPlatforms['discord']}
-                    className="w-full bg-[#5865F2] hover:bg-[#4752C4] border-transparent shadow-sm text-white h-10 transition-all text-xs"
+                    className="w-full bg-[#5865F2] hover:bg-[#4752C4] border-transparent shadow-sm text-white h-11 lg:h-12 transition-all text-xs lg:text-sm"
                   >
                     {connectedPlatforms['discord'] ? 'Discord Connected' : 'Connect Discord'}
                   </Button>
@@ -245,7 +245,7 @@ export default function Onboarding() {
                     type="button" 
                     onClick={() => handlePopupConnect('github', `https://orchestra-backend-30fy.onrender.com/auth/github?user_id=${currentUser?.id}`)}
                     disabled={connectedPlatforms['github']}
-                    className="w-full bg-[#181717] hover:bg-[#2b2a2a] border-transparent shadow-sm text-white h-10 transition-all text-xs"
+                    className="w-full bg-[#181717] hover:bg-[#2b2a2a] border-transparent shadow-sm text-white h-11 lg:h-12 transition-all text-xs lg:text-sm"
                   >
                     {connectedPlatforms['github'] ? 'GitHub Connected' : 'Connect GitHub'}
                   </Button>
@@ -257,7 +257,7 @@ export default function Onboarding() {
                     variant="outline" 
                     onClick={() => handleConnectPlatform('figma')}
                     disabled={connectedPlatforms['figma']}
-                    className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-10 transition-all text-xs"
+                    className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-11 lg:h-12 transition-all text-xs lg:text-sm"
                   >
                     {connectedPlatforms['figma'] ? 'Figma Connected' : 'Connect Figma'}
                   </Button>
@@ -268,7 +268,7 @@ export default function Onboarding() {
             <Button 
               disabled={loading || !['google', 'discord', 'github', 'figma'].every(p => connectedPlatforms[p])} 
               type="submit" 
-              className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-10 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-12 lg:h-14 mt-6 text-sm lg:text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Saving...' : 'Continue to Dashboard'}
             </Button>
