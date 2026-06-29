@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Contact, LayoutGrid, Lock, Fingerprint, ChevronRight } from 'lucide-react';
+import { ArrowLeft, User, Contact, LayoutGrid, Lock, Fingerprint, ChevronRight, Code, Search, Check, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+const PREDEFINED_SKILLS = [
+  'React', 'Vue', 'Angular', 'Node.js', 'Python', 'Java', 'C++', 'C#', 
+  'Ruby', 'Go', 'Rust', 'PHP', 'TypeScript', 'JavaScript', 'HTML/CSS', 
+  'SQL', 'MongoDB', 'PostgreSQL', 'Docker', 'Kubernetes', 'AWS', 
+  'Azure', 'GCP', 'GraphQL', 'REST API', 'Figma', 'UI/UX Design', 'TailwindCSS'
+];
 
 // User Profile Page
 // Allows the authenticated user to view their info, update their password, 
@@ -13,6 +20,28 @@ export default function Profile() {
   const [showEmail, setShowEmail] = useState(false);
   const [connected, setConnected] = useState({});
   const toggleWorkspace = (id) => setConnected(prev => ({ ...prev, [id]: !prev[id] }));
+
+  // Skills state
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [savedSkills, setSavedSkills] = useState(['React', 'JavaScript']);
+  const [skillSearchQuery, setSkillSearchQuery] = useState('');
+
+  const toggleSkill = (skill) => {
+    setSelectedSkills(prev => 
+      prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
+    );
+  };
+
+  const handleSaveSkills = () => {
+    setSavedSkills(prev => Array.from(new Set([...prev, ...selectedSkills])));
+    setSelectedSkills([]); // Clear selection after saving
+  };
+
+  const removeSavedSkill = (skillToRemove) => {
+    setSavedSkills(prev => prev.filter(s => s !== skillToRemove));
+  };
+
+  const filteredSkills = PREDEFINED_SKILLS.filter(s => s.toLowerCase().includes(skillSearchQuery.toLowerCase()));
 
   // Password fields state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -52,6 +81,7 @@ export default function Profile() {
 
   const tabs = [
     { id: 'details', label: 'Profile Details', icon: Contact },
+    { id: 'skills', label: 'Skills', icon: Code },
     { id: 'platform', label: 'Workspaces', icon: LayoutGrid },
     { id: 'visibility', label: 'Visibility', icon: Lock },
     { id: 'accounts', label: 'Accounts', icon: Fingerprint },
@@ -83,6 +113,96 @@ export default function Profile() {
               <button className="px-6 py-2.5 bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white font-medium rounded-lg transition-colors text-sm shadow-sm mt-4">
                 Update Profile
               </button>
+            </div>
+          </div>
+        );
+
+      case 'skills':
+        return (
+          <div className="max-w-4xl">
+            <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Technical Skills</h1>
+            
+            <div className="space-y-6">
+              {/* My Skills Section */}
+              <div className="bg-[#F4F1EB] dark:bg-[#1C2618] border border-gray-200 dark:border-[#2B3B26] p-6 rounded-xl shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">My Skills</h2>
+                {savedSkills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {savedSkills.map(skill => (
+                      <div
+                        key={skill}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#6B905F]/30 dark:bg-[#6B905F]/25 text-[#1C361D] dark:text-[#A4D88E] border border-[#6B905F]/40 dark:border-[#6B905F]/50 shadow-sm"
+                      >
+                        {skill}
+                        <button 
+                          onClick={() => removeSavedSkill(skill)}
+                          className="hover:bg-[#1C361D]/10 dark:hover:bg-white/20 p-0.5 rounded-full transition-colors text-[#1C361D] dark:text-[#A4D88E]"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">You haven't added any skills yet.</p>
+                )}
+              </div>
+
+              {/* Add Skills Section */}
+              <div className="bg-[#F4F1EB] dark:bg-[#1C2618] border border-gray-200 dark:border-[#2B3B26] p-6 rounded-xl shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Add More Skills</h2>
+                <div className="flex items-center gap-2 mb-6 bg-white dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#6B905F]">
+                  <Search className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search skills..."
+                    value={skillSearchQuery}
+                    onChange={(e) => setSkillSearchQuery(e.target.value)}
+                    className="flex-1 bg-transparent border-none focus:outline-none text-sm text-[#1D1E1B] dark:text-white/90"
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto pr-2 pb-2">
+                  {filteredSkills.map(skill => {
+                    const isSelected = selectedSkills.includes(skill);
+                    const isAlreadySaved = savedSkills.includes(skill);
+                    if (isAlreadySaved) return null; // Don't show already saved skills in the selection pool
+
+                    return (
+                      <button
+                        key={skill}
+                        onClick={() => toggleSkill(skill)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                          isSelected 
+                            ? 'bg-[#6B905F] text-white border-[#6B905F]' 
+                            : 'bg-white dark:bg-[#121910] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-[#2B3B26] hover:border-[#6B905F] hover:text-[#6B905F]'
+                        }`}
+                      >
+                        {skill}
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                      </button>
+                    );
+                  })}
+                  
+                  {filteredSkills.filter(s => !savedSkills.includes(s)).length === 0 && (
+                    <p className="text-sm text-gray-500 py-4 text-center w-full">No new skills match your search.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button 
+                  onClick={handleSaveSkills}
+                  disabled={selectedSkills.length === 0}
+                  className={`px-6 py-2.5 font-medium rounded-lg transition-colors text-sm shadow-sm ${
+                    selectedSkills.length > 0 
+                      ? 'bg-[#6B905F] hover:bg-[#5A7A4F] text-white' 
+                      : 'bg-gray-300 dark:bg-[#2B3B26] text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  Save Skills
+                </button>
+              </div>
             </div>
           </div>
         );

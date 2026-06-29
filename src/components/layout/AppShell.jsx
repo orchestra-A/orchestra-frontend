@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { FloatingAIChat } from '../FloatingAIChat';
 
 // Main layout wrapper for the authenticated application.
 // Handles the positioning of the Sidebar, Header, and the main scrollable content area (<Outlet />).
@@ -25,6 +26,8 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      
+      <FloatingAIChat />
     </div>
   );
 }
