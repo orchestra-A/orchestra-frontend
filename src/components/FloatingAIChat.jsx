@@ -119,7 +119,7 @@ export function FloatingAIChat() {
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6B905F] to-[#5A7A4F] flex items-center justify-center flex-shrink-0">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
-                <div className="bg-gradient-to-br from-[#8FA885] to-[#6B905F] text-white p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm max-w-[85%]">
+                <div className="bg-gradient-to-br from-[#6B905F] to-[#3B5432] text-white p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm max-w-[85%]">
                   Hello! I'm the AI assistant for {projectName}. How can I help you today?
                 </div>
               </div>
