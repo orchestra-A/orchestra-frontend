@@ -73,12 +73,13 @@ const LANDING_CSS = `
 .ol-nav-cta{display:flex;gap:8px;align-items:center;}
 
 .ol-btn-ghost{
-  padding:.5rem 1.2rem;border:1px solid var(--ol-border-card);
+  padding:.5rem 1.2rem;border:2px solid var(--ol-border-card);
   background:transparent;color:var(--ol-text-body);border-radius:9px;
-  cursor:pointer;font-family:var(--ol-font-body);font-size:.875rem;font-weight:400;
+  cursor:pointer;font-family:var(--ol-font-body);font-size:.875rem;font-weight:500;
   text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
-.ol-btn-ghost:hover{background:var(--ol-bg-card);border-color:var(--ol-border);}
+.ol-btn-ghost:hover{background:var(--ol-bg-card);border-color:var(--ol-border);box-shadow: 0 4px 12px rgba(0,0,0,0.08);}
 
 .ol-btn-primary{
   padding:.5rem 1.35rem;
@@ -93,9 +94,8 @@ const LANDING_CSS = `
 
 /* ── HERO ── */
 .ol-hero{
-  min-height:88vh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  text-align:center;padding:5rem 2rem 4rem;
+  padding: 2.5rem 2rem 4rem; display:flex;flex-direction:column;
+  align-items:center; text-align:center;
   background:var(--ol-bg-main);
   position:relative;overflow:hidden;
 }
@@ -369,8 +369,7 @@ export default function LandingPage() {
             <li><a href="#integrations">Integrations</a></li>
           </ul>
           <div className="ol-nav-cta">
-            <button className="ol-btn-ghost" onClick={() => navigate('/login')}>Sign in</button>
-            <button className="ol-btn-primary" onClick={() => navigate('/signup')}>Get Started</button>
+            <button className="ol-btn-primary" onClick={() => navigate('/login')}>Get Started</button>
           </div>
         </nav>
 
@@ -381,7 +380,6 @@ export default function LandingPage() {
             <h1>Turn app ideas into <span className="ol-accent">structured game plans</span></h1>
             <p className="ol-hero-sub">Orchestra uses AI to break down massive app ideas into step-by-step technical tasks, intelligently distributes work across your team, and tracks progress across GitHub, Figma, Discord, and more.</p>
             <div className="ol-hero-actions">
-              <button className="ol-btn-primary ol-btn-lg" onClick={() => navigate('/signup')}>Start for free →</button>
               <a href="#how" className="ol-btn-ghost ol-btn-lg-ghost">See how it works</a>
             </div>
 
