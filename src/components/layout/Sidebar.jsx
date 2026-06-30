@@ -42,14 +42,14 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
 
   return (
     <div
-      className={`${isSidebarExpanded ? 'w-48' : 'w-14'} bg-[#F4F1EB] dark:bg-[#121910] text-[#1D1E1B] dark:text-white flex flex-col transition-all duration-300 border-r border-[#2B3B26] h-screen shrink-0`}
+      className={`${isSidebarExpanded ? 'w-48' : 'w-14'} bg-[#F4F1EB] dark:bg-[#09090B] text-[#1D1E1B] dark:text-white flex flex-col transition-all duration-300 border-r border-[#2B3B26] h-screen shrink-0`}
       onMouseEnter={() => setIsHoveringsidebar(true)}
       onMouseLeave={() => setIsHoveringsidebar(false)}
     >
       {/* Sidebar Header */}
       <div className={`h-16 flex items-center border-b border-white/5 shrink-0 ${isSidebarExpanded ? 'px-4 justify-between' : 'justify-center'}`}>
         <div className="flex items-center gap-2">
-          <Clover className="w-6 h-6 text-[#51DD15] dark:text-[#51DD15]" />
+          <Clover className="w-6 h-6 text-[#7ED957] dark:text-[#7ED957]" />
           {isSidebarExpanded && <span className="font-medium text-[15px]">Orchestra</span>}
         </div>
         {isSidebarExpanded && !sidebarCollapsed && (
@@ -68,7 +68,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] mb-2 ${isActive
-            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-[#51DD15] dark:text-[#51DD15] font-medium'
+            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
             : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'Home' : ''}
@@ -129,7 +129,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                       key={item}
                       to={`/${path}`}
                       className={({ isActive }) => `w-full flex text-left px-3 py-1.5 rounded-md text-[13px] transition-colors ${isActive
-                        ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-[#51DD15] dark:text-[#51DD15] font-medium'
+                        ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
                         : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
                         }`}
                     >
@@ -140,7 +140,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                 <NavLink
                   to={`/blueprint/${project.id}`}
                   className={({ isActive }) => `w-full flex text-left px-3 py-1.5 rounded-md text-[13px] transition-colors ${isActive
-                    ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-[#51DD15] dark:text-[#51DD15] font-medium'
+                    ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
                     : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
                     }`}
                 >
@@ -160,7 +160,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/todo"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-[#51DD15] dark:text-[#51DD15] font-medium'
+            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
             : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'To Do' : ''}
@@ -178,7 +178,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/calendar"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-[#51DD15] dark:text-[#51DD15] font-medium'
+            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
             : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'Calendar' : ''}
@@ -190,7 +190,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
         <NavLink
           to="/archive"
           className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-[13px] ${isActive
-            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-[#51DD15] dark:text-[#51DD15] font-medium'
+            ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
             : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
             }`}
           title={!isSidebarExpanded ? 'Archive' : ''}
@@ -204,7 +204,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
       {/* Delete Confirmation Dialog */}
       {projectToDelete && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#F4F1EB] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6">
               <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
                 <Trash2 className="w-6 h-6 text-red-600" />
@@ -216,7 +216,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
               <div className="flex gap-3">
                 <button
                   onClick={() => setProjectToDelete(null)}
-                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-[#2B3B26] hover:bg-gray-300 dark:hover:bg-[#2B3B26] text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer"
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-[#27272A] hover:bg-gray-300 dark:hover:bg-[#2B3B26] text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

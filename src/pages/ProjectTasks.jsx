@@ -38,9 +38,9 @@ export default function ProjectTasks() {
         </Button>
       </div>
 
-      <div className="bg-[#F4F1EB] dark:bg-[#121910] rounded-lg border border-gray-200 dark:border-[#2B3B26] overflow-hidden shadow-sm">
+      <div className="bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] overflow-hidden shadow-sm">
         <table className="w-full text-left text-sm text-gray-600">
-          <thead className="bg-[#F3F7F1] dark:bg-[#1C2618] border-b border-gray-200 dark:border-[#2B3B26] text-gray-500 dark:text-white/50 uppercase text-xs font-semibold">
+          <thead className="bg-[#F3F7F1] dark:bg-[#18181B] border-b border-gray-200 dark:border-[#27272A] text-gray-500 dark:text-white/50 uppercase text-xs font-semibold">
             <tr>
               <th className="px-6 py-4">Task Name</th>
               <th className="px-6 py-4">Status</th>
