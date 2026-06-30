@@ -94,10 +94,10 @@ export function FloatingAIChat() {
         <div 
           ref={windowRef}
           style={windowStyle}
-          className="fixed z-50 w-[350px] bg-[#F4F1EB] dark:bg-[#0A0F09] border border-gray-200 dark:border-[#2B3B26] rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          className="fixed z-50 w-[350px] bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl shadow-2xl flex flex-col overflow-hidden"
         >
           <div 
-            className="flex items-center justify-between px-4 py-3 bg-[#6B905F] dark:bg-[#2B3B26] text-white cursor-move touch-none select-none"
+            className="flex items-center justify-between px-4 py-3 bg-[#6B905F] dark:bg-[#27272A] text-white cursor-move touch-none select-none"
             onPointerDown={onPointerDown}
           >
             <div className="flex items-center gap-2">
@@ -125,11 +125,11 @@ export function FloatingAIChat() {
               </div>
             </div>
             
-            <div className="p-3 bg-[#F4F1EB] dark:bg-[#121910] border-t border-gray-200 dark:border-[#2B3B26]">
+            <div className="p-3 bg-[#F4F1EB] dark:bg-[#09090B] border-t border-gray-200 dark:border-[#27272A]">
               <div className="relative flex items-center gap-2">
                 <Input 
                   placeholder="Ask something..." 
-                  className="flex-1 bg-white dark:bg-[#0A0F09] border-gray-200 dark:border-[#2B3B26] text-[#1D1E1B] dark:text-white/90" 
+                  className="flex-1 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#27272A] text-[#1D1E1B] dark:text-white/90" 
                 />
                 <Button size="icon" className="bg-[#6B905F] hover:bg-[#5A7A4F] text-white shrink-0">
                   <Send className="w-4 h-4" />

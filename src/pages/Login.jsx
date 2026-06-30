@@ -6,14 +6,14 @@ export default function Login() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#F4F1EB] dark:bg-[#0a100a] text-[#1c1c1a] dark:text-[#F3F7F1] relative">
+    <div className="min-h-screen w-full flex flex-col bg-[#F4F1EB] dark:bg-[#09090B] text-[#1c1c1a] dark:text-[#F3F7F1] relative">
 
       {/* Background decoration (optional, keeping it subtle) */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#5a7a4e]/5 via-transparent to-transparent pointer-events-none"></div>
 
       {/* Top bar for Back to home */}
       <div className="w-full flex justify-start p-4 lg:p-6 absolute top-0 left-0 z-50">
-        <Link to="/" className="inline-flex items-center text-[#8a8a82] dark:text-[#a0a59e] hover:text-[#4a4a45] dark:hover:text-[#F3F7F1] text-base lg:text-lg transition-colors">
+        <Link to="/" className="inline-flex items-center text-[#8a8a82] dark:text-[#A1A1AA] hover:text-[#4a4a45] dark:hover:text-[#F3F7F1] text-base lg:text-lg transition-colors">
           <ArrowLeft className="w-5 h-5 lg:w-6 lg:h-6 mr-2" /> Back to home
         </Link>
       </div>
@@ -28,14 +28,14 @@ export default function Login() {
           </h1>
 
           {/* Tagline */}
-          <h2 className="text-4xl lg:text-5xl font-bold text-[#6b8f5e] dark:text-[#51DD15] mb-6 lg:mb-8 leading-tight max-w-5xl" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>
+          <h2 className="text-4xl lg:text-5xl font-bold text-[#6b8f5e] dark:text-[#7ED957] mb-6 lg:mb-8 leading-tight max-w-5xl" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>
             Streamline your development workflow.
           </h2>
 
           {/* Login Buttons Row */}
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mb-8 lg:mb-10">
             <a href="https://orchestra-backend-30fy.onrender.com/auth/google" className="w-full block">
-              <Button type="button" variant="outline" className="w-full bg-white dark:bg-[#1c2132] border border-[#eae6df] dark:border-[#2a3042] shadow-sm text-[#4a4a45] dark:text-[#F3F7F1] hover:bg-gray-50 dark:hover:bg-[#252a3a] h-16 lg:h-20 flex items-center justify-center gap-4 text-base lg:text-lg cursor-pointer transition-all">
+              <Button type="button" variant="outline" className="w-full bg-white dark:bg-[#09090B] border border-[#eae6df] dark:border-[#27272A] shadow-sm text-[#4a4a45] dark:text-[#F3F7F1] hover:bg-gray-50 dark:hover:bg-[#252a3a] h-16 lg:h-20 flex items-center justify-center gap-4 text-base lg:text-lg cursor-pointer transition-all">
                 <svg className="w-7 h-7 lg:w-8 lg:h-8" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -60,7 +60,7 @@ export default function Login() {
               </Button>
             </a>
             <a href="https://orchestra-backend-30fy.onrender.com/auth/figma" className="w-full block">
-              <Button type="button" variant="outline" className="w-full bg-white dark:bg-[#1c2132] border border-[#eae6df] dark:border-[#2a3042] shadow-sm text-[#4a4a45] dark:text-[#F3F7F1] hover:bg-gray-50 dark:hover:bg-[#252a3a] h-16 lg:h-20 flex items-center justify-center gap-4 text-base lg:text-lg cursor-pointer transition-all">
+              <Button type="button" variant="outline" className="w-full bg-white dark:bg-[#09090B] border border-[#eae6df] dark:border-[#27272A] shadow-sm text-[#4a4a45] dark:text-[#F3F7F1] hover:bg-gray-50 dark:hover:bg-[#252a3a] h-16 lg:h-20 flex items-center justify-center gap-4 text-base lg:text-lg cursor-pointer transition-all">
                 <svg className="w-5 h-7 lg:w-6 lg:h-8" viewBox="0 0 38 57" fill="none"><path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" fill="#1ABCFE" /><path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z" fill="#F24E1E" /><path d="M19 0v19h9.5A9.5 9.5 0 1 0 19 0z" fill="#FF7262" /><path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z" fill="#A259FF" /><path d="M0 47.5A9.5 9.5 0 0 0 9.5 57 9.5 9.5 0 0 0 19 47.5v-9.5H9.5A9.5 9.5 0 0 0 0 47.5z" fill="#0ACF83" /></svg>
                 <span>Figma</span>
               </Button>
@@ -69,7 +69,7 @@ export default function Login() {
 
           {/* Centered Description Paragraph */}
           <div className="w-full flex justify-center">
-            <p className="text-lg lg:text-xl text-[#4a4a45] dark:text-[#b8bcb5] leading-relaxed text-center max-w-4xl">
+            <p className="text-lg lg:text-xl text-[#4a4a45] dark:text-[#A1A1AA] leading-relaxed text-center max-w-4xl">
               Input your project details, and our platform intelligently crafts a custom, actionable plan. We track your Figma design updates, GitHub commits, and Discord conversations in real-time, automatically assigning tasks based on team skillsets to keep everyone aligned and productive.
             </p>
           </div>

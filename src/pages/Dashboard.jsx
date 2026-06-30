@@ -27,16 +27,16 @@ export default function Dashboard() {
   const delayedTasks = tasks.filter(t => t.status === 'stopped' || t.status === 'delayed').slice(0, 3);
   const inProgressTasks = tasks.filter(t => t.status === 'in_progress').slice(0, 3);
 
-  const TaskCard = ({ task, colorClass }) => (
+  const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => (
     <div
       onClick={() => navigate('/todo')}
       className={`rounded-lg border shadow-sm p-2.5 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
     >
       <div className="flex justify-between items-start mb-1.5">
-        <h3 className="font-semibold text-[#1D1E1B] text-[13px] leading-snug">{task.title}</h3>
+        <h3 className={`font-semibold ${textClass} text-[13px] leading-snug`}>{task.title}</h3>
       </div>
       <div className="flex items-center justify-between mt-2">
-        <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100 text-gray-600">
+        <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100/50 text-[#2B3B26]">
           {projects.find(p => p.id === task.project_id)?.name || task.project_id || 'General'}
         </Badge>
       </div>
@@ -56,11 +56,11 @@ export default function Dashboard() {
         {/* Left Column: Projects Overview */}
         <div className="flex flex-col gap-4">
           {/* Active Projects Stat Box */}
-          <div className="bg-[#F4F1EB] dark:bg-[#121910] rounded-lg border border-gray-200 dark:border-[#2B3B26] p-5 shadow-sm flex flex-col justify-center transition-all hover:border-[#6B905F] dark:border-[#6B905F]/30 hover:shadow-md cursor-pointer">
+          <div className="bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-5 shadow-sm flex flex-col justify-center transition-all hover:border-[#6B905F] dark:border-[#6B905F]/30 hover:shadow-md cursor-pointer">
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-600 dark:text-white/60 font-medium">Active Projects</span>
               <div className="w-10 h-10 bg-[#6B905F] dark:bg-[#6B905F]/10 rounded-lg flex items-center justify-center shadow-sm">
-                <FolderOpen className="w-5 h-5 text-[#51DD15] dark:text-[#51DD15]" />
+                <FolderOpen className="w-5 h-5 text-[#7ED957] dark:text-[#7ED957]" />
               </div>
             </div>
             <div className="text-5xl font-bold text-[#1D1E1B] dark:text-white/90">{projects.length}</div>
@@ -77,7 +77,7 @@ export default function Dashboard() {
                 <div key={project.id} className="relative group">
                   <button
                     onClick={() => navigate(`/${project.id}-tasks`)}
-                    className="w-full bg-[#F4F1EB] dark:bg-[#121910] rounded-lg border border-gray-200 dark:border-[#2B3B26] p-4 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#6B905F]/30 text-left flex flex-col items-center justify-center aspect-square group/btn"
+                    className="w-full bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-4 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#6B905F]/30 text-left flex flex-col items-center justify-center aspect-square group/btn"
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover/btn:scale-110 transition-transform" style={{ backgroundColor: `${project.color}15` }}>
                       <FolderOpen className="w-5 h-5" style={{ color: project.color }} />
@@ -89,7 +89,7 @@ export default function Dashboard() {
                       e.stopPropagation();
                       setProjectToDelete(project);
                     }}
-                    className="absolute top-2 right-2 p-1.5 rounded-md bg-[#F4F1EB] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] text-gray-400 dark:text-white/40 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 z-10"
+                    className="absolute top-2 right-2 p-1.5 rounded-md bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] text-gray-400 dark:text-white/40 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 z-10"
                     title="Delete Project"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -104,14 +104,14 @@ export default function Dashboard() {
         </div>
 
         {/* Kanban Board Container */}
-        <div className="lg:col-span-2 bg-[#F3F7F1]/50 dark:bg-[#121910] rounded-2xl p-4 border border-gray-200 dark:border-[#2B3B26]">
+        <div className="lg:col-span-2 bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-2xl p-4 border border-gray-200 dark:border-[#27272A]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
             {/* Middle Column: Behind Tasks Widget */}
-            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#121910] rounded-xl border-2 border-gray-200 dark:border-[#2B3B26] overflow-hidden shadow-inner h-full">
-              <div className="p-3 border-b-2 border-gray-200 dark:border-[#2B3B26] bg-gray-100 dark:bg-[#1C2618] flex items-center gap-2 sticky top-0 z-10">
+            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+              <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Behind / Delayed</h2>
-                <span className="ml-auto bg-gray-200 dark:bg-[#2B3B26] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
+                <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
                 {delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-200 border-red-300" />)}
@@ -119,14 +119,14 @@ export default function Dashboard() {
             </div>
 
             {/* Right Column: In Progress Tasks Widget */}
-            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#121910] rounded-xl border-2 border-gray-200 dark:border-[#2B3B26] overflow-hidden shadow-inner h-full">
-              <div className="p-3 border-b-2 border-gray-200 dark:border-[#2B3B26] bg-gray-100 dark:bg-[#1C2618] flex items-center gap-2 sticky top-0 z-10">
+            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+              <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <PlayCircle className="w-4 h-4 text-amber-500" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">In Progress</h2>
-                <span className="ml-auto bg-gray-200 dark:bg-[#2B3B26] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
+                <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-amber-200 border-amber-300" />)}
+                {inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-[#6B905F] border-[#5A7A50]" />)}
               </div>
             </div>
           </div>

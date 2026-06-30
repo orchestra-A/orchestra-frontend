@@ -18,14 +18,14 @@ export default function ProjectTeam() {
         <div>
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Team</h1>
         </div>
-        <Button className="bg-[#F4F1EB] dark:bg-[#121910] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#2B3B26] hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] shadow-sm">
+        <Button className="bg-[#F4F1EB] dark:bg-[#09090B] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#27272A] hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] shadow-sm">
           <UserPlus className="w-4 h-4 mr-2" /> Add Member
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {team.map(member => (
-          <div key={member.id} className="bg-[#F4F1EB] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] rounded-xl p-6 shadow-sm flex items-center gap-4">
+          <div key={member.id} className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-6 shadow-sm flex items-center gap-4">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${member.color}`}>
               {member.initials}
             </div>

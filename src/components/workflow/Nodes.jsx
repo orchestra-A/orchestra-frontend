@@ -5,7 +5,7 @@ import { CheckSquare, Target, PauseCircle, Clock, User, Code2 } from 'lucide-rea
 export function TaskNode({ data }) {
   const getColors = (status) => {
     switch (status) {
-      case 'completed': return { header: '#86efac', body: '#22c55e' }; // Green
+      case 'completed': return { header: '#86efac', body: '#6BC642' }; // Green
       case 'stopped': 
       case 'paused': return { header: '#991b1b', body: '#ef4444' }; // Red
       case 'in_progress': 

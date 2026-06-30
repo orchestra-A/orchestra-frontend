@@ -150,11 +150,11 @@ html {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #2B3B26;
+  background: #3F3F46;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #2B3B26;
+  background: #52525B;
 }
 
 /* Fix Autofill background colors replacing theme colors */
@@ -171,7 +171,7 @@ input:-webkit-autofill:active {
 .dark input:-webkit-autofill:hover, 
 .dark input:-webkit-autofill:focus, 
 .dark input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #1C2618 inset !important;
+    -webkit-box-shadow: 0 0 0 30px #18181B inset !important;
     -webkit-text-fill-color: white !important;
     transition: background-color 5000s ease-in-out 0s;
 }

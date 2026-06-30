@@ -8,7 +8,7 @@ export default function Help() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        <div className="bg-[#6B905F] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+        <div className="bg-[#6B905F] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
           <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 text-[#6B905F] dark:text-[#6B905F] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
             <Book className="w-6 h-6" />
           </div>
@@ -16,7 +16,7 @@ export default function Help() {
           <p className="text-white/80 dark:text-white/50 text-sm">Read our detailed guides and API documentation.</p>
         </div>
         
-        <div className="bg-[#6B905F] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+        <div className="bg-[#6B905F] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
           <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 text-[#9B59B6] dark:text-[#B97ACD] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
             <Mail className="w-6 h-6" />
           </div>
