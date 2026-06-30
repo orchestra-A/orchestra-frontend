@@ -165,11 +165,11 @@ export function WorkflowCanvas({ projectId = "proj_marketing" }) {
   };
 
   if (loading) {
-    return <div className="w-full h-full flex items-center justify-center bg-[#F4F1EB] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26] text-gray-500 dark:text-white/50">Loading workflow...</div>;
+    return <div className="w-full h-full flex items-center justify-center bg-[#F4F1EB] dark:bg-[#09090B] rounded-xl border border-gray-200 dark:border-[#27272A] text-gray-500 dark:text-white/50">Loading workflow...</div>;
   }
 
   return (
-    <div className="w-full h-full border border-gray-200 dark:border-[#2B3B26] rounded-xl bg-[#F4F1EB] dark:bg-[#121910] shadow-sm overflow-hidden relative group">
+    <div className="w-full h-full border border-gray-200 dark:border-[#27272A] rounded-xl bg-[#F4F1EB] dark:bg-[#09090B] shadow-sm overflow-hidden relative group">
       <button 
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${

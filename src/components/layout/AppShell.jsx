@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { FloatingAIChat } from '../FloatingAIChat';
 
 // Main layout wrapper for the authenticated application.
 // Handles the positioning of the Sidebar, Header, and the main scrollable content area (<Outlet />).
@@ -10,7 +11,7 @@ export function AppShell() {
   const [isHoveringSidebar, setIsHoveringsidebar] = useState(false);
 
   return (
-    <div className="size-full flex bg-[#F5F6F8] dark:bg-[#1C2618] h-screen overflow-hidden">
+    <div className="size-full flex bg-[#F5F6F8] dark:bg-[#18181B] h-screen overflow-hidden">
       <Sidebar 
         sidebarCollapsed={sidebarCollapsed} 
         setSidebarCollapsed={setSidebarCollapsed}
@@ -25,6 +26,8 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      
+      <FloatingAIChat />
     </div>
   );
 }

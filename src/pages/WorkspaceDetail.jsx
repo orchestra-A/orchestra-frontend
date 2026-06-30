@@ -23,7 +23,7 @@ export default function WorkspaceDetail() {
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Workspaces
       </button>
 
-      <div className="bg-[#6B905F] dark:bg-[#2B3B26] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
+      <div className="bg-[#6B905F] dark:bg-[#27272A] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-white/10">
           <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-white ${platform.color}`}>
             {platform.name[0]}
@@ -40,7 +40,7 @@ export default function WorkspaceDetail() {
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-slate-800 dark:text-white/90">Integration Settings</h3>
           
-          <div className="p-4 bg-slate-50 dark:bg-[#22283A] rounded-lg">
+          <div className="p-4 bg-slate-50 dark:bg-[#18181B] rounded-lg">
             <p className="text-sm text-slate-600 dark:text-white/70 mb-1">Connected Account</p>
             <p className="text-base font-medium text-slate-900 dark:text-white">
               {platform.account ? platform.account : 'None'}

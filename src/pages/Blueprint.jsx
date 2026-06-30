@@ -114,10 +114,10 @@ export default function Blueprint() {
               type="text" 
               value={title} 
               onChange={e => setTitle(e.target.value)} 
-              className="w-full bg-white dark:bg-[#1C2618] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#2B3B26] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
+              className="w-full bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
             />
           ) : (
-            <div className="text-[12px] text-[#1D1E1B] dark:text-white/90 bg-[#F3F7F1] dark:bg-[#1C2618] px-2 py-1 rounded-md border border-transparent font-medium">{title || "Untitled Project"}</div>
+            <div className="text-[12px] text-[#1D1E1B] dark:text-white/90 bg-[#F3F7F1] dark:bg-[#18181B] px-2 py-1 rounded-md border border-transparent font-medium">{title || "Untitled Project"}</div>
           )}
         </div>
 
@@ -129,10 +129,10 @@ export default function Blueprint() {
               rows={2} 
               value={description} 
               onChange={e => setDescription(e.target.value)} 
-              className="w-full bg-white dark:bg-[#1C2618] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#2B3B26] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors resize-none shadow-sm" 
+              className="w-full bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors resize-none shadow-sm" 
             />
           ) : (
-            <div className="text-[12px] text-gray-700 dark:text-white/80 bg-[#F3F7F1] dark:bg-[#1C2618] px-2 py-1 rounded-md border border-transparent min-h-[36px] whitespace-pre-wrap">{description || "No description."}</div>
+            <div className="text-[12px] text-gray-700 dark:text-white/80 bg-[#F3F7F1] dark:bg-[#18181B] px-2 py-1 rounded-md border border-transparent min-h-[36px] whitespace-pre-wrap">{description || "No description."}</div>
           )}
         </div>
 
@@ -147,7 +147,7 @@ export default function Blueprint() {
                 onChange={e => setTechInput(e.target.value)} 
                 onKeyDown={handleTechKeyDown}
                 placeholder="Type tech and press enter"
-                className="flex-1 bg-white dark:bg-[#1C2618] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#2B3B26] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
+                className="flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
               />
               <select 
                 onChange={e => {
@@ -156,7 +156,7 @@ export default function Blueprint() {
                     e.target.value = "";
                   }
                 }}
-                className="w-[90px] bg-white dark:bg-[#1C2618] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#2B3B26] rounded-md px-1 py-1 text-[11px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] cursor-pointer shadow-sm"
+                className="w-[90px] bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-1 py-1 text-[11px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] cursor-pointer shadow-sm"
               >
                 <option value="">Presets...</option>
                 {techOptions.map(o => <option key={o} value={o}>{o}</option>)}
@@ -193,7 +193,7 @@ export default function Blueprint() {
                     type="text" 
                     value={m.value} 
                     onChange={e => handleMemberChange(m.id, e.target.value)} 
-                    className="flex-1 bg-white dark:bg-[#1C2618] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#2B3B26] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
+                    className="flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
                   />
                   <button onClick={() => removeMember(m.id)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 p-1 rounded-md transition-colors shrink-0">
                     <X className="w-3 h-3" />
@@ -208,7 +208,7 @@ export default function Blueprint() {
               </button>
             </div>
           ) : (
-            <div className="space-y-1 bg-[#F3F7F1] dark:bg-[#1C2618] p-2 rounded-md border border-transparent">
+            <div className="space-y-1 bg-[#F3F7F1] dark:bg-[#18181B] p-2 rounded-md border border-transparent">
               {members.filter(m => m.value.trim()).length > 0 ? (
                 members.filter(m => m.value.trim()).map(m => (
                   <div key={m.id} className="text-[12px] text-gray-700 dark:text-white/90 font-medium flex items-center gap-1.5">
@@ -224,10 +224,10 @@ export default function Blueprint() {
         </div>
       </div>
 
-      <div className="pt-2 border-t border-gray-200 dark:border-[#2B3B26] mt-2 flex gap-2 shrink-0">
+      <div className="pt-2 border-t border-gray-200 dark:border-[#27272A] mt-2 flex gap-2 shrink-0">
         {isEditing ? (
           <>
-            <button onClick={() => viewState === 'centered' ? navigate('/') : setIsEditing(false)} className="flex-1 py-1.5 bg-white dark:bg-[#121910] border border-gray-300 dark:border-[#2B3B26] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors shadow-sm">
+            <button onClick={() => viewState === 'centered' ? navigate('/') : setIsEditing(false)} className="flex-1 py-1.5 bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors shadow-sm">
               Cancel
             </button>
             <button onClick={handleCreate} className="flex-1 py-1.5 bg-[#6B905F] dark:bg-[#6B905F] text-white font-semibold text-[13px] rounded-md hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] transition-colors shadow-sm flex items-center justify-center gap-1.5">
@@ -235,7 +235,7 @@ export default function Blueprint() {
             </button>
           </>
         ) : (
-          <button onClick={() => setIsEditing(true)} className="w-full py-1.5 bg-white dark:bg-[#121910] border border-gray-300 dark:border-[#2B3B26] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+          <button onClick={() => setIsEditing(true)} className="w-full py-1.5 bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors flex items-center justify-center gap-1.5 shadow-sm">
             <Edit2 className="w-3.5 h-3.5" /> Edit Details
           </button>
         )}
@@ -261,7 +261,7 @@ export default function Blueprint() {
     return (
       <div className="h-full flex flex-col page-enter">
         <div className="flex-1 flex items-center justify-center pb-4 min-h-0">
-          <div className="w-[800px] max-w-[95%] bg-[#F4F1EB] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26] shadow-2xl flex flex-col max-h-[95%] transition-shadow overflow-hidden">
+          <div className="w-[800px] max-w-[95%] bg-[#F4F1EB] dark:bg-[#09090B] rounded-xl border border-gray-200 dark:border-[#27272A] shadow-2xl flex flex-col max-h-[95%] transition-shadow overflow-hidden">
             {windowHeader}
             <div className="p-5 flex flex-col flex-1 overflow-hidden">
               {formContent}
@@ -276,7 +276,7 @@ export default function Blueprint() {
     <div className="h-full flex flex-col page-enter bg-transparent">
       {pageHeading}
       <div className="flex-1 flex gap-4 md:gap-5 min-h-0 pb-4">
-        <div className="w-[320px] lg:w-[350px] shrink-0 bg-[#F4F1EB] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26] shadow-lg flex flex-col h-full overflow-hidden transition-shadow resize-x">
+        <div className="w-[320px] lg:w-[350px] shrink-0 bg-[#F4F1EB] dark:bg-[#09090B] rounded-xl border border-gray-200 dark:border-[#27272A] shadow-lg flex flex-col h-full overflow-hidden transition-shadow resize-x">
           {windowHeader}
           <div className="p-3 flex flex-col flex-1 overflow-hidden">
             {formContent}

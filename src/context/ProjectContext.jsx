@@ -39,7 +39,7 @@ export function ProjectProvider({ children }) {
                 taskCount: 0,
                 membersMap: {}, 
                 color: ['#6B905F', '#9B59B6', '#F59E42', '#34D399', '#EC4899', '#8B5CF6'][Object.keys(projectMap).length % 6],
-                items: ['Workflow', 'AI', 'Tasks', 'Team', 'Activity']
+                items: ['Workflow', 'Tasks', 'Team', 'Activity']
               };
             }
             
@@ -96,7 +96,7 @@ export function ProjectProvider({ children }) {
       taskCount: 0,
       memberCount: projectData.members?.filter(m => m.value.trim()).length || 0,
       color: randomColor,
-      items: ['Workflow', 'AI', 'Tasks', 'Team', 'Activity'],
+      items: ['Workflow', 'Tasks', 'Team', 'Activity'],
       techStack: projectData.techStack || [],
       members: projectData.members || []
     };

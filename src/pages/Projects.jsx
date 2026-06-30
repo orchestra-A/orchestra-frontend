@@ -27,7 +27,7 @@ export default function Projects() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {projects.map(project => (
-          <div key={project.id} className="bg-[#F4F1EB] dark:bg-[#121910] rounded-lg border border-gray-200 dark:border-[#2B3B26] p-6 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#6B905F]/30 flex flex-col">
+          <div key={project.id} className="bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-6 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#6B905F]/30 flex flex-col">
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${project.color}15` }}>
                 <FolderOpen className="w-5 h-5" style={{ color: project.color }} />
@@ -40,7 +40,7 @@ export default function Projects() {
             <p className="text-sm text-gray-500 dark:text-white/50 mb-6 flex-1 line-clamp-2">{project.description}</p>
             
             <div className="mt-auto">
-              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-white/50 mb-4 pb-4 border-b border-gray-100 dark:border-[#2B3B26]">
+              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-white/50 mb-4 pb-4 border-b border-gray-100 dark:border-[#27272A]">
                 <span>{project.taskCount} tasks</span>
                 <span>{project.memberCount} members</span>
               </div>

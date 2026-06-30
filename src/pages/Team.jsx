@@ -37,9 +37,9 @@ export default function Team() {
         </div>
       </div>
 
-      <div className="flex-1 bg-[#F4F1EB] dark:bg-[#121910] rounded-lg border border-gray-200 dark:border-[#2B3B26] overflow-y-auto shadow-sm min-h-0">
+      <div className="flex-1 bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] overflow-y-auto shadow-sm min-h-0">
         <table className="w-full text-left text-sm text-gray-600 dark:text-white/70">
-          <thead className="bg-[#F3F7F1] dark:bg-[#1C2618] border-b border-gray-200 dark:border-[#2B3B26] text-gray-500 dark:text-white/50 uppercase text-xs font-semibold sticky top-0 z-10">
+          <thead className="bg-[#F3F7F1] dark:bg-[#18181B] border-b border-gray-200 dark:border-[#27272A] text-gray-500 dark:text-white/50 uppercase text-xs font-semibold sticky top-0 z-10">
             <tr>
               <th className="px-6 py-4">Member</th>
               <th className="px-6 py-4 text-right">Actions</th>
