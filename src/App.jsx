@@ -19,6 +19,7 @@ import Archive from './pages/Archive';
 import Help from './pages/Help';
 import ProjectTasks from './pages/ProjectTasks';
 import ProjectTeam from './pages/ProjectTeam';
+import ProjectActivity from './pages/ProjectActivity';
 import ProjectAI from './pages/ProjectAI';
 import Blueprint from './pages/Blueprint';
 import Workspaces from './pages/Workspaces';
@@ -78,6 +79,7 @@ export default function App() {
               <Route path="project/:projectId/ai" element={<ProjectAI />} />
               <Route path="project/:projectId/tasks" element={<ProjectTasks />} />
               <Route path="project/:projectId/team" element={<ProjectTeam />} />
+              <Route path="project/:projectId/activity" element={<ProjectActivity />} />
 
               {/* Other Sidebar/Header Routes */}
               <Route path="todo" element={<Todo />} />

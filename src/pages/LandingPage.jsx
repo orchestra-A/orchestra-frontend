@@ -369,7 +369,7 @@ export default function LandingPage() {
             <li><a href="#integrations">Integrations</a></li>
           </ul>
           <div className="ol-nav-cta">
-            <button className="ol-btn-primary" onClick={() => navigate('/login')}>Get Started</button>
+            {/* Removed Get Started from header */}
           </div>
         </nav>
 
@@ -380,7 +380,7 @@ export default function LandingPage() {
             <h1>Turn app ideas into <span className="ol-accent">structured game plans</span></h1>
             <p className="ol-hero-sub">Orchestra uses AI to break down massive app ideas into step-by-step technical tasks, intelligently distributes work across your team, and tracks progress across GitHub, Figma, Discord, and more.</p>
             <div className="ol-hero-actions">
-              <a href="#how" className="ol-btn-ghost ol-btn-lg-ghost">See how it works</a>
+              <button className="ol-btn-primary ol-btn-lg" onClick={() => navigate('/login')}>Get Started</button>
             </div>
 
             {/* Dashboard mockup */}

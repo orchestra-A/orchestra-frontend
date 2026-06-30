@@ -14,10 +14,10 @@ const nodeTypes = {
 
 const defaultEdgeOptions = {
   type: 'smoothstep',
-  style: { stroke: '#2F80ED', strokeWidth: 4, borderRadius: 24 },
+  style: { stroke: '#475569', strokeWidth: 4 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    color: '#2F80ED',
+    color: '#475569',
   },
 };
 
