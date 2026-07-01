@@ -24,11 +24,7 @@ export function FloatingAIChat() {
   const dragRef = useRef({ startX: 0, startY: 0, initialLeft: 0, initialTop: 0 });
   const windowRef = useRef(null);
 
-  // Reset when navigating to a new project
-  useEffect(() => {
-    setIsOpen(false);
-    setPosition({ left: -1, top: -1 });
-  }, [currentProjectId]);
+  // Removed reset on navigate to persist chat box open state across tabs
 
   useEffect(() => {
     if (!isDragging) return;
@@ -55,8 +51,7 @@ export function FloatingAIChat() {
     };
   }, [isDragging]);
 
-  if (!isProjectRoute) return null;
-
+  // No longer returning null on non-project routes, handled by AppShell
   const onPointerDown = (e) => {
     if (!windowRef.current) return;
     const rect = windowRef.current.getBoundingClientRect();

@@ -23,7 +23,7 @@ export default function WorkspaceDetail() {
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Workspaces
       </button>
 
-      <div className="bg-[#6B905F] dark:bg-[#27272A] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
+      <div className="bg-white dark:bg-[#27272A] border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-white/10">
           <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-white ${platform.color}`}>
             {platform.name[0]}

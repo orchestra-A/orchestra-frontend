@@ -137,14 +137,14 @@ export default function Dashboard() {
       {/* Delete Confirmation Dialog */}
       {projectToDelete && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 page-enter">
-          <div className="bg-[#6B905F] dark:bg-[#6B905F] rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+          <div className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-6">
               <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
                 <Trash2 className="w-6 h-6 text-red-600" />
               </div>
               <h3 className="text-xl font-bold text-[#1D1E1B] dark:text-white/90 mb-2">Delete Project?</h3>
-              <p className="text-gray-500 dark:text-white/50 mb-6">
-                Are you sure you want to delete <span className="font-semibold text-gray-800">"{projectToDelete.name}"</span>? This action cannot be undone and all associated tasks and data will be permanently removed.
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Are you sure you want to delete <span className="font-semibold text-gray-800 dark:text-gray-200">"{projectToDelete.name}"</span>? This action cannot be undone and all associated tasks and data will be permanently removed.
               </p>
               <div className="flex gap-3">
                 <button
