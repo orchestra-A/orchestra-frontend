@@ -180,8 +180,8 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
         onClick={() => setIsEditable(!isEditable)}
         className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-medium transition-all ${
           isEditable 
-            ? 'bg-white dark:bg-[#6B905F] text-[#6B905F] dark:text-white hover:bg-gray-50' 
-            : 'bg-white dark:bg-[#6B905F] text-gray-600 border border-gray-200 hover:bg-gray-50'
+            ? 'bg-[#6B905F] text-white hover:bg-[#5A7A4F]' 
+            : 'bg-white dark:bg-[#27272A] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-[#27272A] hover:bg-gray-50 dark:hover:bg-white/5'
         }`}
       >
         {isEditable ? (

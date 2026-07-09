@@ -31,14 +31,7 @@ export function FloatingAIChat() {
   const windowRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Reset when navigating to a new project
-  useEffect(() => {
-    setIsOpen(false);
-    setPosition({ left: -1, top: -1 });
-    setMessages([
-      { role: 'assistant', content: `Hello! I'm the AI assistant for ${projectName}. How can I help you today?` }
-    ]);
-  }, [currentProjectId, projectName]);
+  // Removed reset on navigate to persist chat box open state across tabs
 
   // Ping health endpoint on first open
   useEffect(() => {
@@ -79,8 +72,7 @@ export function FloatingAIChat() {
     };
   }, [isDragging]);
 
-  if (!isProjectRoute) return null;
-
+  // No longer returning null on non-project routes, handled by AppShell
   const onPointerDown = (e) => {
     if (!windowRef.current) return;
     const rect = windowRef.current.getBoundingClientRect();

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { FloatingAIChat } from '../FloatingAIChat';
@@ -9,6 +9,11 @@ import { FloatingAIChat } from '../FloatingAIChat';
 export function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isHoveringSidebar, setIsHoveringsidebar] = useState(false);
+  const location = useLocation();
+  
+  // Routes where the AI chat should be hidden
+  const hiddenChatRoutes = ['/profile', '/settings', '/help', '/about', '/blueprint'];
+  const showChat = !hiddenChatRoutes.some(route => location.pathname.startsWith(route));
 
   return (
     <div className="size-full flex bg-[#F5F6F8] dark:bg-[#18181B] h-screen overflow-hidden">
@@ -27,7 +32,7 @@ export function AppShell() {
         </main>
       </div>
       
-      <FloatingAIChat />
+      {showChat && <FloatingAIChat />}
     </div>
   );
 }
