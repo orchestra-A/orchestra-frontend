@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Edit2, Check } from 'lucide-react';
+import { X, Plus, Edit2, Check, Layout, FileText, Loader2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
+import { WorkflowCanvas } from '../components/WorkflowCanvas';
 
 const techOptions = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Tailwind CSS', 'Next.js', 'PostgreSQL', 'MongoDB', 'Docker'];
 
@@ -24,6 +25,10 @@ export default function Blueprint() {
   const [techInput, setTechInput] = useState('');
   
   const [members, setMembers] = useState([{ id: 1, value: "" }]);
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [blueprintData, setBlueprintData] = useState(null);
+  const [activeTab, setActiveTab] = useState('workflow');
 
   useEffect(() => {
     if (projectId) {
@@ -92,14 +97,41 @@ export default function Blueprint() {
     }
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (projectId) {
       updateProject(projectId, { title, description, members, techStack });
       setViewState('split');
       setIsEditing(false);
     } else {
+      setIsGenerating(true);
+      setViewState('split');
       const newId = addProject({ title, description, members, techStack });
-      navigate(`/blueprint/${newId}`);
+      navigate(`/blueprint/${newId}`, { replace: true });
+
+      try {
+         const res = await fetch('https://orchestra-ai-36zm.onrender.com/blueprint', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+            },
+            body: JSON.stringify({
+              idea: `${title}: ${description}`,
+              project_id: newId,
+              members: members.map(m => m.value).filter(val => val.trim() !== '')
+            })
+         });
+         const data = await res.json();
+         setBlueprintData({
+            tasks: data.tasks || [],
+            description: data.description || "No description provided."
+         });
+      } catch (err) {
+         console.error(err);
+      } finally {
+         setIsGenerating(false);
+         setIsEditing(false);
+      }
     }
   };
 
@@ -282,14 +314,58 @@ export default function Blueprint() {
             {formContent}
           </div>
         </div>
-        <div className="flex-1 bg-[#121212] rounded-xl border border-gray-800 shadow-inner flex flex-col items-center justify-center text-gray-500 dark:text-white/50 relative overflow-hidden transition-all duration-300">
-        <div className="absolute top-3 left-3 flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
-        </div>
-        <p className="font-mono text-[12px] tracking-widest text-gray-600 uppercase">Output Window</p>
-        <p className="text-[10px] text-gray-600 mt-1 opacity-50">Blueprint rendering will appear here.</p>
+        <div className="flex-1 bg-[#F4F1EB] dark:bg-[#09090B] rounded-xl border border-gray-200 dark:border-[#27272A] shadow-lg flex flex-col relative overflow-hidden transition-all duration-300">
+          
+          {/* Header & Tabs */}
+          <div className="bg-white dark:bg-[#18181B] border-b border-gray-200 dark:border-[#27272A] px-4 py-3 flex items-center justify-between shrink-0 z-10">
+            <div className="flex bg-gray-100 dark:bg-[#09090B] rounded-lg p-1 border border-gray-200 dark:border-[#27272A]">
+              <button 
+                onClick={() => setActiveTab('workflow')} 
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors ${activeTab === 'workflow' ? 'bg-white dark:bg-[#27272A] text-[#6B905F] dark:text-[#6B905F] shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+              >
+                <Layout className="w-3.5 h-3.5" /> Workflow
+              </button>
+              <button 
+                onClick={() => setActiveTab('description')} 
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors ${activeTab === 'description' ? 'bg-white dark:bg-[#27272A] text-[#6B905F] dark:text-[#6B905F] shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+              >
+                <FileText className="w-3.5 h-3.5" /> Description
+              </button>
+            </div>
+            
+            <div className="flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 relative overflow-hidden flex flex-col">
+            {isGenerating ? (
+               <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#6B905F] mb-3" />
+                  <p className="font-semibold text-[13px]">Generating Blueprint...</p>
+                  <p className="text-[11px] mt-1 opacity-70">Structuring workflow and compiling details</p>
+               </div>
+            ) : blueprintData ? (
+               activeTab === 'workflow' ? (
+                   <WorkflowCanvas projectId={projectId} tasksOverride={blueprintData.tasks} />
+               ) : (
+                   <div className="p-6 overflow-y-auto w-full h-full custom-scrollbar">
+                       <div className="max-w-3xl text-gray-800 dark:text-gray-200 whitespace-pre-wrap text-[13px] leading-relaxed">
+                          {blueprintData.description}
+                       </div>
+                   </div>
+               )
+            ) : (
+               <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                  <Layout className="w-12 h-12 opacity-20 mb-3" />
+                  <p className="font-mono text-[12px] tracking-widest uppercase">Output Window</p>
+                  <p className="text-[11px] mt-1 opacity-60">Blueprint rendering will appear here.</p>
+               </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

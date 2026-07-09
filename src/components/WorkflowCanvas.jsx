@@ -21,20 +21,26 @@ const defaultEdgeOptions = {
   },
 };
 
-export function WorkflowCanvas({ projectId = "proj_marketing" }) {
+export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = null }) {
   const [isEditable, setIsEditable] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState(null);
 
-  const { tasks } = useProject();
+  const { tasks: globalTasks } = useProject();
+  const tasks = tasksOverride || globalTasks;
 
   useEffect(() => {
     function loadTasks() {
       try {
         setLoading(true);
-        if (!tasks || tasks.length === 0) return;
+        if (!tasks || tasks.length === 0) {
+           setNodes([]);
+           setEdges([]);
+           setLoading(false);
+           return;
+        }
 
         const decodedId = decodeURIComponent(projectId || "").trim();
         

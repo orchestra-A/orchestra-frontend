@@ -25,8 +25,9 @@ export function Header() {
     logout();
   };
 
-  const getInitials = (name) => {
-    if (!name) return "G";
+  const getInitials = (user) => {
+    const name = user?.username || user?.name;
+    if (!name) return 'U';
     return name.substring(0, 2).toUpperCase();
   };
 
@@ -61,7 +62,7 @@ export function Header() {
             <button className="focus:outline-none cursor-pointer">
               <Avatar className="w-8 h-8 border border-gray-200 dark:border-[#27272A] hover:border-[#6B905F] dark:border-[#6B905F] dark:hover:border-[#6B905F] dark:border-[#6B905F] transition-colors cursor-pointer">
                 <AvatarFallback className="bg-[#6B905F] dark:bg-[#6B905F] text-white text-xs">
-                  {getInitials(currentUser?.name)}
+                  {getInitials(currentUser)}
                 </AvatarFallback>
               </Avatar>
             </button>
@@ -69,8 +70,8 @@ export function Header() {
           <DropdownMenuContent align="end" className="w-56 dark:bg-[#09090B] dark:border-[#27272A]">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="text-sm font-medium dark:text-white/90">{currentUser?.name || "Guest User"}</span>
-                <span className="text-xs text-gray-500 dark:text-white/50 font-normal">{currentUser?.email || "guest@orchestra.app"}</span>
+                <span className="text-sm font-medium dark:text-white/90">{currentUser?.username || currentUser?.name || 'Guest User'}</span>
+                <span className="text-xs text-gray-500 dark:text-white/50 font-normal">{currentUser?.email || ''}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
