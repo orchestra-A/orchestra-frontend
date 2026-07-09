@@ -19,6 +19,7 @@ import Archive from './pages/Archive';
 import Help from './pages/Help';
 import ProjectTasks from './pages/ProjectTasks';
 import ProjectTeam from './pages/ProjectTeam';
+import ProjectActivity from './pages/ProjectActivity';
 import Blueprint from './pages/Blueprint';
 import Workspaces from './pages/Workspaces';
 import WorkspaceDetail from './pages/WorkspaceDetail';
@@ -76,6 +77,7 @@ export default function App() {
               <Route path="project/:projectId/workflow" element={<ProjectWorkflow />} />
               <Route path="project/:projectId/tasks" element={<ProjectTasks />} />
               <Route path="project/:projectId/team" element={<ProjectTeam />} />
+              <Route path="project/:projectId/activity" element={<ProjectActivity />} />
 
               {/* Other Sidebar/Header Routes */}
               <Route path="todo" element={<Todo />} />

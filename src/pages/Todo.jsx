@@ -7,7 +7,7 @@ export default function Todo() {
   const { tasks, projects } = useProject();
   const { currentUser } = useAuth();
 
-  const myTasks = tasks.filter(t => t.assigned_to === (currentUser?.name || "Guest"));
+  const myTasks = tasks.filter(t => t.assigned_to === (currentUser?.username || ''));
 
   const delayedTasks = myTasks.filter(t => t.status === 'stopped' || t.status === 'delayed');
   const inProgressTasks = myTasks.filter(t => t.status === 'in_progress');

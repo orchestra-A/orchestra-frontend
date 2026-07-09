@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { fetchTasks, fetchUsers } from '../services/api';
 
 const ProjectContext = createContext();
 
@@ -7,82 +8,122 @@ export function useProject() {
   return useContext(ProjectContext);
 }
 
-// Provider component that manages global state for Projects, Tasks, and Workflow Data.
-// It fetches initial data from an API and provides methods to create or delete projects.
+// Provider component that manages global state for Projects, Tasks, and Team Data.
+// It fetches data from the backend and scopes everything to the logged-in user:
+//   - Only projects where the user's username appears in at least one task's assigned_to
+//   - All users fetched once and exposed as `allUsers` for team enrichment
 export function ProjectProvider({ children }) {
   const [projects, setProjects] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [rawNodes, setRawNodes] = useState([]);
-  const [rawEdges, setRawEdges] = useState([]);
+  const [tasks, setTasks] = useState([]);       // All tasks for the current user's projects
+  const [allUsers, setAllUsers] = useState([]);  // All backend users (for team enrichment)
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProjectsFromTasks = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch('https://orchestra-backend-30fy.onrender.com/tasks');
-        const data = await response.json();
-        
-        if (data && data.tasks) {
-          const projectMap = {};
-          
-          data.tasks.forEach(t => {
-            const pid = t.project_id || "Project 1";
-            
-            if (!projectMap[pid]) {
-              // Create a formatted name, e.g., proj_marketing -> Marketing
-              const formattedName = pid === "Project 1" ? "Project 1" : pid.replace("proj_", "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-              
-              projectMap[pid] = {
-                id: pid,
-                name: formattedName,
-                description: `Automatically generated project from tasks.`,
-                taskCount: 0,
-                membersMap: {}, 
-                color: ['#6B905F', '#9B59B6', '#F59E42', '#34D399', '#EC4899', '#8B5CF6'][Object.keys(projectMap).length % 6],
-                items: ['Workflow', 'Tasks', 'Team']
+        // Read the current user from localStorage (avoids circular dependency with AuthContext)
+        const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+        // Use username as the identifier — this matches the assigned_to field in tasks
+        const currentUsername = storedUser?.username || null;
+
+        // Fetch all tasks and all users in parallel
+        const [allTasks, users] = await Promise.all([
+          fetchTasks(),
+          fetchUsers(),
+        ]);
+
+        setAllUsers(users);
+
+        // If we have a logged-in user, filter to only their tasks/projects
+        const relevantTasks = currentUsername
+          ? allTasks.filter((t) => t.assigned_to === currentUsername)
+          : allTasks;
+
+        // Build a project map from the relevant tasks
+        const projectMap = {};
+        const projectColors = [
+          '#6B905F', '#9B59B6', '#F59E42', '#34D399',
+          '#EC4899', '#8B5CF6', '#38BDF8', '#F87171',
+        ];
+        let colorIndex = 0;
+
+        // Also collect ALL tasks for each project the user belongs to
+        // (so team members who work on the same project are visible)
+        const userProjectIds = new Set(relevantTasks.map((t) => t.project_id).filter(Boolean));
+
+        const projectTasks = allTasks.filter((t) => userProjectIds.has(t.project_id));
+
+        projectTasks.forEach((t) => {
+          const pid = t.project_id;
+          if (!pid) return;
+
+          if (!projectMap[pid]) {
+            const formattedName = pid
+              .replace(/^proj_/, '')
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+
+            projectMap[pid] = {
+              id: pid,
+              name: formattedName,
+              description: `Tasks and activity for the ${formattedName} project.`,
+              taskCount: 0,
+              membersMap: {},
+              color: projectColors[colorIndex % projectColors.length],
+              items: ['Workflow', 'Tasks', 'Team', 'Activity'],
+            };
+            colorIndex++;
+          }
+
+          projectMap[pid].taskCount += 1;
+
+          // Build a members map per project from assigned_to field
+          if (t.assigned_to) {
+            if (!projectMap[pid].membersMap[t.assigned_to]) {
+              const memberColors = [
+                'bg-blue-100 text-blue-700',
+                'bg-purple-100 text-purple-700',
+                'bg-green-100 text-green-700',
+                'bg-orange-100 text-orange-700',
+                'bg-pink-100 text-pink-700',
+                'bg-cyan-100 text-cyan-700',
+              ];
+              const colorHash = t.assigned_to.length % memberColors.length;
+              const backendUser = users.find((u) => u.username === t.assigned_to);
+
+              projectMap[pid].membersMap[t.assigned_to] = {
+                id: t.assigned_to,
+                username: t.assigned_to,
+                name: backendUser?.username || t.assigned_to,
+                email: backendUser?.email || null,
+                skills: backendUser?.skills || [],
+                platforms_connected: backendUser?.platforms_connected || [],
+                github_username: backendUser?.github_username || null,
+                initials: t.assigned_to.substring(0, 2).toUpperCase(),
+                color: memberColors[colorHash],
               };
             }
-            
-            projectMap[pid].taskCount += 1;
-            
-            if (t.assigned_to) {
-              if (!projectMap[pid].membersMap[t.assigned_to]) {
-                const colors = ['bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-green-100 text-green-700', 'bg-orange-100 text-orange-700', 'bg-pink-100 text-pink-700'];
-                const colorHash = t.assigned_to.length % colors.length;
+          }
+        });
 
-                projectMap[pid].membersMap[t.assigned_to] = {
-                  id: t.assigned_to,
-                  name: t.assigned_to,
-                  initials: t.assigned_to.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
-                  color: colors[colorHash]
-                };
-              }
-            }
-          });
-          
-          const computedProjects = Object.values(projectMap).map(p => ({
-            ...p,
-            memberCount: Object.keys(p.membersMap).length,
-            teamMembers: Object.values(p.membersMap),
-            membersMap: undefined 
-          }));
-          
-          // Store raw tasks globally so components can compute their own logic
-          setTasks(data.tasks);
-          setProjects(computedProjects);
-          
-          // Empty these out since ProjectWorkflow will compute them per-project now
-          setRawNodes([]);
-          setRawEdges([]);
-        }
+        const computedProjects = Object.values(projectMap).map((p) => ({
+          ...p,
+          memberCount: Object.keys(p.membersMap).length,
+          teamMembers: Object.values(p.membersMap),
+          membersMap: undefined,
+        }));
+
+        // Store all tasks for the user's projects (needed for team pages, workflow, etc.)
+        setTasks(projectTasks);
+        setProjects(computedProjects);
       } catch (error) {
-        console.error("Failed to fetch tasks to build projects:", error);
+        console.error('Failed to load project data:', error);
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchProjectsFromTasks();
+
+    loadData();
   }, []);
 
   const addProject = (projectData) => {
@@ -94,40 +135,45 @@ export function ProjectProvider({ children }) {
       name: projectData.title || 'Untitled Project',
       description: projectData.description || 'No description provided.',
       taskCount: 0,
-      memberCount: projectData.members?.filter(m => m.value.trim()).length || 0,
+      memberCount: projectData.members?.filter((m) => m.value.trim()).length || 0,
+      teamMembers: [],
       color: randomColor,
-      items: ['Workflow', 'Tasks', 'Team'],
+      items: ['Workflow', 'Tasks', 'Team', 'Activity'],
       techStack: projectData.techStack || [],
-      members: projectData.members || []
+      members: projectData.members || [],
     };
-    
-    setProjects(prev => [...prev, newProject]);
+
+    setProjects((prev) => [...prev, newProject]);
     return newProject.id;
   };
 
   const updateProject = (id, updatedData) => {
-    setProjects(prev => prev.map(p => {
-      if (p.id === id) {
-        return {
-          ...p,
-          name: updatedData.title || p.name,
-          description: updatedData.description || p.description,
-          memberCount: updatedData.members?.filter(m => m.value.trim()).length || p.memberCount,
-          // We could also save techStack and full members list in context if needed
-          techStack: updatedData.techStack || p.techStack || [],
-          members: updatedData.members || p.members || []
-        };
-      }
-      return p;
-    }));
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id === id) {
+          return {
+            ...p,
+            name: updatedData.title || p.name,
+            description: updatedData.description || p.description,
+            memberCount:
+              updatedData.members?.filter((m) => m.value.trim()).length || p.memberCount,
+            techStack: updatedData.techStack || p.techStack || [],
+            members: updatedData.members || p.members || [],
+          };
+        }
+        return p;
+      })
+    );
   };
 
   const deleteProject = (id) => {
-    setProjects(prev => prev.filter(p => p.id !== id));
+    setProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
   return (
-    <ProjectContext.Provider value={{ projects, tasks, rawNodes, rawEdges, addProject, updateProject, deleteProject }}>
+    <ProjectContext.Provider
+      value={{ projects, tasks, allUsers, addProject, updateProject, deleteProject, loading }}
+    >
       {children}
     </ProjectContext.Provider>
   );

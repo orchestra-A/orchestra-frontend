@@ -13,10 +13,10 @@ export default function Settings() {
   const [lastName, setLastName] = useState('');
   
   useEffect(() => {
-    if (currentUser?.name) {
-      const parts = currentUser.name.split(' ');
-      setFirstName(parts[0] || '');
-      setLastName(parts.slice(1).join(' ') || '');
+    if (currentUser?.username) {
+      // Backend users have a username field, not a split first/last name
+      setFirstName(currentUser.username || '');
+      setLastName('');
     }
   }, [currentUser]);
 

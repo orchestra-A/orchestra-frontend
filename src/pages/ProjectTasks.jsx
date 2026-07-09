@@ -20,18 +20,15 @@ export default function ProjectTasks() {
     return (pId === decodedId || pId === projectId);
   });
 
-  const userName = currentUser?.name || "Guest";
-  const hasUserTasks = allProjectTasks.some(t => t.assigned_to === userName);
-  
-  const targetUser = hasUserTasks ? userName : "Member 1";
-  
-  const projectTasks = allProjectTasks.filter(t => t.assigned_to === targetUser);
+  // Filter tasks assigned specifically to the logged-in user within this project
+  const username = currentUser?.username || '';
+  const projectTasks = allProjectTasks.filter(t => t.assigned_to === username);
 
   return (
     <div className="max-w-7xl mx-auto h-full flex flex-col">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Tasks ({targetUser})</h1>
+          <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} — My Tasks</h1>
         </div>
         <Button className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white">
           <Plus className="w-4 h-4 mr-2" /> Add Task

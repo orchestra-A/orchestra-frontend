@@ -20,11 +20,32 @@ export function FloatingAIChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ left: -1, top: -1 });
   
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: `Hello! I'm the AI assistant for ${projectName}. How can I help you today?` }
+  ]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, initialLeft: 0, initialTop: 0 });
   const windowRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   // Removed reset on navigate to persist chat box open state across tabs
+
+  // Ping health endpoint on first open
+  useEffect(() => {
+    if (isOpen) {
+      fetch('https://orchestra-ai-36zm.onrender.com/health').catch(() => {});
+    }
+  }, [isOpen]);
+
+  // Auto scroll to bottom
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -69,6 +90,41 @@ export function FloatingAIChat() {
     ? { left: position.left, top: position.top, bottom: 'auto', right: 'auto' } 
     : { bottom: '80px', right: '24px' };
 
+  const handleSend = async () => {
+    if (!inputText.trim() || isLoading) return;
+    
+    const userMsg = { role: 'user', content: inputText.trim() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInputText('');
+    setIsLoading(true);
+
+    try {
+      // Get last 5 pairs of interactions (up to 10 messages)
+      const history = newMessages.slice(1, -1).slice(-10).map(m => m.content);
+
+      const response = await fetch('https://orchestra-ai-36zm.onrender.com/clover', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+        },
+        body: JSON.stringify({
+          question: `[System Context: User is currently on URL path: ${location.pathname}]\n\n${userMsg.content}`,
+          conversation_history: history
+        })
+      });
+
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.answer || data.response || data.reply || JSON.stringify(data) }]);
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error connecting to the AI server." }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       {!isOpen && (
@@ -109,24 +165,53 @@ export function FloatingAIChat() {
           </div>
 
           <div className="h-[400px] flex flex-col">
-            <div className="flex-1 p-4 overflow-y-auto bg-[#F3F7F1] dark:bg-transparent">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6B905F] to-[#5A7A4F] flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-white" />
+            <div className="flex-1 p-4 overflow-y-auto bg-[#F3F7F1] dark:bg-transparent space-y-4">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  {msg.role === 'assistant' && (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6B905F] to-[#5A7A4F] flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-5 h-5 text-white" />
+                    </div>
+                  )}
+                  <div className={`p-3 rounded-2xl text-[13px] shadow-sm max-w-[85%] whitespace-pre-wrap ${
+                    msg.role === 'user' 
+                      ? 'bg-white dark:bg-[#1E1E22] text-[#1D1E1B] dark:text-white rounded-tr-sm border border-gray-200 dark:border-[#27272A]' 
+                      : 'bg-gradient-to-br from-[#6B905F] to-[#3B5432] text-white rounded-tl-sm'
+                  }`}>
+                    {msg.content}
+                  </div>
                 </div>
-                <div className="bg-gradient-to-br from-[#6B905F] to-[#3B5432] text-white p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm max-w-[85%]">
-                  Hello! I'm the AI assistant for {projectName}. How can I help you today?
+              ))}
+              {isLoading && (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6B905F] to-[#5A7A4F] flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="bg-gradient-to-br from-[#6B905F] to-[#3B5432] text-white p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm max-w-[85%] flex gap-1 items-center">
+                    <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
+                    <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
+                  </div>
                 </div>
-              </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
             
             <div className="p-3 bg-[#F4F1EB] dark:bg-[#09090B] border-t border-gray-200 dark:border-[#27272A]">
               <div className="relative flex items-center gap-2">
                 <Input 
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
                   placeholder="Ask something..." 
                   className="flex-1 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#27272A] text-[#1D1E1B] dark:text-white/90" 
                 />
-                <Button size="icon" className="bg-[#6B905F] hover:bg-[#5A7A4F] text-white shrink-0">
+                <Button 
+                  onClick={handleSend}
+                  disabled={isLoading || !inputText.trim()}
+                  size="icon" 
+                  className="bg-[#6B905F] hover:bg-[#5A7A4F] text-white shrink-0 disabled:opacity-50 transition-opacity"
+                >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>

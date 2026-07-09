@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { fetchUserById, updateUser } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -8,18 +9,14 @@ export function useAuth() {
 }
 
 // Provider component that manages user authentication state (login, signup, logout)
-// and persists sessions using localStorage.
+// and persists sessions using localStorage. After OAuth login, it hydrates the
+// full user profile from the backend (skills, platforms_connected, etc.)
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load users from localStorage
-    const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
-    setUsers(storedUsers);
-
-    // Check for an active session
+    // Restore active session from localStorage on mount
     const storedUser = JSON.parse(localStorage.getItem('currentUser'));
     if (storedUser) {
       setCurrentUser(storedUser);
@@ -27,105 +24,85 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const signup = (user) => {
-    return new Promise((resolve) => {
-      // Check if user already exists
-      const existingIndex = users.findIndex(u => u.email === user.email || u.username === user.username);
-      
-      let updatedUsers = [...users];
-      let finalUser;
+  /**
+   * Fetches the full user profile from the backend by user_id and merges it
+   * with whatever data came from the OAuth token. Called by OAuthCallback.
+   * @param {string} userId - The backend user_id (e.g. "usr_53dc61e9")
+   * @param {Object} tokenData - Partial user data already known from OAuth token
+   */
+  const fetchAndHydrateUser = async (userId, tokenData = {}) => {
+    let backendUser = null;
+    try {
+      backendUser = await fetchUserById(userId);
+    } catch (err) {
+      console.warn('Could not hydrate user from backend:', err);
+    }
 
-      if (existingIndex >= 0) {
-        finalUser = { ...users[existingIndex], ...user };
-        updatedUsers[existingIndex] = finalUser;
-      } else {
-        finalUser = { ...user, id: user.id || Date.now().toString() };
-        updatedUsers.push(finalUser);
-      }
+    // Merge backend profile over token data (backend is source of truth)
+    const hydratedUser = {
+      // Fallbacks from OAuth token if backend lookup fails
+      id: userId,
+      username: tokenData.username || '',
+      email: tokenData.email || '',
+      platform: tokenData.platform || '',
+      // Backend profile fields (overwrite token data if available)
+      ...(backendUser || {}),
+      // Ensure user_id is always set
+      user_id: userId,
+    };
 
-      setUsers(updatedUsers);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
-      setCurrentUser(finalUser);
-      localStorage.setItem('currentUser', JSON.stringify(finalUser));
-      resolve(finalUser);
-    });
+    setCurrentUser(hydratedUser);
+    localStorage.setItem('currentUser', JSON.stringify(hydratedUser));
+    return hydratedUser;
   };
 
-  const login = (identifier, password) => {
-    return new Promise((resolve, reject) => {
-      const user = users.find(u => 
-        (u.email === identifier || u.username === identifier) && u.password === password
-      );
+  /**
+   * Called by OAuthCallback when a new or returning user arrives.
+   * Saves the initial token data and triggers full profile hydration.
+   */
+  const signup = async (user) => {
+    const userId = user.id || user.user_id;
+    // Immediately set a lightweight session so the UI isn't blocked
+    const lightUser = { ...user, user_id: userId, id: userId };
+    setCurrentUser(lightUser);
+    localStorage.setItem('currentUser', JSON.stringify(lightUser));
 
-      if (user) {
-        setCurrentUser(user);
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        resolve(user);
-      } else {
-        reject(new Error("Invalid credentials. Please try again."));
-      }
-    });
+    // Hydrate with full backend profile asynchronously
+    if (userId) {
+      await fetchAndHydrateUser(userId, user);
+    }
+    return lightUser;
   };
 
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
   };
 
-  const updatePassword = (currentPassword, newPassword) => {
-    return new Promise((resolve, reject) => {
-      if (currentUser.password !== currentPassword) {
-        return reject(new Error("Current password is incorrect."));
-      }
-      
-      const updatedUser = { ...currentUser, password: newPassword };
-      const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
-      
-      setUsers(updatedUsers);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
-      setCurrentUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      resolve(true);
-    });
-  };
-
-  const deleteAccount = () => {
-    return new Promise((resolve) => {
-      const updatedUsers = users.filter(u => u.id !== currentUser.id);
-      
-      setUsers(updatedUsers);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
-      setCurrentUser(null);
-      localStorage.removeItem('currentUser');
-      resolve(true);
-    });
-  };
-
-  const updateProfile = (updates) => {
-    return new Promise((resolve) => {
-      const updatedUser = { ...currentUser, ...updates };
-      const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
-      
-      setUsers(updatedUsers);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
-      setCurrentUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      resolve(true);
-    });
+  /**
+   * Update the user's profile both locally and on the backend.
+   * @param {Object} updates - Fields to update (e.g. { skills: [...] })
+   */
+  const updateProfile = async (updates) => {
+    if (!currentUser?.user_id) throw new Error('No user logged in.');
+    try {
+      await updateUser(currentUser.user_id, updates);
+    } catch (err) {
+      console.warn('Backend profile update failed, updating locally only:', err);
+    }
+    const updatedUser = { ...currentUser, ...updates };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    return updatedUser;
   };
 
   const value = {
     currentUser,
     signup,
-    login,
     logout,
-    updatePassword,
-    deleteAccount,
-    updateProfile
+    fetchAndHydrateUser,
+    updateProfile,
   };
 
   return (

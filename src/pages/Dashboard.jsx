@@ -24,8 +24,12 @@ export default function Dashboard() {
     }
   };
 
-  const delayedTasks = tasks.filter(t => t.status === 'stopped' || t.status === 'delayed').slice(0, 3);
-  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').slice(0, 3);
+  // Filter tasks to only show the logged-in user's tasks (username matches assigned_to)
+  const username = currentUser?.username || '';
+  const myTasks = tasks.filter(t => t.assigned_to === username);
+
+  const delayedTasks = myTasks.filter(t => t.status === 'stopped' || t.status === 'delayed').slice(0, 3);
+  const inProgressTasks = myTasks.filter(t => t.status === 'in_progress').slice(0, 3);
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => (
     <div
@@ -47,7 +51,9 @@ export default function Dashboard() {
     <div className="max-w-[1400px] mx-auto h-full flex flex-col">
       {/* Welcome Section */}
       <div className="mb-4 shrink-0">
-        <h1 className="text-[#1D1E1B] dark:text-white/90 text-lg font-bold mb-0.5">Welcome back</h1>
+        <h1 className="text-[#1D1E1B] dark:text-white/90 text-lg font-bold mb-0.5">
+          Welcome back{currentUser?.username ? `, ${currentUser.username}` : ''}
+        </h1>
       </div>
 
       {/* Main Grid: 3 columns */}
