@@ -103,7 +103,7 @@ export function FloatingAIChat() {
       // Get last 5 pairs of interactions (up to 10 messages)
       const history = newMessages.slice(1, -1).slice(-10).map(m => m.content);
 
-      const response = await fetch('https://orchestra-ai-36zm.onrender.com/clover', {
+      const response = await fetch('https://orchestra-backend-30fy.onrender.com/clover', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

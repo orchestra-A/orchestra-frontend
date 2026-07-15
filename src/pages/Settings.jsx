@@ -36,7 +36,7 @@ export default function Settings() {
     switch (activeTab) {
       case 'account':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Profile Information</h1>
 
             <div className="space-y-6">
@@ -78,7 +78,7 @@ export default function Settings() {
       
       case 'notifications':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Notifications</h1>
 
             <div className="space-y-6">
@@ -109,7 +109,7 @@ export default function Settings() {
 
       case 'appearance':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Appearance</h1>
 
             <div className="space-y-6">

@@ -9,7 +9,13 @@ export default function Todo() {
 
   const myTasks = tasks.filter(t => t.assigned_to === (currentUser?.username || ''));
 
-  const delayedTasks = myTasks.filter(t => t.status === 'stopped' || t.status === 'delayed');
+  const delayedTasks = myTasks.filter(t => 
+    t.status === 'stopped' || 
+    t.status === 'delayed' || 
+    t.status === 'blocked' || 
+    t.status === 'paused' || 
+    t.status === 'error'
+  );
   const inProgressTasks = myTasks.filter(t => t.status === 'in_progress');
   const upcomingTasks = myTasks.filter(t => t.status === 'todo' || t.status === 'upcoming');
 
@@ -24,27 +30,44 @@ export default function Todo() {
           <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100/50 border-none text-[#2B3B26]">
             {projectName}
           </Badge>
+          {task.priority && (
+            <span className={`text-[10px] font-semibold uppercase tracking-wider ${textClass}`}>
+              {task.priority}
+            </span>
+          )}
         </div>
       </div>
     );
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto h-full flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <div className="mb-8">
         <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">My Tasks</h1>
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden pb-6">
-        {/* Column 1: Behind/Delayed/Stopped */}
+        {/* Column 1: Halted */}
         <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner">
           <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0">
             <AlertCircle className="w-4 h-4 text-red-600" />
-            <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Behind / Delayed / Stopped</h2>
+            <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Halted</h2>
             <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-200 border-red-300" />)}
+            {delayedTasks.map(task => (
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                colorClass="bg-red-100 border-red-200 dark:bg-red-950/20 dark:border-red-900/30" 
+                textClass="text-red-900 dark:text-red-200" 
+              />
+            ))}
+            {delayedTasks.length === 0 && (
+              <div className="h-full flex items-center justify-center text-center text-xs text-gray-400 italic py-8">
+                No halted tasks
+              </div>
+            )}
           </div>
         </div>
 
@@ -56,7 +79,19 @@ export default function Todo() {
             <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-[#6B905F] border-[#5A7A50]" />)}
+            {inProgressTasks.map(task => (
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                colorClass="bg-amber-100 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30" 
+                textClass="text-amber-900 dark:text-amber-200" 
+              />
+            ))}
+            {inProgressTasks.length === 0 && (
+              <div className="h-full flex items-center justify-center text-center text-xs text-gray-400 italic py-8">
+                No tasks in progress
+              </div>
+            )}
           </div>
         </div>
 
@@ -68,7 +103,19 @@ export default function Todo() {
             <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{upcomingTasks.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {upcomingTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-blue-200 border-blue-300" />)}
+            {upcomingTasks.map(task => (
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                colorClass="bg-sky-100 border-sky-200 dark:bg-sky-950/20 dark:border-sky-900/30" 
+                textClass="text-sky-900 dark:text-sky-200" 
+              />
+            ))}
+            {upcomingTasks.length === 0 && (
+              <div className="h-full flex items-center justify-center text-center text-xs text-gray-400 italic py-8">
+                No upcoming tasks
+              </div>
+            )}
           </div>
         </div>
       </div>

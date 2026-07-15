@@ -109,7 +109,7 @@ export default function Blueprint() {
       navigate(`/blueprint/${newId}`, { replace: true });
 
       try {
-         const res = await fetch('https://orchestra-ai-36zm.onrender.com/blueprint', {
+         const res = await fetch('https://orchestra-backend-30fy.onrender.com/blueprint', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

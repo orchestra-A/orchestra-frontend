@@ -41,7 +41,7 @@ export default function ProjectTeam() {
   const team = project?.teamMembers || [];
 
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} — Team</h1>

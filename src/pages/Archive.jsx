@@ -2,7 +2,7 @@ import { Archive as ArchiveIcon } from 'lucide-react';
 
 export default function Archive() {
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col items-center justify-center text-center">
+    <div className="w-full h-full flex flex-col items-center justify-center text-center">
       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
         <ArchiveIcon className="w-8 h-8 text-gray-400" />
       </div>

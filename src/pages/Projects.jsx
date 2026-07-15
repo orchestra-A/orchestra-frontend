@@ -8,7 +8,7 @@ export default function Projects() {
   const { projects } = useProject();
 
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">Workspaces & Projects</h1>

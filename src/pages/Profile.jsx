@@ -128,7 +128,7 @@ export default function Profile() {
       // ── Profile Details ──────────────────────────────────────────────────
       case 'details':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Profile Details</h1>
             <div className="space-y-6">
               {/* Username (read-only from backend) */}
@@ -195,7 +195,7 @@ export default function Profile() {
       // ── Skills ────────────────────────────────────────────────────────────
       case 'skills':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Technical Skills</h1>
             <div className="space-y-6">
               {/* My Skills */}
@@ -282,7 +282,7 @@ export default function Profile() {
       // ── Workspaces / Platform Connections ─────────────────────────────────
       case 'platform':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-2">Connect Workspaces</h1>
             <p className="text-sm text-gray-500 dark:text-white/50 mb-8">
               Active connections ({connectedPlatforms.size}/3) — connecting a platform lets Orchestra track activity automatically.
@@ -332,7 +332,7 @@ export default function Profile() {
       // ── Visibility ────────────────────────────────────────────────────────
       case 'visibility':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Visibility</h1>
             <div className="space-y-6">
               {[
@@ -359,7 +359,7 @@ export default function Profile() {
       // ── Accounts ──────────────────────────────────────────────────────────
       case 'accounts':
         return (
-          <div className="max-w-4xl">
+          <div className="w-full">
             <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Account Settings</h1>
             <div className="space-y-6">
               <div className="bg-[#F4F1EB] dark:bg-[#18181B] border border-gray-200 dark:border-[#27272A] p-6 rounded-xl shadow-sm">
