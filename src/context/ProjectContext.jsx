@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { fetchTasks, fetchUsers } from '../services/api';
+import { useAuth } from './AuthContext';
 
 const ProjectContext = createContext();
 
@@ -13,6 +14,7 @@ export function useProject() {
 //   - Only projects where the user's username appears in at least one task's assigned_to
 //   - All users fetched once and exposed as `allUsers` for team enrichment
 export function ProjectProvider({ children }) {
+  const { currentUser } = useAuth();
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);       // All tasks for the current user's projects
   const [allUsers, setAllUsers] = useState([]);  // All backend users (for team enrichment)
@@ -21,10 +23,8 @@ export function ProjectProvider({ children }) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Read the current user from localStorage (avoids circular dependency with AuthContext)
-        const storedUser = JSON.parse(localStorage.getItem('currentUser'));
         // Use username as the identifier — this matches the assigned_to field in tasks
-        const currentUsername = storedUser?.username || null;
+        const currentUsername = currentUser?.username || null;
 
         // Fetch all tasks and all users in parallel
         const [allTasks, users] = await Promise.all([
@@ -124,7 +124,7 @@ export function ProjectProvider({ children }) {
     };
 
     loadData();
-  }, []);
+  }, [currentUser?.username]);
 
   const addProject = (projectData) => {
     const colors = ['#F59E42', '#34D399', '#EC4899', '#8B5CF6', '#F87171', '#38BDF8'];

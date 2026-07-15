@@ -20,8 +20,15 @@ export async function fetchUsers() {
  * @returns {Promise<Object|null>} The matched user object, or null
  */
 export async function fetchUserById(userId) {
+  if (!userId) return null;
   const users = await fetchUsers();
-  return users.find((u) => u.user_id === userId) || null;
+  const lowerId = userId.toString().toLowerCase();
+  return users.find((u) => 
+    (u.user_id && u.user_id.toLowerCase() === lowerId) ||
+    (u.email && u.email.toLowerCase() === lowerId) ||
+    (u.discord_id && u.discord_id.toString().toLowerCase() === lowerId) ||
+    (u.github_username && u.github_username.toLowerCase() === lowerId)
+  ) || null;
 }
 
 /**
