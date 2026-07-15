@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchUserById, updateUser } from '../services/api';
+import { fetchUserById, updateUser, fetchUsers } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -16,12 +16,22 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Restore active session from localStorage on mount
-    const storedUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (storedUser) {
-      setCurrentUser(storedUser);
-    }
-    setLoading(false);
+    const initializeUser = async () => {
+      // Restore active session from localStorage on mount
+      const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+      if (storedUser && storedUser.user_id) {
+        try {
+          await fetchAndHydrateUser(storedUser.user_id, storedUser);
+        } catch (err) {
+          console.warn('Could not auto-hydrate user on mount:', err);
+          // Fallback to local storage if backend fetch fails (e.g., offline)
+          setCurrentUser(storedUser);
+        }
+      }
+      setLoading(false);
+    };
+
+    initializeUser();
   }, []);
 
   /**
@@ -34,6 +44,13 @@ export function AuthProvider({ children }) {
     let backendUser = null;
     try {
       backendUser = await fetchUserById(userId);
+      // Fallback: If not found by ID (e.g. Google sub ID), search by email if available
+      if (!backendUser && tokenData.email) {
+        const users = await fetchUsers();
+        backendUser = users.find(
+          (u) => u.email && u.email.toLowerCase() === tokenData.email.toLowerCase()
+        ) || null;
+      }
     } catch (err) {
       console.warn('Could not hydrate user from backend:', err);
     }
@@ -47,9 +64,15 @@ export function AuthProvider({ children }) {
       platform: tokenData.platform || '',
       // Backend profile fields (overwrite token data if available)
       ...(backendUser || {}),
-      // Ensure user_id is always set
-      user_id: userId,
     };
+
+    // Ensure we use the backend's real user_id if we successfully hydrated
+    if (backendUser && backendUser.user_id) {
+      hydratedUser.user_id = backendUser.user_id;
+      hydratedUser.id = backendUser.user_id;
+    } else {
+      hydratedUser.user_id = userId;
+    }
 
     setCurrentUser(hydratedUser);
     localStorage.setItem('currentUser', JSON.stringify(hydratedUser));
