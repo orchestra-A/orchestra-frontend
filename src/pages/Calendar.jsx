@@ -3,7 +3,7 @@ export default function Calendar() {
   const dates = Array.from({ length: 35 }, (_, i) => i - 2);
 
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <div className="mb-8">
         <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">Calendar</h1>
       </div>

@@ -66,7 +66,7 @@ export default function ProjectActivity() {
     });
 
   return (
-    <div className="w-full max-w-7xl mx-auto h-full flex flex-col pb-12 px-4">
+    <div className="w-full h-full flex flex-col pb-12">
       <div className="mb-4">
         <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Activity</h1>
       </div>
