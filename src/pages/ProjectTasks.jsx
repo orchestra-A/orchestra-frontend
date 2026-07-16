@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { AlertCircle, PlayCircle, CalendarClock, CheckCircle2, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -7,8 +8,24 @@ import { useAuth } from '../context/AuthContext';
 
 export default function ProjectTasks() {
   const { projectId } = useParams();
-  const { projects, tasks } = useProject();
+  const { projects, tasks, changeTaskStatus } = useProject();
   const { currentUser } = useAuth();
+  const [contextMenu, setContextMenu] = useState(null);
+
+  useEffect(() => {
+    const handleClose = () => setContextMenu(null);
+    window.addEventListener('click', handleClose);
+    return () => window.removeEventListener('click', handleClose);
+  }, []);
+
+  const handleContextMenu = (e, task) => {
+    e.preventDefault();
+    setContextMenu({
+      id: task.id,
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
   
   const decodedId = decodeURIComponent(projectId || "").trim();
   const project = projects.find(p => p.id.trim() === decodedId || p.id === projectId);
@@ -37,7 +54,10 @@ export default function ProjectTasks() {
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
     return (
-      <div className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}>
+      <div 
+        onContextMenu={(e) => handleContextMenu(e, task)}
+        className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
+      >
         <div className="flex justify-between items-start mb-2">
           <h3 className={`font-semibold ${textClass} text-sm leading-snug`}>{task.title}</h3>
         </div>
@@ -163,6 +183,51 @@ export default function ProjectTasks() {
           </div>
         </div>
       </div>
+
+      {contextMenu && (
+        <div 
+          className="fixed z-50 bg-[#6B905F] dark:bg-[#6B905F] rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden text-white"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+            onClick={() => {
+              changeTaskStatus(contextMenu.id, 'todo');
+              setContextMenu(null);
+            }}
+          >
+            Set Pending
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+            onClick={() => {
+              changeTaskStatus(contextMenu.id, 'in_progress');
+              setContextMenu(null);
+            }}
+          >
+            Set In Progress
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+            onClick={() => {
+              changeTaskStatus(contextMenu.id, 'completed');
+              setContextMenu(null);
+            }}
+          >
+            Set Completed
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+            onClick={() => {
+              changeTaskStatus(contextMenu.id, 'stopped');
+              setContextMenu(null);
+            }}
+          >
+            Set Halted
+          </button>
+        </div>
+      )}
     </div>
   );
 }

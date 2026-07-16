@@ -1,7 +1,7 @@
 // Centralized API service layer for the Orchestra backend.
-// All fetch calls to https://orchestra-backend-30fy.onrender.com/ go through here.
+// All fetch calls go through local proxy /api to avoid CORS issues.
 
-const BASE_URL = 'https://orchestra-backend-30fy.onrender.com';
+const BASE_URL = '/api';
 
 /**
  * Fetch all users from the backend.
@@ -60,4 +60,28 @@ export async function updateUser(userId, payload) {
   });
   if (!res.ok) throw new Error(`Failed to update user: ${res.status}`);
   return res.json();
+}
+
+/**
+ * Update a task's status via PATCH.
+ * @param {string} taskId - The task ID to update
+ * @param {string} status - The new status
+ * @returns {Promise<Object>} Response data
+ */
+export async function updateTaskStatus(taskId, status) {
+  const payload = { status };
+  console.log(`[API] Updating task ${taskId} status to:`, payload);
+  const res = await fetch(`${BASE_URL}/tasks/${encodeURIComponent(taskId)}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => 'No details');
+    console.error(`[API] Status update failed (Status: ${res.status}). Server error details:`, errorText);
+    throw new Error(`Failed to update task status: ${res.status}. Details: ${errorText}`);
+  }
+  const data = await res.json();
+  console.log(`[API] Status update response:`, data);
+  return data;
 }
