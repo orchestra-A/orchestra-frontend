@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import { MessageSquare, Activity, Clock } from 'lucide-react';
+import { MessageSquare, Activity, Clock, User } from 'lucide-react';
 
 const GithubIcon = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -9,15 +9,43 @@ const GithubIcon = ({ className }) => (
   </svg>
 );
 
+const getDisplayActor = (event, allUsers) => {
+  if (!event || !event.actor) return 'Unknown';
+  const actorLower = event.actor.toLowerCase();
+
+  // Find matching user from our platform
+  const matchedUser = allUsers.find(u => {
+    if (event.platform === 'github') {
+      return u.github_username && u.github_username.toLowerCase() === actorLower;
+    }
+    if (event.platform === 'discord') {
+      return u.discord_id && u.discord_id.toString().toLowerCase() === actorLower;
+    }
+    // Fallback/direct matching
+    return (
+      (u.username && u.username.toLowerCase() === actorLower) ||
+      (u.github_username && u.github_username.toLowerCase() === actorLower) ||
+      (u.discord_id && u.discord_id.toString().toLowerCase() === actorLower)
+    );
+  });
+
+  return matchedUser ? matchedUser.username : event.actor;
+};
+
+const getActionSummary = (event, displayActor) => {
+  if (!event.action_summary || !event.actor) return event.action_summary;
+  return event.action_summary.replaceAll(event.actor, displayActor);
+};
+
 export default function ProjectActivity() {
   const { projectId } = useParams();
-  const { projects } = useProject();
+  const { projects, allUsers } = useProject();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [sortOrder, setSortOrder] = useState('desc');
-  const [platformFilter, setPlatformFilter] = useState('all');
-  const [userFilter, setUserFilter] = useState('all');
+  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
 
   const decodedId = decodeURIComponent(projectId || "").trim();
   const project = projects.find(p => p.id.trim() === decodedId || p.id === projectId);
@@ -53,55 +81,160 @@ export default function ProjectActivity() {
     }).format(date);
   };
 
-  const platforms = [...new Set(events.map(e => e.platform))].filter(Boolean);
-  const users = [...new Set(events.map(e => e.actor))].filter(Boolean);
+  // Enrich events with display actor names
+  const enrichedEvents = events.map(event => {
+    const displayActor = getDisplayActor(event, allUsers);
+    return {
+      ...event,
+      displayActor,
+      action_summary: getActionSummary(event, displayActor)
+    };
+  });
 
-  const displayedEvents = events
-    .filter(e => platformFilter === 'all' || e.platform === platformFilter)
-    .filter(e => userFilter === 'all' || e.actor === userFilter)
+  const platforms = [...new Set(enrichedEvents.map(e => e.platform))].filter(Boolean);
+  const users = [...new Set(enrichedEvents.map(e => e.displayActor))].filter(Boolean);
+
+  const displayedEvents = enrichedEvents
+    .filter(e => selectedPlatforms.length === 0 || selectedPlatforms.includes(e.platform))
+    .filter(e => selectedUsers.length === 0 || selectedUsers.includes(e.displayActor))
     .sort((a, b) => {
       const timeA = new Date(a.timestamp).getTime();
       const timeB = new Date(b.timestamp).getTime();
       return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
     });
 
+  const isFilterActive = selectedPlatforms.length > 0 || selectedUsers.length > 0;
+
   return (
     <div className="w-full h-full flex flex-col pb-12">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Activity</h1>
+        {isFilterActive && (
+          <button
+            onClick={() => {
+              setSelectedPlatforms([]);
+              setSelectedUsers([]);
+            }}
+            className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors cursor-pointer bg-red-50 dark:bg-red-950/20 px-2.5 py-1 rounded-full border border-red-100 dark:border-red-950/30"
+          >
+            Clear Filters
+          </button>
+        )}
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          className="bg-white dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] text-gray-700 dark:text-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#6B905F]/50 shadow-sm"
-        >
-          <option value="desc">Newest First</option>
-          <option value="asc">Oldest First</option>
-        </select>
+      {/* Filters (Outside of the canvas box) */}
+      <div className="flex flex-col gap-3.5 mb-6 p-1 bg-transparent text-[#1D1E1B] dark:text-white/90">
+        
+        {/* Sort Order Radio Buttons */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
+            <Clock className="w-3.5 h-3.5" /> Sort Order:
+          </span>
+          <div className="flex items-center gap-6">
+            <div 
+              onClick={() => setSortOrder('desc')}
+              className="flex items-center gap-2 cursor-pointer select-none group text-xs font-medium text-gray-700 dark:text-white/80"
+            >
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                sortOrder === 'desc' 
+                  ? 'bg-[#6B905F] border-[#6B905F]' 
+                  : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
+              }`}>
+                {sortOrder === 'desc' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+              </div>
+              Newest First
+            </div>
+            <div 
+              onClick={() => setSortOrder('asc')}
+              className="flex items-center gap-2 cursor-pointer select-none group text-xs font-medium text-gray-700 dark:text-white/80"
+            >
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                sortOrder === 'asc' 
+                  ? 'bg-[#6B905F] border-[#6B905F]' 
+                  : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
+              }`}>
+                {sortOrder === 'asc' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+              </div>
+              Oldest First
+            </div>
+          </div>
+        </div>
 
-        <select
-          value={platformFilter}
-          onChange={(e) => setPlatformFilter(e.target.value)}
-          className="bg-white dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] text-gray-700 dark:text-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#6B905F]/50 shadow-sm capitalize"
-        >
-          <option value="all">All Platforms</option>
-          {platforms.map(p => (
-            <option key={p} value={p} className="capitalize">{p}</option>
-          ))}
-        </select>
+        {/* Platform Checkbox List */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
+            <Activity className="w-3.5 h-3.5" /> Platforms:
+          </span>
+          <div className="flex items-center gap-4 flex-wrap">
+            {platforms.length > 0 ? (
+              platforms.map(p => {
+                const isChecked = selectedPlatforms.includes(p);
+                return (
+                  <div
+                    key={p}
+                    onClick={() => {
+                      setSelectedPlatforms(prev =>
+                        isChecked ? prev.filter(item => item !== p) : [...prev, p]
+                      );
+                    }}
+                    className="flex items-center gap-2 cursor-pointer select-none group"
+                  >
+                    <div 
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                        isChecked 
+                          ? 'bg-[#6B905F] border-[#6B905F]' 
+                          : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
+                      }`}
+                    >
+                      {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                    <span className="text-xs font-medium capitalize text-gray-700 dark:text-white/80">{p}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <span className="text-xs text-gray-400 italic">No platforms active</span>
+            )}
+          </div>
+        </div>
 
-        <select
-          value={userFilter}
-          onChange={(e) => setUserFilter(e.target.value)}
-          className="bg-white dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] text-gray-700 dark:text-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#6B905F]/50 shadow-sm"
-        >
-          <option value="all">All Users</option>
-          {users.map(u => (
-            <option key={u} value={u}>{u}</option>
-          ))}
-        </select>
+        {/* User Checkbox List */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
+            <User className="w-3.5 h-3.5" /> Users:
+          </span>
+          <div className="flex items-center gap-4 flex-wrap">
+            {users.length > 0 ? (
+              users.map(u => {
+                const isChecked = selectedUsers.includes(u);
+                return (
+                  <div
+                    key={u}
+                    onClick={() => {
+                      setSelectedUsers(prev =>
+                        isChecked ? prev.filter(item => item !== u) : [...prev, u]
+                      );
+                    }}
+                    className="flex items-center gap-2 cursor-pointer select-none group"
+                  >
+                    <div 
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                        isChecked 
+                          ? 'bg-[#6B905F] border-[#6B905F]' 
+                          : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
+                      }`}
+                    >
+                      {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 dark:text-white/80">{u}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <span className="text-xs text-gray-400 italic">No users active</span>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pr-4">

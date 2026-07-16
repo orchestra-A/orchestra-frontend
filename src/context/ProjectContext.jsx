@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { fetchTasks, fetchUsers } from '../services/api';
+import { fetchTasks, fetchUsers, updateTaskStatus } from '../services/api';
 import { useAuth } from './AuthContext';
 
 const ProjectContext = createContext();
@@ -170,9 +170,21 @@ export function ProjectProvider({ children }) {
     setProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const changeTaskStatus = async (taskId, newStatus) => {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+      setTasks(prevTasks =>
+        prevTasks.map(t => (t.id === taskId ? { ...t, status: newStatus } : t))
+      );
+    } catch (error) {
+      console.error('Failed to change task status:', error);
+      throw error;
+    }
+  };
+
   return (
     <ProjectContext.Provider
-      value={{ projects, tasks, allUsers, addProject, updateProject, deleteProject, loading }}
+      value={{ projects, tasks, allUsers, addProject, updateProject, deleteProject, changeTaskStatus, loading }}
     >
       {children}
     </ProjectContext.Provider>

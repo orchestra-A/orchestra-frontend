@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ReactFlow, Controls, Background, MarkerType, Position, useNodesState, useEdgesState } from '@xyflow/react';
-import { Edit2, Lock, User, CheckSquare } from 'lucide-react';
+import { Edit2, Lock, User, CheckSquare, X, ArrowRight, CornerDownRight, Activity, AlertCircle, HelpCircle } from 'lucide-react';
 import '@xyflow/react/dist/style.css';
 import { TaskNode, TrunkNode, DeveloperNode, SkillNode } from './workflow/Nodes';
 import { useProject } from '../context/ProjectContext';
+import { useAuth } from '../context/AuthContext';
 
 const nodeTypes = {
   task: TaskNode,
@@ -21,17 +22,35 @@ const defaultEdgeOptions = {
   },
 };
 
+const isAssignedToCurrentUser = (assignedTo, currentUser) => {
+  if (!assignedTo || !currentUser) return false;
+  const assignedLower = assignedTo.trim().toLowerCase();
+  const currentUsername = (currentUser.username || '').trim().toLowerCase();
+  const currentEmail = (currentUser.email || '').trim().toLowerCase();
+  const currentGithub = (currentUser.github_username || '').trim().toLowerCase();
+  const currentDiscord = (currentUser.discord_id || '').toString().trim().toLowerCase();
+  
+  return (
+    assignedLower === currentUsername ||
+    assignedLower === currentEmail ||
+    assignedLower === currentGithub ||
+    assignedLower === currentDiscord
+  );
+};
+
 export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = null, title = "" }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Filter States
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
 
-  const { tasks: globalTasks } = useProject();
+  const { tasks: globalTasks, changeTaskStatus } = useProject();
+  const { currentUser } = useAuth();
   const tasks = tasksOverride || globalTasks;
 
   const decodedId = decodeURIComponent(projectId || "").trim();
@@ -41,6 +60,16 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
     const pName = (t.project_id || "Project 1").trim();
     return pName === decodedId || pName === projectId;
   });
+
+  // Sync selected task when backend task list is refreshed or updated
+  useEffect(() => {
+    if (selectedTask) {
+      const updated = projectTasks.find(t => t.id === selectedTask.id);
+      if (updated) {
+        setSelectedTask(updated);
+      }
+    }
+  }, [tasks]);
 
   const uniqueMembers = Array.from(new Set(projectTasks.map(t => t.assigned_to).filter(Boolean))).sort();
   const uniqueStatuses = Array.from(new Set(projectTasks.map(t => t.status).filter(Boolean))).sort();
@@ -221,11 +250,26 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
     event.preventDefault();
     if (node.type !== 'task') return;
     
+    // Workflow menu restriction: only allow status change if task is assigned to current logged-in user
+    if (!isAssignedToCurrentUser(node.data?.assigned_to, currentUser)) {
+      return;
+    }
+
     setMenu({
       id: node.id,
       top: event.clientY,
       left: event.clientX,
     });
+  };
+
+  const onNodeClick = (event, node) => {
+    console.log("[WorkflowCanvas] Click event fired for node:", node.id, "type:", node.type);
+    if (node.type !== 'task') return;
+    const task = projectTasks.find(t => t.id === node.id);
+    console.log("[WorkflowCanvas] Found matching task:", task);
+    if (task) {
+      setSelectedTask(task);
+    }
   };
 
   const closeMenu = () => setMenu(null);
@@ -246,15 +290,47 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
     closeMenu();
 
     try {
-      await fetch(`/api/tasks/${taskId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
+      await changeTaskStatus(taskId, status);
     } catch (err) {
       console.error("Failed to update status", err);
     }
   };
+
+  const updateTaskStatusFromPanel = async (taskId, newStatus) => {
+    // Optimistic UI updates
+    setNodes((nds) => 
+      nds.map((node) => {
+        if (node.id === taskId) {
+          return { ...node, data: { ...node.data, status: newStatus } };
+        }
+        return node;
+      })
+    );
+    setSelectedTask(prev => prev && prev.id === taskId ? { ...prev, status: newStatus } : prev);
+
+    try {
+      await changeTaskStatus(taskId, newStatus);
+    } catch (err) {
+      console.error("Failed to update status from panel", err);
+    }
+  };
+
+  const taskDependencies = selectedTask 
+    ? projectTasks.filter(t => selectedTask.depends_on?.includes(t.id))
+    : [];
+
+  const taskDependents = selectedTask
+    ? projectTasks.filter(t => t.depends_on?.includes(selectedTask.id))
+    : [];
+
+  useEffect(() => {
+    if (selectedTask) {
+      const match = projectTasks.find(t => t.id === selectedTask.id);
+      if (!match) {
+        setSelectedTask(null);
+      }
+    }
+  }, [projectId]);
 
   if (loading) {
     return <div className="w-full h-full flex items-center justify-center bg-[#F4F1EB] dark:bg-[#09090B] rounded-xl border border-gray-200 dark:border-[#27272A] text-gray-500 dark:text-white/50">Loading workflow...</div>;
@@ -351,61 +427,250 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
         </div>
       </div>
 
-      {/* Main Workflow Canvas Box */}
-      <div className="flex-1 min-h-[600px] border border-gray-200 dark:border-[#27272A] rounded-xl bg-[#F4F1EB] dark:bg-[#09090B] shadow-sm overflow-hidden relative group">
-        {/* Clear Filters Button inside top-right of canvas */}
-        {isFilterActive && (
-          <button 
-            onClick={() => {
-              setSelectedMembers([]);
-              setSelectedStatuses([]);
-            }}
-            className="absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-semibold transition-all bg-[#E74C3C] text-white hover:bg-[#C0392B] cursor-pointer"
-          >
-            Clear Filters
-          </button>
-        )}
+      {/* Main Container: Flex layout supporting Canvas and Side Panel side-by-side */}
+      <div className="flex-1 min-h-[600px] flex gap-4 relative">
+        {/* Canvas Box */}
+        <div className="flex-1 border border-gray-200 dark:border-[#27272A] rounded-xl bg-[#F4F1EB] dark:bg-[#09090B] shadow-sm overflow-hidden relative group">
+          {/* Clear Filters Button inside top-right of canvas */}
+          {isFilterActive && (
+            <button 
+              onClick={() => {
+                setSelectedMembers([]);
+                setSelectedStatuses([]);
+              }}
+              className="absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-semibold transition-all bg-[#E74C3C] text-white hover:bg-[#C0392B] cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
 
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
-          defaultEdgeOptions={defaultEdgeOptions}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          elementsSelectable={false}
-          onNodeContextMenu={onNodeContextMenu}
-          onPaneClick={closeMenu}
-          fitView
-          fitViewOptions={{ padding: 0.1 }}
-          proOptions={{ hideAttribution: true }}
-        />
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            defaultEdgeOptions={defaultEdgeOptions}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            zoomOnDoubleClick={false}
+            onNodeContextMenu={onNodeContextMenu}
+            onNodeClick={onNodeClick}
+            onPaneClick={closeMenu}
+            fitView
+            fitViewOptions={{ padding: 0.1 }}
+            proOptions={{ hideAttribution: true }}
+          />
 
-        {menu && (
-          <div 
-            className="fixed z-50 bg-[#6B905F] dark:bg-[#6B905F] rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden"
-            style={{ top: menu.top, left: menu.left }}
-          >
-            <button 
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 font-medium"
-              onClick={() => handleStatusChange('todo')}
+          {menu && (
+            <div 
+              className="fixed z-50 bg-[#6B905F] dark:bg-[#6B905F] rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden text-white"
+              style={{ top: menu.top, left: menu.left }}
             >
-              Set Pending
-            </button>
-            <button 
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 font-medium"
-              onClick={() => handleStatusChange('in_progress')}
-            >
-              Set In Progress
-            </button>
-            <button 
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 font-medium"
-              onClick={() => handleStatusChange('completed')}
-            >
-              Set Completed
-            </button>
+              <button 
+                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                onClick={() => handleStatusChange('todo')}
+              >
+                Set Pending
+              </button>
+              <button 
+                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                onClick={() => handleStatusChange('in_progress')}
+              >
+                Set In Progress
+              </button>
+              <button 
+                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                onClick={() => handleStatusChange('completed')}
+              >
+                Set Completed
+              </button>
+              <button 
+                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                onClick={() => handleStatusChange('stopped')}
+              >
+                Set Halted
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Side Details Panel */}
+        {selectedTask && (
+          <div className="w-[360px] shrink-0 border border-gray-200 dark:border-[#27272A] rounded-xl bg-white dark:bg-[#18181B] shadow-lg flex flex-col overflow-hidden transition-all duration-300 page-enter">
+            {/* Panel Header */}
+            <div className="p-4 border-b border-gray-200 dark:border-[#27272A] flex items-center justify-between bg-gray-50 dark:bg-[#09090B] shrink-0 select-none">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                  {selectedTask.track || 'task'}
+                </span>
+                <span className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                  selectedTask.priority === 'HIGH' 
+                    ? 'bg-red-100 dark:bg-red-500/10 text-red-500 border border-red-500/20' 
+                    : selectedTask.priority === 'MEDIUM'
+                    ? 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
+                    : 'bg-blue-100 dark:bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                }`}>
+                  {selectedTask.priority || 'MEDIUM'}
+                </span>
+              </div>
+              <button 
+                onClick={() => setSelectedTask(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Panel Contents */}
+            <div className="p-5 flex-1 overflow-y-auto space-y-5 custom-scrollbar">
+              {/* Status Indicator & Title */}
+              <div>
+                <div className="flex items-center gap-2 mb-2 select-none">
+                  <span className={`w-2.5 h-2.5 rounded-full ${
+                    selectedTask.status === 'completed'
+                      ? 'bg-[#34D399]'
+                      : selectedTask.status === 'in_progress'
+                      ? 'bg-[#F59E42]'
+                      : selectedTask.status === 'stopped'
+                      ? 'bg-[#F87171]'
+                      : 'bg-[#38BDF8]'
+                  }`} />
+                  <span className="text-[11px] font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500">
+                    {selectedTask.status === 'stopped' ? 'Halted' : selectedTask.status === 'in_progress' ? 'In Progress' : selectedTask.status === 'completed' ? 'Completed' : 'Upcoming'}
+                  </span>
+                </div>
+                <h2 className="text-[15px] font-bold text-[#1D1E1B] dark:text-white/90 leading-snug">
+                  {selectedTask.title}
+                </h2>
+              </div>
+
+              {/* Assignee Information */}
+              <div className="flex items-center gap-3 bg-[#F4F1EB]/30 dark:bg-[#09090B]/30 p-2.5 rounded-lg border border-gray-100 dark:border-[#27272A]/50 select-none">
+                <div className="w-8 h-8 rounded-full bg-[#6B905F]/10 dark:bg-[#6B905F]/20 flex items-center justify-center text-[#6B905F] font-bold text-sm shrink-0">
+                  {selectedTask.assigned_to ? selectedTask.assigned_to[0].toUpperCase() : '?'}
+                </div>
+                <div>
+                  <div className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Assigned To</div>
+                  <div className="text-xs font-semibold text-gray-700 dark:text-white/80">{selectedTask.assigned_to || 'Unassigned'}</div>
+                </div>
+              </div>
+
+              {/* Status Update Controls */}
+              {isAssignedToCurrentUser(selectedTask.assigned_to, currentUser) && (
+                <div className="pt-4 border-t border-gray-200 dark:border-[#27272A] space-y-3 select-none">
+                  <div className="flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-[#6B905F]" />
+                    <h3 className="text-[11px] font-bold text-[#6B905F] uppercase tracking-wider">
+                      Update Task Status
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'todo')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${
+                        selectedTask.status === 'todo'
+                          ? 'bg-[#38BDF8]/10 text-[#38BDF8] border-[#38BDF8] shadow-sm'
+                          : 'bg-transparent border-gray-200 dark:border-[#27272A] hover:border-gray-300 dark:hover:border-[#3f3f46] text-gray-700 dark:text-white/80'
+                      }`}
+                    >
+                      Pending
+                    </button>
+                    <button
+                      onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'in_progress')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${
+                        selectedTask.status === 'in_progress'
+                          ? 'bg-[#F59E42]/10 text-[#F59E42] border-[#F59E42] shadow-sm'
+                          : 'bg-transparent border-gray-200 dark:border-[#27272A] hover:border-gray-300 dark:hover:border-[#3f3f46] text-gray-700 dark:text-white/80'
+                      }`}
+                    >
+                      In Progress
+                    </button>
+                    <button
+                      onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'completed')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${
+                        selectedTask.status === 'completed'
+                          ? 'bg-[#34D399]/10 text-[#34D399] border-[#34D399] shadow-sm'
+                          : 'bg-transparent border-gray-200 dark:border-[#27272A] hover:border-gray-300 dark:hover:border-[#3f3f46] text-gray-700 dark:text-white/80'
+                      }`}
+                    >
+                      Completed
+                    </button>
+                    <button
+                      onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'stopped')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${
+                        selectedTask.status === 'stopped'
+                          ? 'bg-[#F87171]/10 text-[#F87171] border-[#F87171] shadow-sm'
+                          : 'bg-transparent border-gray-200 dark:border-[#27272A] hover:border-gray-300 dark:hover:border-[#3f3f46] text-gray-700 dark:text-white/80'
+                      }`}
+                    >
+                      Halted
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <h3 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider select-none">
+                  Description
+                </h3>
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed bg-[#F4F1EB]/10 dark:bg-[#09090B]/10 p-2.5 rounded-lg border border-transparent whitespace-pre-wrap">
+                  {selectedTask.description || 'No description provided.'}
+                </p>
+              </div>
+
+              {/* Pre-requisites (Depends On) */}
+              <div className="space-y-2">
+                <h3 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider select-none">
+                  Pre-requisites (Depends On)
+                </h3>
+                <div className="space-y-1.5">
+                  {taskDependencies.length > 0 ? (
+                    taskDependencies.map(dep => (
+                      <button
+                        key={dep.id}
+                        onClick={() => setSelectedTask(dep)}
+                        className="w-full text-left flex items-center gap-2.5 p-2 rounded-lg bg-gray-50 hover:bg-[#6B905F]/10 dark:bg-[#09090B]/50 dark:hover:bg-[#6B905F]/10 border border-gray-200 dark:border-[#27272A] hover:border-[#6B905F]/30 dark:hover:border-[#6B905F]/30 group transition-all"
+                      >
+                        <CornerDownRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#6B905F] shrink-0" />
+                        <span className="text-xs font-semibold text-gray-700 dark:text-white/80 group-hover:text-gray-900 dark:group-hover:text-white truncate">
+                          {dep.title}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-xs italic text-gray-400 dark:text-gray-500 pl-2 select-none">No pre-requisites</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Dependents (Blockers For) */}
+              <div className="space-y-2">
+                <h3 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider select-none">
+                  Blockers For (Dependents)
+                </h3>
+                <div className="space-y-1.5">
+                  {taskDependents.length > 0 ? (
+                    taskDependents.map(dep => (
+                      <button
+                        key={dep.id}
+                        onClick={() => setSelectedTask(dep)}
+                        className="w-full text-left flex items-center gap-2.5 p-2 rounded-lg bg-gray-50 hover:bg-[#6B905F]/10 dark:bg-[#09090B]/50 dark:hover:bg-[#6B905F]/10 border border-gray-200 dark:border-[#27272A] hover:border-[#6B905F]/30 dark:hover:border-[#6B905F]/30 group transition-all"
+                      >
+                        <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#6B905F] shrink-0" />
+                        <span className="text-xs font-semibold text-gray-700 dark:text-white/80 group-hover:text-gray-900 dark:group-hover:text-white truncate">
+                          {dep.title}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-xs italic text-gray-400 dark:text-gray-500 pl-2 select-none">No dependent tasks</div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
