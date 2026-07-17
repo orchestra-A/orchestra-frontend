@@ -20,12 +20,12 @@ export function AuthProvider({ children }) {
       // Restore active session from localStorage on mount
       const storedUser = JSON.parse(localStorage.getItem('currentUser'));
       if (storedUser && storedUser.user_id) {
+        // Instantly restore cached session to prevent flash of empty auth state
+        setCurrentUser(storedUser);
         try {
           await fetchAndHydrateUser(storedUser.user_id, storedUser);
         } catch (err) {
           console.warn('Could not auto-hydrate user on mount:', err);
-          // Fallback to local storage if backend fetch fails (e.g., offline)
-          setCurrentUser(storedUser);
         }
       }
       setLoading(false);

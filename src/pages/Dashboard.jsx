@@ -62,7 +62,10 @@ export default function Dashboard() {
         {/* Left Column: Projects Overview */}
         <div className="flex flex-col gap-4">
           {/* Active Projects Stat Box */}
-          <div className="bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-5 shadow-sm flex flex-col justify-center transition-all hover:border-[#6B905F] dark:border-[#6B905F]/30 hover:shadow-md cursor-pointer">
+          <div 
+            onClick={() => navigate('/todo')}
+            className="bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-5 shadow-sm flex flex-col justify-center transition-all hover:border-[#6B905F] dark:border-[#6B905F]/30 hover:shadow-md cursor-pointer"
+          >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-600 dark:text-white/60 font-medium">Active Projects</span>
               <div className="w-10 h-10 bg-[#6B905F] dark:bg-[#6B905F]/10 rounded-lg flex items-center justify-center shadow-sm">
@@ -82,7 +85,7 @@ export default function Dashboard() {
               {projects.map(project => (
                 <div key={project.id} className="relative group">
                   <button
-                    onClick={() => navigate(`/${project.id}-tasks`)}
+                    onClick={() => navigate(`/project/${project.id}/tasks`)}
                     className="w-full bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-4 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#6B905F]/30 text-left flex flex-col items-center justify-center aspect-square group/btn"
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover/btn:scale-110 transition-transform" style={{ backgroundColor: `${project.color}15` }}>

@@ -83,7 +83,7 @@ export default function Onboarding() {
     }
 
     // Ensure all platforms are connected
-    const requiredPlatforms = ['google', 'discord', 'github', 'figma'];
+    const requiredPlatforms = ['google', 'discord', 'github'];
     const missingPlatforms = requiredPlatforms.filter(p => !connectedPlatforms[p]);
     if (missingPlatforms.length > 0) {
       setError('Please connect all other platforms before continuing.');
@@ -251,22 +251,12 @@ export default function Onboarding() {
                   </Button>
                 )}
                 
-                {currentUser?.platform !== 'figma' && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => handleConnectPlatform('figma')}
-                    disabled={connectedPlatforms['figma']}
-                    className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-11 lg:h-12 transition-all text-xs lg:text-sm"
-                  >
-                    {connectedPlatforms['figma'] ? 'Figma Connected' : 'Connect Figma'}
-                  </Button>
-                )}
+
               </div>
             </div>
 
             <Button 
-              disabled={loading || !['google', 'discord', 'github', 'figma'].every(p => connectedPlatforms[p])} 
+              disabled={loading || !['google', 'discord', 'github'].every(p => connectedPlatforms[p])} 
               type="submit" 
               className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-12 lg:h-14 mt-6 text-sm lg:text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
