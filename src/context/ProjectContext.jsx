@@ -35,9 +35,10 @@ export function ProjectProvider({ children }) {
         setAllUsers(users);
 
         // If we have a logged-in user, filter to only their tasks/projects
+        // Default to empty array if no active user session to prevent flashing all projects
         const relevantTasks = currentUsername
           ? allTasks.filter((t) => t.assigned_to === currentUsername)
-          : allTasks;
+          : [];
 
         // Build a project map from the relevant tasks
         const projectMap = {};

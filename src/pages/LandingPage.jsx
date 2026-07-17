@@ -378,7 +378,7 @@ export default function LandingPage() {
           <div className="ol-hero-inner">
             <div style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--ol-green-primary)', marginBottom: '1rem' }}>Orchestra</div>
             <h1>Turn app ideas into <span className="ol-accent">structured game plans</span></h1>
-            <p className="ol-hero-sub">Orchestra uses AI to break down massive app ideas into step-by-step technical tasks, intelligently distributes work across your team, and tracks progress across GitHub, Figma, Discord, and more.</p>
+            <p className="ol-hero-sub">Orchestra uses AI to break down massive app ideas into step-by-step technical tasks, intelligently distributes work across your team, and tracks progress across GitHub, Gmail, Discord, and more.</p>
             <div className="ol-hero-actions">
               <button className="ol-btn-primary ol-btn-lg" onClick={() => navigate('/login')}>Get Started</button>
             </div>
@@ -403,7 +403,7 @@ export default function LandingPage() {
                   {[
                     { c: '#5865F2', name: 'Discord', svg: <svg width="22" height="17" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7 8.07A105.15 105.15 0 0081.47 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-29.11 0A72.37 72.37 0 0045.64 0a105.89 105.89 0 00-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0032.17 16.15 77.7 77.7 0 006.89-11.11 68.42 68.42 0 01-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0064.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 01-10.87 5.19 77 77 0 006.89 11.1 105.25 105.25 0 0032.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.05 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.31 60 73.31 53s5-12.74 11.43-12.74S96.2 46 96.09 53s-5.05 12.69-11.4 12.69z" /></svg> },
                     { c: '#181717', name: 'GitHub', svg: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg> },
-                    { c: 'none', name: 'Figma', svg: <svg width="16" height="24" viewBox="0 0 38 57" fill="none"><path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" fill="#1ABCFE"/><path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z" fill="#F24E1E"/><path d="M19 0v19h9.5A9.5 9.5 0 1 0 19 0z" fill="#FF7262"/><path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z" fill="#A259FF"/><path d="M0 47.5A9.5 9.5 0 0 0 9.5 57 9.5 9.5 0 0 0 19 47.5v-9.5H9.5A9.5 9.5 0 0 0 0 47.5z" fill="#0ACF83"/></svg> },
+                    { c: '#EA4335', name: 'Gmail', svg: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" /></svg> },
                   ].map((p, i) => (
                     <div className="ol-plat" key={i}>
                       <div className="ol-plat-icon" style={{ color: p.c !== 'none' ? p.c : undefined }}>
@@ -440,7 +440,7 @@ export default function LandingPage() {
               {
                 icon: <svg fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>,
                 title: 'Cross-Platform Integration',
-                desc: 'Quietly connects GitHub, Figma, Discord, and other workspaces to build a live, visual, interconnected brain of your team\'s knowledge.'
+                desc: 'Quietly connects GitHub, Gmail, Discord, and other workspaces to build a live, visual, interconnected brain of your team\'s knowledge.'
               },
               {
                 icon: <svg fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>,
@@ -536,8 +536,8 @@ export default function LandingPage() {
                   icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg>
                 },
                 {
-                  bg: '#1e1e1e', name: 'Figma', sub: 'Sync design updates',
-                  icon: <svg width="16" height="24" viewBox="0 0 38 57" fill="none"><path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" fill="#1ABCFE"/><path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z" fill="#F24E1E"/><path d="M19 0v19h9.5A9.5 9.5 0 1 0 19 0z" fill="#FF7262"/><path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z" fill="#A259FF"/><path d="M0 47.5A9.5 9.5 0 0 0 9.5 57 9.5 9.5 0 0 0 19 47.5v-9.5H9.5A9.5 9.5 0 0 0 0 47.5z" fill="#0ACF83"/></svg>
+                  bg: '#EA4335', name: 'Gmail', sub: 'Sync email updates',
+                  icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" /></svg>
                 },
               ].map((item, i) => (
                 <div className="ol-int-card ol-reveal" key={i}>
@@ -556,7 +556,7 @@ export default function LandingPage() {
           <h2 className="ol-reveal">Ready to orchestrate<br />your next project?</h2>
           <p className="ol-reveal">Join teams who ship faster with AI-powered project management.</p>
           <div className="ol-cta-btns ol-reveal">
-            <button className="ol-btn-primary ol-btn-lg" onClick={() => navigate('/signup')}>Get started for free →</button>
+            <button className="ol-btn-primary ol-btn-lg" onClick={() => navigate('/signup')}>Get started →</button>
           </div>
         </section>
 

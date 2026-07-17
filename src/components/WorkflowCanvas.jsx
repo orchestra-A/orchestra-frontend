@@ -185,6 +185,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
             const xPosition = (i - (group.length - 1) / 2) * 350; // Horizontal spacing increased
             
             const matched = matchesFilter(t);
+            const isSelected = selectedTask && t.id === selectedTask.id;
             newNodes.push({
               id: t.id,
               type: "task",
@@ -194,8 +195,9 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                 status: t.status,
                 assigned_to: t.assigned_to,
                 project_name: t.project_id || "Project 1",
-                isHighlighted: isFilterActive && matched,
-                isDimmed: isFilterActive && !matched,
+                isHighlighted: (isFilterActive && matched) || isSelected,
+                isDimmed: (isFilterActive && !matched) || (selectedTask && !isSelected && !isFilterActive),
+                isSelected: isSelected,
               }
             });
           });
@@ -244,7 +246,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
     }
 
     loadTasks();
-  }, [projectId, tasks, setNodes, setEdges, selectedMembers, selectedStatuses]);
+  }, [projectId, tasks, setNodes, setEdges, selectedMembers, selectedStatuses, selectedTask]);
 
   const onNodeContextMenu = (event, node) => {
     event.preventDefault();

@@ -24,22 +24,27 @@ export function TaskNode({ data }) {
   const { header: headerColor, body: bodyColor, text: textColor } = getColors(data.status);
   const isHighlighted = data.isHighlighted;
   const isDimmed = data.isDimmed;
+  const isSelected = data.isSelected;
 
   return (
     <div 
       className={`relative w-[240px] rounded-lg overflow-hidden flex flex-col border transition-all duration-300 ${
         isDimmed 
           ? 'opacity-25 scale-[0.97] border-black/5' 
-          : isHighlighted 
-            ? 'opacity-100 scale-[1.03]' 
-            : 'opacity-100 scale-100 border-black/5'
+          : isSelected
+            ? 'opacity-100 scale-[1.06]'
+            : isHighlighted 
+              ? 'opacity-100 scale-[1.03]' 
+              : 'opacity-100 scale-100 border-black/5'
       }`}
       style={{
-        boxShadow: isHighlighted 
-          ? `0 0 25px 6px ${headerColor}bb` 
-          : '0 2px 10px rgba(0,0,0,0.08)',
-        borderColor: isHighlighted ? headerColor : undefined,
-        borderWidth: isHighlighted ? '2px' : '1px'
+        boxShadow: isSelected
+          ? `0 0 30px 6px ${headerColor}cc`
+          : isHighlighted 
+            ? `0 0 20px 4px ${headerColor}aa` 
+            : '0 2px 10px rgba(0,0,0,0.08)',
+        borderColor: isSelected ? headerColor : isHighlighted ? headerColor : undefined,
+        borderWidth: isSelected ? '3px' : isHighlighted ? '2px' : '1px'
       }}
     >
       <Handle type="target" position={Position.Top} className="!opacity-0 !w-0 !h-0 border-0" />
