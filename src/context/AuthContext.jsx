@@ -101,6 +101,7 @@ export function AuthProvider({ children }) {
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('onboarded');
   };
 
   /**

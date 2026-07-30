@@ -8,10 +8,77 @@ const BASE_URL = '/api';
  * @returns {Promise<Array>} Array of user objects
  */
 export async function fetchUsers() {
-  const res = await fetch(`${BASE_URL}/users`);
-  if (!res.ok) throw new Error(`Failed to fetch users: ${res.status}`);
-  const data = await res.json();
-  return data.users || [];
+  try {
+    const res = await fetch(`${BASE_URL}/users`);
+    if (res.ok) {
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.users || []);
+    }
+  } catch (e) {
+    // Ignore proxy error, fallback to direct
+  }
+  try {
+    const directRes = await fetch('https://orchestra-backend-30fy.onrender.com/users');
+    if (directRes.ok) {
+      const data = await directRes.json();
+      return Array.isArray(data) ? data : (data.users || []);
+    }
+  } catch (err) {
+    console.warn('[API] Failed to fetch users:', err);
+  }
+  return [];
+}
+
+/**
+ * Fetch projects from the backend via GET /projects.
+ * When userId is provided, sends ?user_id= to let the backend filter
+ * to only projects the user created or is a member of.
+ * @param {string} [userId] - Optional user_id for server-side filtering
+ * @returns {Promise<Array>} Array of project objects
+ */
+export async function fetchProjects(userId) {
+  const query = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
+  const url = `${BASE_URL}/projects${query}`;
+  const directUrl = `https://orchestra-backend-30fy.onrender.com/projects${query}`;
+  
+  let projectsList = [];
+
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      projectsList = Array.isArray(data) ? data : (data.projects || []);
+    }
+  } catch (e) {
+    // proxy failed
+  }
+
+  if (projectsList.length === 0) {
+    try {
+      const directRes = await fetch(directUrl);
+      if (directRes.ok) {
+        const data = await directRes.json();
+        projectsList = Array.isArray(data) ? data : (data.projects || []);
+      }
+    } catch (err) {
+      console.warn('[API] Direct fetch projects failed:', err);
+    }
+  }
+
+  // Fallback: If filtered fetch returned empty array but userId was passed, fetch ALL projects
+  if (projectsList.length === 0 && userId) {
+    try {
+      const allRes = await fetch(`https://orchestra-backend-30fy.onrender.com/projects`);
+      if (allRes.ok) {
+        const data = await allRes.json();
+        projectsList = Array.isArray(data) ? data : (data.projects || []);
+      }
+    } catch (err) {
+      console.warn('[API] Fallback all projects fetch failed:', err);
+    }
+  }
+
+  return projectsList;
 }
 
 /**
@@ -37,13 +104,23 @@ export async function fetchUserById(userId) {
  * @returns {Promise<Array>} Array of task objects
  */
 export async function fetchTasks(projectId = null) {
-  const url = projectId
-    ? `${BASE_URL}/tasks?project_id=${encodeURIComponent(projectId)}`
-    : `${BASE_URL}/tasks`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch tasks: ${res.status}`);
-  const data = await res.json();
-  return data.tasks || [];
+  const queryParam = projectId ? `?project_id=${encodeURIComponent(projectId)}` : '';
+  const url = `${BASE_URL}/tasks${queryParam}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const directUrl = `https://orchestra-backend-30fy.onrender.com/tasks${queryParam}`;
+      const directRes = await fetch(directUrl);
+      if (!directRes.ok) return [];
+      const data = await directRes.json();
+      return Array.isArray(data) ? data : (data.tasks || []);
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data.tasks || []);
+  } catch (err) {
+    console.warn('[API] Failed to fetch tasks from backend:', err);
+    return [];
+  }
 }
 
 /**
@@ -85,3 +162,344 @@ export async function updateTaskStatus(taskId, status) {
   console.log(`[API] Status update response:`, data);
   return data;
 }
+
+/**
+ * Validate an array of team member inputs against the user table.
+ * @param {Array<string>} memberInputs - Array of entered member identifiers (e.g. user_id, username, email)
+ * @returns {Promise<{ valid: boolean, validMembers: string[], invalidMembers: string[] }>}
+ */
+export async function validateTeamMembers(memberInputs = []) {
+  const cleanInputs = memberInputs.map(m => m ? m.toString().trim() : '').filter(Boolean);
+  if (cleanInputs.length === 0) {
+    return { valid: true, validMembers: [], invalidMembers: [] };
+  }
+
+  let users = [];
+  try {
+    users = await fetchUsers();
+  } catch (err) {
+    console.warn('[API] Could not fetch user table for validation:', err);
+  }
+
+  const validMembers = [];
+  const invalidMembers = [];
+
+  for (const input of cleanInputs) {
+    const lowerInput = input.toLowerCase();
+    const matchedUser = users.find(u =>
+      (u.user_id && u.user_id.toLowerCase() === lowerInput) ||
+      (u.username && u.username.toLowerCase() === lowerInput) ||
+      (u.email && u.email.toLowerCase() === lowerInput) ||
+      (u.discord_id && u.discord_id.toString().toLowerCase() === lowerInput) ||
+      (u.github_username && u.github_username.toLowerCase() === lowerInput) ||
+      (u.id && u.id.toString().toLowerCase() === lowerInput)
+    );
+
+    if (matchedUser) {
+      validMembers.push(matchedUser.user_id || matchedUser.username || input);
+    } else {
+      // If user list loaded and user not found, mark invalid
+      if (users.length > 0) {
+        invalidMembers.push(input);
+      } else {
+        // Fallback if user table couldn't be loaded: accept input
+        validMembers.push(input);
+      }
+    }
+  }
+
+  return {
+    valid: invalidMembers.length === 0,
+    validMembers,
+    invalidMembers,
+  };
+}
+
+/**
+ * Helper to execute fetch requests with a configurable timeout (default 65 seconds).
+ */
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 65000, ...fetchOptions } = options;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(resource, {
+      ...fetchOptions,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error(`AI request timed out after ${Math.round(timeout / 1000)}s while waiting for backend response.`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Create a new blueprint via POST /blueprint endpoint.
+ * @param {Object} payload - { name: string, description: string, tech_stack: string[], members: string[], created_by?: string }
+ * @param {string} userId - Creator user_id query param
+ * @returns {Promise<Object>} Response data
+ */
+export async function createBlueprint(payload, userId) {
+  const effectiveUserId = userId || payload.created_by || null;
+  const queryParam = effectiveUserId ? `?user_id=${encodeURIComponent(effectiveUserId)}` : '';
+  const url = `${BASE_URL}/blueprint${queryParam}`;
+  const directUrl = `https://orchestra-backend-30fy.onrender.com/blueprint${queryParam}`;
+
+  const bodyPayload = {
+    ...payload,
+    created_by: effectiveUserId
+  };
+
+  console.log('[API] Calling createBlueprint endpoint (120s timeout):', url, bodyPayload);
+  try {
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      timeout: 120000,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      },
+      body: JSON.stringify(bodyPayload),
+    });
+
+    if (!res.ok) {
+      // Fallback to direct backend URL if proxy fails
+      const directRes = await fetchWithTimeout(directUrl, {
+        method: 'POST',
+        timeout: 120000,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+        },
+        body: JSON.stringify(bodyPayload),
+      });
+      if (!directRes.ok) {
+        const errText = await directRes.text().catch(() => 'No details');
+        throw new Error(`Blueprint API error (${directRes.status}): ${errText}`);
+      }
+      return await directRes.json();
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[API] Proxy blueprint call failed, trying direct endpoint...', err);
+    const directRes = await fetchWithTimeout(directUrl, {
+      method: 'POST',
+      timeout: 120000,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      },
+      body: JSON.stringify(bodyPayload),
+    });
+    if (!directRes.ok) {
+      throw err;
+    }
+    return await directRes.json();
+  }
+}
+
+/**
+ * Send a chat message to Clover AI endpoint via POST /clover.
+ * @param {string} question - Current user message
+ * @param {Array<{ content: string, role: string }>} conversationHistory - Last 5 turns of conversation history
+ * @returns {Promise<Object|string>} Response data
+ */
+export async function sendCloverMessage(question, conversationHistory = []) {
+  const payload = {
+    conversation_history: conversationHistory,
+    question: question,
+  };
+  const url = `${BASE_URL}/clover`;
+  console.log('[API] Calling sendCloverMessage endpoint (65s timeout):', payload);
+
+  try {
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      timeout: 65000,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const directRes = await fetchWithTimeout('https://orchestra-backend-30fy.onrender.com/clover', {
+        method: 'POST',
+        timeout: 65000,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!directRes.ok) {
+        const errText = await directRes.text().catch(() => 'No details');
+        throw new Error(`Clover API error (${directRes.status}): ${errText}`);
+      }
+      return await directRes.json();
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[API] Proxy clover call failed, trying direct endpoint...', err);
+    const directRes = await fetchWithTimeout('https://orchestra-backend-30fy.onrender.com/clover', {
+      method: 'POST',
+      timeout: 65000,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!directRes.ok) {
+      throw err;
+    }
+    return await directRes.json();
+  }
+}
+
+/**
+ * Create a new project in backend via POST /projects.
+ * Calls the backend DIRECTLY (no proxy) to avoid duplicate creation from retry logic.
+ * @param {Object} payload - { name, description, tech_stack, members, summary }
+ * @param {string} userId - Creator user_id query param
+ * @returns {Promise<Object>} Response data
+ */
+export async function createProjectBackend(payload, userId) {
+  const queryParam = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
+  const directUrl = `https://orchestra-backend-30fy.onrender.com/projects${queryParam}`;
+  console.log('[API] Calling createProjectBackend DIRECT endpoint:', directUrl, payload);
+
+  const bodyData = {
+    name: payload.name || 'Untitled Project',
+    description: payload.description || '',
+    tech_stack: payload.tech_stack || [],
+    members: payload.members || [],
+    created_by: userId || null,
+    ...(payload.summary ? { summary: payload.summary } : {}),
+  };
+
+  const res = await fetch(directUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+    },
+    body: JSON.stringify(bodyData),
+  });
+
+  const text = await res.text();
+  console.log(`[API] createProjectBackend response (status ${res.status}):`, text);
+
+  if (!res.ok) {
+    throw new Error(`Create Project API error (${res.status}): ${text}`);
+  }
+
+  try { return JSON.parse(text); } catch { return text; }
+}
+
+/**
+ * Update an existing project in backend via PATCH /projects/{project_id}.
+ * @param {string} projectId - Path param project_id
+ * @param {Object} payload - { name: string, description: string, tech_stack: string[], members: string[] }
+ * @returns {Promise<Object>} Response data
+ */
+export async function updateProjectBackend(projectId, payload) {
+  const url = `${BASE_URL}/projects/${encodeURIComponent(projectId)}`;
+  console.log('[API] Calling updateProjectBackend endpoint:', url, payload);
+
+  try {
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const directUrl = `https://orchestra-backend-30fy.onrender.com/projects/${encodeURIComponent(projectId)}`;
+      const directRes = await fetch(directUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!directRes.ok) {
+        const errText = await directRes.text().catch(() => 'No details');
+        throw new Error(`Update Project API error (${directRes.status}): ${errText}`);
+      }
+      return await directRes.json();
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[API] Proxy updateProject call failed, trying direct endpoint...', err);
+    const directUrl = `https://orchestra-backend-30fy.onrender.com/projects/${encodeURIComponent(projectId)}`;
+    const directRes = await fetch(directUrl, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!directRes.ok) throw err;
+    return await directRes.json();
+  }
+}
+
+/**
+ * Create a new task in the tasks table via POST /tasks.
+ * Calls backend DIRECTLY (no proxy) to avoid duplicate creation from retry logic.
+ * @param {Object} taskData - Task payload { id, title, description, project_id, track, assigned_to, status, dependencies }
+ * @returns {Promise<Object>} Response data
+ */
+export async function createTaskBackend(taskData) {
+  const directUrl = 'https://orchestra-backend-30fy.onrender.com/tasks';
+
+  const taskId = taskData.id || taskData.task_id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+  const payload = {
+    id: taskId,
+    title: taskData.title || taskData.name || 'Untitled Task',
+    description: taskData.description || '',
+    project_id: taskData.project_id || taskData.projectId || '',
+    track: taskData.track || 'general',
+    assigned_to: taskData.assigned_to || taskData.assignedTo || '',
+    status: taskData.status || 'todo',
+    dependencies: Array.isArray(taskData.dependencies) 
+      ? taskData.dependencies 
+      : (Array.isArray(taskData.depends_on) ? taskData.depends_on : [])
+  };
+
+  console.log('[API] Calling createTaskBackend DIRECT endpoint:', directUrl, payload);
+
+  const res = await fetch(directUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await res.text();
+  console.log(`[API] createTaskBackend response (status ${res.status}):`, text);
+
+  if (!res.ok) {
+    throw new Error(`Create Task API error (${res.status}): ${text}`);
+  }
+
+  try { return JSON.parse(text); } catch { return text; }
+}
+
+
+

@@ -9,7 +9,6 @@ import Team from './pages/Team';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
-import EmptyPage from './pages/EmptyPage';
 import ProjectWorkflow from './pages/ProjectWorkflow';
 import LandingPage from './pages/LandingPage';
 import Profile from './pages/Profile';
@@ -25,24 +24,45 @@ import Workspaces from './pages/Workspaces';
 import WorkspaceDetail from './pages/WorkspaceDetail';
 import OAuthCallback from './pages/OAuthCallback';
 
-// A wrapper to protect routes
+// A wrapper to protect routes.
+// - Unauthenticated users at "/" see the LandingPage.
+// - Unauthenticated users at any other path get redirected to "/".
+// - Authenticated but un-onboarded users get redirected to "/onboarding".
+// - Authenticated and onboarded users see the route content.
 function ProtectedRoute({ children }) {
   const { currentUser } = useAuth();
   const location = useLocation();
+  const isOnboarded = localStorage.getItem('onboarded') === 'true';
 
+  // Not logged in at all
   if (!currentUser) {
+    // Show landing page at "/" instead of a blank screen
     if (location.pathname === '/') {
       return <LandingPage />;
     }
+    // Any other protected path → redirect to landing
     return <Navigate to="/" replace />;
   }
+
+  // Logged in but hasn't completed onboarding
+  if (!isOnboarded) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // Logged in and onboarded → render the actual route
   return children;
 }
 
-// A wrapper to redirect logged-in users away from auth pages (e.g. preventing access to Login if already authenticated)
+// A wrapper to redirect logged-in users away from auth pages
 function PublicRoute({ children }) {
   const { currentUser } = useAuth();
+  const isOnboarded = localStorage.getItem('onboarded') === 'true';
+
   if (currentUser) {
+    // If not onboarded, send straight to onboarding (not dashboard)
+    if (!isOnboarded) {
+      return <Navigate to="/onboarding" replace />;
+    }
     return <Navigate to="/" replace />;
   }
   return children;

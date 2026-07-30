@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Edit2, Check, Layout, FileText, Loader2 } from 'lucide-react';
+import { X, Plus, Edit2, Check, Layout, FileText, Loader2, AlertCircle, ShieldAlert } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
+import { useAuth } from '../context/AuthContext';
 import { WorkflowCanvas } from '../components/WorkflowCanvas';
+import { createBlueprint, validateTeamMembers, createProjectBackend, updateProjectBackend, createTaskBackend, fetchProjects } from '../services/api';
 
 const techOptions = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Tailwind CSS', 'Next.js', 'PostgreSQL', 'MongoDB', 'Docker'];
 
@@ -11,8 +13,11 @@ const techOptions = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.j
 export default function Blueprint() {
   const navigate = useNavigate();
   const { projectId } = useParams();
-  const { projects, addProject, updateProject } = useProject();
+  const { projects, addProject, updateProject, refreshData } = useProject();
+  const { currentUser } = useAuth();
   
+  const currentUserId = currentUser?.user_id || currentUser?.id || currentUser?.username || currentUser?.email;
+
   // Local UI and Form States
   const [viewState, setViewState] = useState('centered');
   const [isEditing, setIsEditing] = useState(true);
@@ -27,8 +32,23 @@ export default function Blueprint() {
   const [members, setMembers] = useState([{ id: 1, value: "" }]);
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isValidatingUsers, setIsValidatingUsers] = useState(false);
+  const [memberError, setMemberError] = useState(null);
+
   const [blueprintData, setBlueprintData] = useState(null);
   const [activeTab, setActiveTab] = useState('workflow');
+
+  // Check if logged-in user is the creator of the selected project
+  const currentProject = projectId ? projects.find(p => p.id === projectId) : null;
+  const projectCreator = currentProject?.created_by || null;
+  
+  const isCreator = !currentProject || !projectCreator || (
+    currentUserId && (
+      projectCreator.toLowerCase() === currentUserId.toString().toLowerCase() ||
+      (currentUser?.username && projectCreator.toLowerCase() === currentUser.username.toLowerCase()) ||
+      (currentUser?.email && projectCreator.toLowerCase() === currentUser.email.toLowerCase())
+    )
+  );
 
   useEffect(() => {
     if (projectId) {
@@ -59,6 +79,7 @@ export default function Blueprint() {
       setMembers([{ id: 1, value: "" }]);
       setViewState('centered');
       setIsEditing(true);
+      setMemberError(null);
     }
   }, [projectId]);
 
@@ -82,14 +103,17 @@ export default function Blueprint() {
   };
 
   const handleMemberChange = (id, val) => {
+    setMemberError(null);
     setMembers(members.map(m => m.id === id ? { ...m, value: val } : m));
   };
 
   const addMember = () => {
+    setMemberError(null);
     setMembers([...members, { id: Date.now(), value: '' }]);
   };
 
   const removeMember = (id) => {
+    setMemberError(null);
     if (members.length > 1) {
       setMembers(members.filter(m => m.id !== id));
     } else {
@@ -98,36 +122,188 @@ export default function Blueprint() {
   };
 
   const handleCreate = async () => {
-    if (projectId) {
-      updateProject(projectId, { title, description, members, techStack });
-      setViewState('split');
-      setIsEditing(false);
-    } else {
+    // If modifying an existing project, verify creator permissions
+    if (projectId && !isCreator) {
+      alert(`Only the project creator (${projectCreator}) is allowed to modify this project.`);
+      return;
+    }
+
+    setMemberError(null);
+    const rawMemberInputs = members.map(m => typeof m === 'string' ? m.trim() : (m.value || '').trim()).filter(Boolean);
+
+    // Validate team user IDs against user table
+    if (rawMemberInputs.length > 0) {
+      setIsValidatingUsers(true);
+      try {
+        const validation = await validateTeamMembers(rawMemberInputs);
+        if (!validation.valid) {
+          const invalidFormatted = validation.invalidMembers.map(m => `"${m}"`).join(', ');
+          const errorMsg = `User ID(s) not found in user table: ${invalidFormatted}. Please replace them with valid user IDs or remove them to proceed.`;
+          setMemberError(errorMsg);
+          alert(errorMsg);
+          return;
+        }
+      } catch (err) {
+        console.warn('User validation check warning:', err);
+      } finally {
+        setIsValidatingUsers(false);
+      }
+    }
+
+    const payload = {
+      name: title || 'Untitled Project',
+      description: description || '',
+      tech_stack: techStack,
+      members: rawMemberInputs,
+      created_by: currentUserId || null,
+    };
+
+    const isExistingBackendProject = projectId && projects.some(p => p.id === projectId && !p.id.startsWith('proj_'));
+
+    if (isExistingBackendProject) {
+      // Modifying existing verified backend project: Call POST /blueprint to regenerate blueprint & PATCH /projects/{project_id}
       setIsGenerating(true);
       setViewState('split');
-      const newId = addProject({ title, description, members, techStack });
-      navigate(`/blueprint/${newId}`, { replace: true });
 
       try {
-         const res = await fetch('https://orchestra-backend-30fy.onrender.com/blueprint', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-            },
-            body: JSON.stringify({
-              idea: `${title}: ${description}`,
-              project_id: newId,
-              members: members.map(m => m.value).filter(val => val.trim() !== '')
-            })
-         });
-         const data = await res.json();
-         setBlueprintData({
-            tasks: data.tasks || [],
-            description: data.description || "No description provided."
-         });
+        // 1. Call POST /blueprint with new changes
+        const blueprintRes = await createBlueprint(payload, currentUserId);
+        const tasksList = blueprintRes.tasks || [];
+        const summaryContent = blueprintRes.summary || blueprintRes.description || (typeof blueprintRes === 'string' ? blueprintRes : "Updated blueprint.");
+
+        setBlueprintData({
+          tasks: tasksList,
+          summary: summaryContent,
+          raw: blueprintRes
+        });
+
+        // 2. Call PATCH /projects/{project_id} to update project table in backend
+        try {
+          await updateProjectBackend(projectId, { ...payload, summary: summaryContent });
+        } catch (patchErr) {
+          console.warn('[Blueprint] Backend project update error:', patchErr);
+        }
+
+        // 3. Save each generated task to the tasks table via POST /tasks
+        if (tasksList.length > 0) {
+          const saveTasksPromises = tasksList.map((t) =>
+            createTaskBackend({
+              title: t.title || 'Untitled Task',
+              description: t.description || '',
+              project_id: projectId,
+              track: t.track || 'general',
+              assigned_to: t.assigned_to || currentUserId || '',
+              status: t.status || 'todo',
+              dependencies: t.dependencies || t.depends_on || []
+            }).catch((err) =>
+              console.warn(`[Blueprint] Failed to save task ${t.id || t.title} to backend:`, err)
+            )
+          );
+          await Promise.all(saveTasksPromises);
+        }
+
+        // 4. Update local project context
+        updateProject(projectId, { title, description, members, techStack });
       } catch (err) {
-         console.error(err);
+        console.error('Failed to update blueprint & project:', err);
+        setBlueprintData({
+          tasks: [],
+          summary: `Failed to update blueprint: ${err.message}`,
+          raw: null
+        });
+      } finally {
+        setIsGenerating(false);
+        setIsEditing(false);
+      }
+    } else {
+      // Creating new project: Call POST /blueprint (backend handles creating project and tasks in DB)
+      setIsGenerating(true);
+      setViewState('split');
+
+      try {
+         // 1. Call POST /blueprint (Backend creates project record & tasks directly in database)
+         const data = await createBlueprint(payload, currentUserId);
+         console.log('[Blueprint] POST /blueprint server response:', data);
+
+         const tasksList = data.tasks || [];
+         const summaryContent = data.summary || data.description || (typeof data === 'string' ? data : "Blueprint project generated successfully.");
+
+         setBlueprintData({
+            tasks: tasksList,
+            summary: summaryContent,
+            raw: data
+         });
+
+         // Extract real canonical DB project ID returned from POST /blueprint
+         let realDbProjectId = null;
+         if (typeof data === 'string') {
+           realDbProjectId = data;
+         } else if (data && typeof data === 'object') {
+           realDbProjectId = 
+             data.project_id || 
+             data.id || 
+             data.project?.id || 
+             data.project?.project_id ||
+             data.data?.id ||
+             data.data?.project_id;
+         }
+
+         // Fallback: If POST /blueprint didn't return explicit ID at root, fetch latest project list to find the DB primary key
+         if (!realDbProjectId) {
+           try {
+             const fetched = await fetchProjects();
+             const matches = fetched.filter(p => (p.name || p.title || '').toLowerCase() === (title || '').toLowerCase());
+             if (matches.length > 0) {
+               const matched = matches[matches.length - 1];
+               realDbProjectId = matched.project_id || matched.id;
+             }
+           } catch (fErr) {
+             console.warn('[Blueprint] Fallback project ID fetch error:', fErr);
+           }
+         }
+
+         const finalProjectId = realDbProjectId || `proj_${Date.now()}`;
+         console.log('[Blueprint] Real DB project ID from blueprint creation:', finalProjectId);
+
+         // Persist all blueprint generated tasks to backend DB table under finalProjectId
+         if (tasksList.length > 0) {
+           console.log(`[Blueprint] Persisting ${tasksList.length} tasks to database under project_id "${finalProjectId}"...`);
+           const saveTasksPromises = tasksList.map((t, idx) =>
+             createTaskBackend({
+               id: t.id ? `${finalProjectId}-${t.id}` : `${finalProjectId}-T${idx + 1}`,
+               title: t.title || 'Untitled Task',
+               description: t.description || '',
+               project_id: finalProjectId,
+               track: t.track || 'general',
+               assigned_to: t.assigned_to || currentUserId || '',
+               status: t.status || 'todo',
+               dependencies: t.dependencies || t.depends_on || []
+             }).catch((err) =>
+               console.warn(`[Blueprint] Task persistence warning for "${t.title}":`, err)
+             )
+           );
+           await Promise.all(saveTasksPromises);
+         }
+
+         // Add to local state/context
+         addProject(
+           { id: finalProjectId, title, description, members, techStack }, 
+           currentUserId
+         );
+
+         // Refresh global projects and tasks from backend so tasks appear immediately
+         if (refreshData) {
+           await refreshData().catch(() => {});
+         }
+
+         navigate(`/blueprint/${finalProjectId}`, { replace: true });
+      } catch (err) {
+         console.error('Failed to generate blueprint from backend:', err);
+         setBlueprintData({
+           tasks: [],
+           summary: `Failed to load blueprint details: ${err.message}`,
+           raw: null
+         });
       } finally {
          setIsGenerating(false);
          setIsEditing(false);
@@ -138,6 +314,13 @@ export default function Blueprint() {
   const formContent = (
     <>
       <div className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        {projectId && !isCreator && (
+          <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-md flex items-start gap-2 text-amber-700 dark:text-amber-300 text-[11px] mb-1">
+            <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+            <span>Modify controls are only accessible to the project creator ({projectCreator || 'another user'}).</span>
+          </div>
+        )}
+
         {/* Title */}
         <div>
           <label className="block text-[11px] font-semibold text-gray-800 dark:text-gray-300 mb-0.5">Project Title:</label>
@@ -216,6 +399,12 @@ export default function Blueprint() {
         {/* Members */}
         <div>
           <label className="block text-[11px] font-semibold text-gray-800 dark:text-gray-300 mb-0.5">Members:</label>
+          {memberError && (
+            <div className="mb-2 p-2 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 rounded-md flex items-start gap-2 text-red-600 dark:text-red-400 text-[11px]">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+              <span>{memberError}</span>
+            </div>
+          )}
           {isEditing ? (
             <div className="space-y-1 mb-1">
               {members.map((m) => (
@@ -223,8 +412,9 @@ export default function Blueprint() {
                   <span className="text-[11px] text-[#6B905F] dark:text-[#6B905F] font-semibold w-[80px] shrink-0">User/E-Mail:</span>
                   <input 
                     type="text" 
-                    value={m.value} 
-                    onChange={e => handleMemberChange(m.id, e.target.value)} 
+                    value={typeof m === 'string' ? m : (m?.value || '')} 
+                    onChange={e => handleMemberChange(m.id || m, e.target.value)} 
+                    placeholder="Enter user_id or email"
                     className="flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
                   />
                   <button onClick={() => removeMember(m.id)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 p-1 rounded-md transition-colors shrink-0">
@@ -241,13 +431,16 @@ export default function Blueprint() {
             </div>
           ) : (
             <div className="space-y-1 bg-[#F3F7F1] dark:bg-[#18181B] p-2 rounded-md border border-transparent">
-              {members.filter(m => m.value.trim()).length > 0 ? (
-                members.filter(m => m.value.trim()).map(m => (
-                  <div key={m.id} className="text-[12px] text-gray-700 dark:text-white/90 font-medium flex items-center gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></div>
-                    {m.value}
-                  </div>
-                ))
+              {members.filter(m => (typeof m === 'string' ? m : (m?.value || '')).trim()).length > 0 ? (
+                members.filter(m => (typeof m === 'string' ? m : (m?.value || '')).trim()).map((m, idx) => {
+                  const val = typeof m === 'string' ? m : (m?.value || '');
+                  return (
+                    <div key={typeof m === 'object' ? (m.id || idx) : idx} className="text-[12px] text-gray-700 dark:text-white/90 font-medium flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                      {val}
+                    </div>
+                  );
+                })
               ) : (
                 <div className="text-[11px] text-gray-500 dark:text-white/50 italic">No members added</div>
               )}
@@ -262,12 +455,33 @@ export default function Blueprint() {
             <button onClick={() => viewState === 'centered' ? navigate('/') : setIsEditing(false)} className="flex-1 py-1.5 bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors shadow-sm">
               Cancel
             </button>
-            <button onClick={handleCreate} className="flex-1 py-1.5 bg-[#6B905F] dark:bg-[#6B905F] text-white font-semibold text-[13px] rounded-md hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] transition-colors shadow-sm flex items-center justify-center gap-1.5">
-              {viewState === 'centered' ? "Create" : <><Check className="w-3.5 h-3.5" /> Save</>}
+            <button 
+              onClick={handleCreate} 
+              disabled={isValidatingUsers || isGenerating}
+              className="flex-1 py-1.5 bg-[#6B905F] dark:bg-[#6B905F] text-white font-semibold text-[13px] rounded-md hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] transition-colors shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+            >
+              {isValidatingUsers ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Validating...</>
+              ) : viewState === 'centered' ? (
+                "Create"
+              ) : (
+                <><Check className="w-3.5 h-3.5" /> Save</>
+              )}
             </button>
           </>
         ) : (
-          <button onClick={() => setIsEditing(true)} className="w-full py-1.5 bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+          <button 
+            onClick={() => {
+              if (!isCreator) {
+                alert(`Modify controls are only accessible to the project creator (${projectCreator || 'another user'}).`);
+                return;
+              }
+              setIsEditing(true);
+            }} 
+            disabled={!isCreator}
+            title={!isCreator ? `Only project creator (${projectCreator}) can modify details` : 'Edit Project Details'}
+            className="w-full py-1.5 bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Edit2 className="w-3.5 h-3.5" /> Edit Details
           </button>
         )}
@@ -352,9 +566,60 @@ export default function Blueprint() {
                activeTab === 'workflow' ? (
                    <WorkflowCanvas projectId={projectId} tasksOverride={blueprintData.tasks} />
                ) : (
-                   <div className="p-6 overflow-y-auto w-full h-full custom-scrollbar">
-                       <div className="max-w-3xl text-gray-800 dark:text-gray-200 whitespace-pre-wrap text-[13px] leading-relaxed">
-                          {blueprintData.description}
+                   <div className="p-6 overflow-y-auto w-full h-full custom-scrollbar space-y-6">
+                       <div className="max-w-3xl space-y-5">
+                          {/* Summary Card at the Beginning */}
+                          {blueprintData.summary && (
+                            <div className="bg-[#6B905F]/10 dark:bg-[#6B905F]/15 border border-[#6B905F]/30 p-4 rounded-xl shadow-sm">
+                              <h3 className="text-xs font-bold text-[#6B905F] dark:text-[#6B905F] mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                                <FileText className="w-4 h-4" /> Project Summary
+                              </h3>
+                              <p className="text-[13px] text-gray-800 dark:text-gray-200 leading-relaxed font-medium whitespace-pre-wrap">
+                                {blueprintData.summary}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Task List Architecture */}
+                          {blueprintData.tasks && blueprintData.tasks.length > 0 && (
+                            <div className="space-y-3">
+                              <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Task & Workflow Breakdown ({blueprintData.tasks.length} Tasks)
+                              </h3>
+                              <div className="grid gap-3">
+                                {blueprintData.tasks.map((t, idx) => (
+                                  <div key={t.id || idx} className="bg-white dark:bg-[#18181B] border border-gray-200 dark:border-[#27272A] p-3.5 rounded-lg shadow-sm">
+                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="bg-[#6B905F] text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">
+                                          {t.id || `T${idx+1}`}
+                                        </span>
+                                        <span className="font-semibold text-[13px] text-gray-900 dark:text-white">
+                                          {t.title}
+                                        </span>
+                                      </div>
+                                      {t.track && (
+                                        <span className="text-[11px] font-medium text-gray-500 bg-gray-100 dark:bg-[#27272A] px-2 py-0.5 rounded">
+                                          {t.track}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {t.description && (
+                                      <p className="text-[12px] text-gray-600 dark:text-gray-400 mt-1">
+                                        {t.description}
+                                      </p>
+                                    )}
+                                    {t.assigned_to && (
+                                      <div className="mt-2 text-[11px] text-[#6B905F] font-medium flex items-center gap-1">
+                                        <span>Assigned to:</span>
+                                        <span className="font-semibold">{t.assigned_to}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                        </div>
                    </div>
                )
