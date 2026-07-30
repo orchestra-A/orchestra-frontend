@@ -49,7 +49,7 @@ export default function Login() {
       <div className="max-w-[840px] w-full mx-4 bg-[#FAF8F5] dark:bg-[#18181A] rounded-[32px] px-6 py-6 lg:px-10 lg:py-8 shadow-2xl border border-[#eae6df]/30 dark:border-white/5 flex flex-col items-center text-center z-10">
         
         {/* Welcome */}
-        <span className="text-[#1D1E1B] dark:text-[#E4E4E7] text-xl lg:text-2xl font-bold mb-1" style={{ fontFamily: '"Outfit", sans-serif' }}>
+        <span className="text-[#1D1E1B] dark:text-[#E4E4E7] text-2xl lg:text-3xl italic mb-2" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>
           Welcome,
         </span>
 

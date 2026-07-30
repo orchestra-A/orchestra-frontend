@@ -92,7 +92,6 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
           <div key={project.id}>
             <button
               onClick={() => {
-                handleSidebarInteraction();
                 setExpandedProject(expandedProject === project.id ? null : project.id);
               }}
               className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 transition-colors group relative"
