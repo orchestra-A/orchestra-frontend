@@ -31,21 +31,27 @@ function PlatformBadge({ platform }) {
 // Project Team page — shows all members on a specific project with enriched backend data.
 export default function ProjectTeam() {
   const { projectId } = useParams();
-  const { projects, tasks } = useProject();
+  const { projects, allUsers } = useProject();
 
   const decodedId = decodeURIComponent(projectId || '').trim();
   const project = projects.find((p) => p.id.trim() === decodedId || p.id === projectId);
   const projectName = project ? project.name : 'Project';
 
-  // teamMembers already contain enriched data from ProjectContext (skills, platforms_connected, etc.)
-  const team = project?.teamMembers || [];
+  const rawTeam = project?.teamMembers || project?.members || [];
+
+  const avatarColors = [
+    'bg-[#6B905F]/20 text-[#2B4A24] dark:bg-[#6B905F]/30 dark:text-[#7ED957]',
+    'bg-purple-500/20 text-purple-700 dark:text-purple-300',
+    'bg-blue-500/20 text-blue-700 dark:text-blue-300',
+    'bg-amber-500/20 text-amber-700 dark:text-amber-300',
+  ];
 
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} — Team</h1>
-          <p className="text-sm text-gray-500 dark:text-white/50 mt-1">{team.length} member{team.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-gray-500 dark:text-white/50 mt-1">{rawTeam.length} member{rawTeam.length !== 1 ? 's' : ''}</p>
         </div>
         <Button className="bg-[#F4F1EB] dark:bg-[#09090B] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#27272A] hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] shadow-sm">
           <UserPlus className="w-4 h-4 mr-2" /> Add Member
@@ -53,58 +59,77 @@ export default function ProjectTeam() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {team.map((member) => (
-          <div
-            key={member.id}
-            className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-5 shadow-sm flex flex-col gap-3 hover:shadow-md hover:border-[#6B905F]/40 transition-all"
-          >
-            {/* Avatar + Name */}
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0 ${member.color}`}>
-                {member.initials}
+        {rawTeam.map((member, idx) => {
+          const memberStr = typeof member === 'string' ? member.trim() : (member.name || member.id || member.username || member.value || '');
+          const matchedUser = allUsers?.find(u => 
+            (u.username && u.username.toLowerCase() === memberStr.toLowerCase()) ||
+            (u.user_id && u.user_id.toLowerCase() === memberStr.toLowerCase()) ||
+            (u.name && u.name.toLowerCase() === memberStr.toLowerCase()) ||
+            (u.email && u.email.toLowerCase() === memberStr.toLowerCase())
+          ) || {};
+
+          const name = matchedUser.name || matchedUser.username || memberStr || 'Team Member';
+          const email = matchedUser.email || (typeof member === 'object' ? member.email : '');
+          const skills = matchedUser.skills || (typeof member === 'object' ? member.skills : []) || [];
+          const platforms = matchedUser.platforms_connected || (typeof member === 'object' ? member.platforms_connected : []) || [];
+          const github = matchedUser.github_username || (typeof member === 'object' ? member.github_username : '');
+          
+          const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'M';
+          const colorClass = avatarColors[idx % avatarColors.length];
+
+          return (
+            <div
+              key={member.id || memberStr || idx}
+              className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-5 shadow-sm flex flex-col gap-3 hover:shadow-md hover:border-[#6B905F]/40 transition-all"
+            >
+              {/* Avatar + Name */}
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0 ${colorClass}`}>
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[#1D1E1B] dark:text-white/90 truncate">{name}</h3>
+                  {email && (
+                    <p className="text-xs text-gray-500 dark:text-white/50 truncate">{email}</p>
+                  )}
+                </div>
               </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold text-[#1D1E1B] dark:text-white/90 truncate">{member.username}</h3>
-                {member.email && (
-                  <p className="text-xs text-gray-500 dark:text-white/50 truncate">{member.email}</p>
-                )}
-              </div>
+
+              {/* Skills */}
+              {skills.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#6B905F]/15 text-[#2B4A24] dark:text-[#7ED957] border border-[#6B905F]/25"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Connected platforms */}
+              {platforms.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {platforms.map((p) => (
+                    <PlatformBadge key={p} platform={p} />
+                  ))}
+                </div>
+              )}
+
+              {/* GitHub username */}
+              {github && (
+                <p className="text-xs text-gray-500 dark:text-white/40 flex items-center gap-1">
+                  <GithubIcon className="w-3 h-3" />
+                  {github}
+                </p>
+              )}
             </div>
+          );
+        })}
 
-            {/* Skills */}
-            {member.skills?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {member.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#6B905F]/15 text-[#2B4A24] dark:text-[#7ED957] border border-[#6B905F]/25"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Connected platforms */}
-            {member.platforms_connected?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {member.platforms_connected.map((p) => (
-                  <PlatformBadge key={p} platform={p} />
-                ))}
-              </div>
-            )}
-
-            {/* GitHub username */}
-            {member.github_username && (
-              <p className="text-xs text-gray-500 dark:text-white/40 flex items-center gap-1">
-                <GithubIcon className="w-3 h-3" />
-                {member.github_username}
-              </p>
-            )}
-          </div>
-        ))}
-
-        {team.length === 0 && (
+        {rawTeam.length === 0 && (
           <div className="col-span-3 text-center py-12 text-gray-500 dark:text-white/40">
             No team members found for this project.
           </div>

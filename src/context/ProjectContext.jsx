@@ -38,15 +38,22 @@ export function ProjectProvider({ children }) {
 
       // Build comprehensive set of user aliases (ID, username, email, etc.)
       const userAliases = new Set();
+      const userAliasCleanSet = new Set();
+
       if (currentUser) {
         const addAlias = (val) => {
           if (!val) return;
-          const s = val.toString().trim().toLowerCase();
-          if (s) {
-            userAliases.add(s);
-            if (s.includes('@')) {
-              userAliases.add(s.split('@')[0]);
-            }
+          const raw = val.toString().trim().toLowerCase();
+          if (!raw) return;
+          userAliases.add(raw);
+          const clean = raw.replace(/[^a-z0-9]/g, '');
+          if (clean) userAliasCleanSet.add(clean);
+
+          if (raw.includes('@')) {
+            const prefix = raw.split('@')[0];
+            userAliases.add(prefix);
+            const cleanPrefix = prefix.replace(/[^a-z0-9]/g, '');
+            if (cleanPrefix) userAliasCleanSet.add(cleanPrefix);
           }
         };
 
@@ -59,12 +66,17 @@ export function ProjectProvider({ children }) {
         addAlias(currentUser.discord_id);
 
         users.forEach(u => {
+          const rawUid = (u.user_id || '').toLowerCase();
+          const rawUname = (u.username || '').toLowerCase();
+          const rawEmail = (u.email || '').toLowerCase();
+          const rawId = (u.id || '').toString().toLowerCase();
+
           const matches = 
-            (u.user_id && userAliases.has(u.user_id.toLowerCase())) ||
-            (u.username && userAliases.has(u.username.toLowerCase())) ||
-            (u.email && userAliases.has(u.email.toLowerCase())) ||
-            (u.id && userAliases.has(u.id.toString().toLowerCase()));
-          
+            (rawUid && (userAliases.has(rawUid) || userAliasCleanSet.has(rawUid.replace(/[^a-z0-9]/g, '')))) ||
+            (rawUname && (userAliases.has(rawUname) || userAliasCleanSet.has(rawUname.replace(/[^a-z0-9]/g, '')))) ||
+            (rawEmail && (userAliases.has(rawEmail) || userAliasCleanSet.has(rawEmail.replace(/[^a-z0-9]/g, '')))) ||
+            (rawId && (userAliases.has(rawId) || userAliasCleanSet.has(rawId.replace(/[^a-z0-9]/g, ''))));
+
           if (matches) {
             addAlias(u.user_id);
             addAlias(u.username);
@@ -81,8 +93,13 @@ export function ProjectProvider({ children }) {
         if (typeof val === 'object') return isUserMatch(val.id || val.username || val.name || val.email || val.user_id);
         const str = val.toString().trim().toLowerCase();
         if (userAliases.has(str)) return true;
+        const cleanStr = str.replace(/[^a-z0-9]/g, '');
+        if (cleanStr && userAliasCleanSet.has(cleanStr)) return true;
         if (str.includes('@')) {
-          if (userAliases.has(str.split('@')[0])) return true;
+          const prefix = str.split('@')[0];
+          if (userAliases.has(prefix)) return true;
+          const cleanPrefix = prefix.replace(/[^a-z0-9]/g, '');
+          if (cleanPrefix && userAliasCleanSet.has(cleanPrefix)) return true;
         }
         return false;
       };
@@ -163,9 +180,24 @@ export function ProjectProvider({ children }) {
             // 2. User is listed in members list
             if (Array.isArray(p.members) && p.members.some(m => isUserMatch(m))) return true;
             // 3. User is assigned to at least one task in this project
-            const hasAssignedTask = allTasks.some(
-              t => (t.project_id === p.id || t.project_id === p.name) && isUserMatch(t.assigned_to)
-            );
+            const hasAssignedTask = allTasks.some((t) => {
+              if (!isUserMatch(t.assigned_to)) return false;
+              const tid = (t.project_id || '').toLowerCase().trim();
+              const pid = (p.id || '').toLowerCase().trim();
+              const pname = (p.name || '').toLowerCase().trim();
+
+              if (!tid) return false;
+              if (tid === pid || tid === pname) return true;
+
+              const cleanTid = tid.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+              const cleanPid = pid.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+              const cleanPname = pname.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+
+              if (cleanTid && (cleanTid === cleanPid || cleanTid === cleanPname || cleanPid.includes(cleanTid) || cleanPname.includes(cleanTid))) {
+                return true;
+              }
+              return false;
+            });
             if (hasAssignedTask) return true;
             return false;
           })

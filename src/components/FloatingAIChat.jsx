@@ -211,6 +211,7 @@ export function FloatingAIChat() {
             </div>
           </div>
         </div>
+        </div>
       )}
     </>
   );

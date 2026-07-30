@@ -13,7 +13,7 @@ const techOptions = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.j
 export default function Blueprint() {
   const navigate = useNavigate();
   const { projectId } = useParams();
-  const { projects, addProject, updateProject, refreshData } = useProject();
+  const { projects, tasks, addProject, updateProject, refreshData } = useProject();
   const { currentUser } = useAuth();
   
   const currentUserId = currentUser?.user_id || currentUser?.id || currentUser?.username || currentUser?.email;
@@ -52,7 +52,7 @@ export default function Blueprint() {
 
   useEffect(() => {
     if (projectId) {
-      const proj = projects.find(p => p.id === projectId);
+      const proj = projects.find(p => p.id === projectId || p.name === projectId);
       if (proj) {
         setProjectName(proj.name || 'Project');
         setTitle(proj.name === 'Untitled Project' ? '' : proj.name);
@@ -64,12 +64,36 @@ export default function Blueprint() {
         } else {
           setMembers([{ id: 1, value: "" }]);
         }
-        
+
+        // Find associated tasks for this project to render in Workflow canvas & Description tab
+        const projectTasks = tasks.filter(t => {
+          const tid = (t.project_id || '').toLowerCase().trim();
+          const pid = (proj.id || '').toLowerCase().trim();
+          const pname = (proj.name || '').toLowerCase().trim();
+
+          if (!tid) return false;
+          if (tid === pid || tid === pname) return true;
+
+          const cleanTid = tid.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+          const cleanPid = pid.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+          const cleanPname = pname.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+
+          return cleanTid && (cleanTid === cleanPid || cleanTid === cleanPname || cleanPid.includes(cleanTid) || cleanPname.includes(cleanTid));
+        });
+
+        setBlueprintData({
+          summary: proj.description && proj.description !== 'No description provided.' 
+            ? proj.description 
+            : 'Project architecture and generated task breakdown.',
+          tasks: projectTasks,
+          raw: null
+        });
+
         setViewState('split');
         setIsEditing(false);
       }
     }
-  }, [projectId, projects]);
+  }, [projectId, projects, tasks]);
 
   useEffect(() => {
     if (!projectId) {
