@@ -19,7 +19,8 @@ export function FloatingAIChat() {
   const projectName = project ? project.name : "Project";
 
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ left: -1, top: -1 });
+  const [width, setWidth] = useState(350);
+  const [isResizing, setIsResizing] = useState(false);
   
   const [messages, setMessages] = useState([
     { role: 'assistant', content: `Hello! I'm the AI assistant for ${projectName}. How can I help you today?` }
@@ -27,9 +28,6 @@ export function FloatingAIChat() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0, initialLeft: 0, initialTop: 0 });
-  const windowRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   // Removed reset on navigate to persist chat box open state across tabs
@@ -49,47 +47,36 @@ export function FloatingAIChat() {
   }, [messages]);
 
   useEffect(() => {
-    if (!isDragging) return;
-
-    const onPointerMove = (e) => {
-      const dx = e.clientX - dragRef.current.startX;
-      const dy = e.clientY - dragRef.current.startY;
-      setPosition({
-        left: dragRef.current.initialLeft + dx,
-        top: dragRef.current.initialTop + dy
-      });
+    if (!isResizing) return;
+    
+    const handlePointerMove = (e) => {
+      // The new width is calculated based on how far the mouse is from the right edge of the screen
+      // Assuming the chat is docked on the right side.
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth >= 250 && newWidth <= 600) {
+        setWidth(newWidth);
+      }
+    };
+    
+    const handlePointerUp = () => {
+      setIsResizing(false);
+      document.body.style.cursor = 'default';
     };
 
-    const onPointerUp = () => {
-      setIsDragging(false);
-    };
-
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
 
     return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [isDragging]);
+  }, [isResizing]);
 
-  // No longer returning null on non-project routes, handled by AppShell
-  const onPointerDown = (e) => {
-    if (!windowRef.current) return;
-    const rect = windowRef.current.getBoundingClientRect();
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      initialLeft: rect.left,
-      initialTop: rect.top,
-    };
-    setIsDragging(true);
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
   };
-
-  const hasCustomPos = position.left !== -1;
-  const windowStyle = hasCustomPos 
-    ? { left: position.left, top: position.top, bottom: 'auto', right: 'auto' } 
-    : { bottom: '80px', right: '24px' };
 
   const handleSend = async () => {
     if (!inputText.trim() || isLoading) return;
@@ -145,14 +132,18 @@ export function FloatingAIChat() {
       )}
 
       {isOpen && (
-        <div 
-          ref={windowRef}
-          style={windowStyle}
-          className="fixed z-50 w-[350px] bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl shadow-2xl flex flex-col overflow-hidden"
-        >
+        <div className="relative flex h-full shrink-0">
+          {/* Drag Handle */}
           <div 
-            className="flex items-center justify-between px-4 py-3 bg-[#6B905F] dark:bg-[#27272A] text-white cursor-move touch-none select-none"
-            onPointerDown={onPointerDown}
+            onPointerDown={handlePointerDown}
+            className="absolute left-0 top-0 w-1.5 h-full cursor-col-resize hover:bg-[#6B905F]/50 z-10 transition-colors"
+          />
+          <div 
+            style={{ width: `${width}px` }}
+            className="bg-[#F4F1EB] dark:bg-[#09090B] border-l border-gray-200 dark:border-[#27272A] flex flex-col h-full shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.1)] dark:shadow-none shrink-0"
+          >
+          <div 
+            className="flex items-center justify-between px-4 py-4 bg-[#6B905F] dark:bg-[#27272A] text-white select-none border-b border-[#5A7A4F] dark:border-[#3F3F46]"
           >
             <div className="flex items-center gap-2">
               <Bot className="w-5 h-5" />
@@ -160,14 +151,13 @@ export function FloatingAIChat() {
             </div>
             <button 
               onClick={() => setIsOpen(false)}
-              className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10"
-              onPointerDown={(e) => e.stopPropagation()}
+              className="text-white/80 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="h-[400px] flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 p-4 overflow-y-auto bg-[#F3F7F1] dark:bg-transparent space-y-4">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>

@@ -82,7 +82,14 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4">
 
               {/* Dynamic Project Cards */}
-              {projects.map(project => (
+              {projects.length === 0 ? (
+                <div className="col-span-2 bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-dashed border-gray-300 dark:border-[#27272A] p-8 flex flex-col items-center justify-center text-center">
+                  <FolderOpen className="w-8 h-8 text-gray-400 dark:text-white/40 mb-3 opacity-50" />
+                  <h3 className="text-[#1D1E1B] dark:text-white/90 font-medium text-sm mb-1">No projects yet</h3>
+                  <p className="text-xs text-gray-500 dark:text-white/50">Click to create your first workflow</p>
+                </div>
+              ) : (
+                projects.map(project => (
                 <div key={project.id} className="relative group">
                   <button
                     onClick={() => navigate(`/project/${project.id}/tasks`)}
@@ -104,7 +111,7 @@ export default function Dashboard() {
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              ))}
+              )))}
 
 
 
@@ -123,7 +130,14 @@ export default function Dashboard() {
                 <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-200 border-red-300" />)}
+                {delayedTasks.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-70 py-8">
+                    <AlertCircle className="w-8 h-8 text-gray-400 dark:text-[#27272A] mb-2" />
+                    <span className="text-sm font-medium text-gray-500 dark:text-white/40">You're all caught up!</span>
+                  </div>
+                ) : (
+                  delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-200 border-red-300" />)
+                )}
               </div>
             </div>
 
@@ -135,7 +149,14 @@ export default function Dashboard() {
                 <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-[#6B905F] border-[#5A7A50]" />)}
+                {inProgressTasks.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-70 py-8">
+                    <PlayCircle className="w-8 h-8 text-gray-400 dark:text-[#27272A] mb-2" />
+                    <span className="text-sm font-medium text-gray-500 dark:text-white/40">No active tasks</span>
+                  </div>
+                ) : (
+                  inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-[#6B905F] border-[#5A7A50]" textClass="text-white dark:text-white/90" />)
+                )}
               </div>
             </div>
           </div>

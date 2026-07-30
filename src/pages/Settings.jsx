@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Bell, Lock, User, Palette } from 'lucide-react';
+import { Bell, Lock, User, Palette, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('account');
   const { currentUser, updateProfile } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   
   // State for Account
   const [firstName, setFirstName] = useState('');
@@ -149,6 +151,12 @@ export default function Settings() {
     <div className="flex bg-[#F8F9FA] dark:bg-[#09090B] h-full rounded-lg overflow-hidden border border-gray-200 dark:border-[#27272A]">
       {/* Left Sidebar */}
       <div className="w-[280px] bg-[#F4F1EB] dark:bg-[#18181B] border-r border-gray-200 dark:border-[#27272A] p-6 flex flex-col flex-shrink-0">
+        <div
+          onClick={() => navigate('/')}
+          className="text-[#6B905F] dark:text-[#6B905F] font-medium flex items-center gap-2 mb-8 cursor-pointer hover:text-[#6B905F] transition-colors text-sm"
+        >
+          <ArrowLeft size={16} /> Back to Dashboard
+        </div>
         <div className="mb-8">
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">Settings</h1>
         </div>
