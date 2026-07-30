@@ -122,11 +122,13 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
             {isSidebarExpanded && expandedProject === project.id && project.items.length > 0 && (
               <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/5 pl-3">
                 {project.items.map((item) => {
-                  const path = `project/${project.id}/${item.toLowerCase()}`;
+                  const targetPath = item === 'Modify'
+                    ? `/blueprint/${project.id}`
+                    : `/project/${project.id}/${item.toLowerCase()}`;
                   return (
                     <NavLink
                       key={item}
-                      to={`/${path}`}
+                      to={targetPath}
                       className={({ isActive }) => `w-full flex text-left px-3 py-1.5 rounded-md text-[13px] transition-colors ${isActive
                         ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
                         : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
@@ -136,15 +138,6 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
                     </NavLink>
                   )
                 })}
-                <NavLink
-                  to={`/blueprint/${project.id}`}
-                  className={({ isActive }) => `w-full flex text-left px-3 py-1.5 rounded-md text-[13px] transition-colors ${isActive
-                    ? 'bg-[#6B905F] dark:bg-[#6B905F]/15 text-white dark:text-[#7ED957] font-medium'
-                    : 'text-[#1D1E1B] dark:text-white/70 hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 hover:text-[#1D1E1B] dark:hover:text-white'
-                    }`}
-                >
-                  Modify
-                </NavLink>
               </div>
             )}
           </div>

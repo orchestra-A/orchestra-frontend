@@ -17,6 +17,12 @@ export default function Onboarding() {
   const [existingUsers, setExistingUsers] = useState([]);
   const [connectedPlatforms, setConnectedPlatforms] = useState({});
 
+  // Account lookup state for "Already have an account?"
+  const [showAccountLookup, setShowAccountLookup] = useState(false);
+  const [lookupEmail, setLookupEmail] = useState('');
+  const [matchedAccount, setMatchedAccount] = useState(null);
+  const [lookupError, setLookupError] = useState('');
+
   useEffect(() => {
     // Attempt to fetch existing users to validate unique usernames
     const fetchUsers = async () => {
@@ -28,7 +34,6 @@ export default function Onboarding() {
         }
       } catch (err) {
         console.warn("Could not fetch /users, using simulated local validation", err);
-        // Fallback to local storage or mocked users
         const local = JSON.parse(localStorage.getItem('users')) || [];
         setExistingUsers(local);
       }
@@ -45,8 +50,23 @@ export default function Onboarding() {
     }
   }, [currentUser]);
 
+  const handleAccountSearch = () => {
+    setLookupError('');
+    setMatchedAccount(null);
+    if (!lookupEmail.trim()) {
+      setLookupError('Please enter a registered email address.');
+      return;
+    }
+    const cleanSearch = lookupEmail.trim().toLowerCase();
+    const found = existingUsers.find(u => u.email && u.email.toLowerCase() === cleanSearch);
+    if (found) {
+      setMatchedAccount(found);
+    } else {
+      setLookupError('No account found with this email. Please complete the registration below.');
+    }
+  };
+
   const handleConnectPlatform = (platform) => {
-    // Simulate connection for Google and Figma
     setConnectedPlatforms(prev => ({ ...prev, [platform]: true }));
   };
 
@@ -76,24 +96,14 @@ export default function Onboarding() {
     }
 
     // Check uniqueness
-    const isTaken = Array.isArray(existingUsers) ? existingUsers.some(u => u.username === username) : false;
+    const isTaken = Array.isArray(existingUsers) ? existingUsers.some(u => u.username === username && u.id !== currentUser?.id) : false;
     if (isTaken) {
       setError('Username is already taken. Please choose another one.');
       return;
     }
 
-    // Ensure all platforms are connected
-    const requiredPlatforms = ['google', 'discord', 'github'];
-    const missingPlatforms = requiredPlatforms.filter(p => !connectedPlatforms[p]);
-    if (missingPlatforms.length > 0) {
-      setError('Please connect all other platforms before continuing.');
-      return;
-    }
-
     setLoading(true);
     try {
-      // Simulate saving to database if real backend endpoint isn't ready
-      // Ideally we'd POST to https://orchestra-backend-30fy.onrender.com/users
       const newUserObj = {
         id: currentUser?.id || Date.now().toString(),
         name,
@@ -130,7 +140,6 @@ export default function Onboarding() {
       }
       localStorage.setItem('onboarded', 'true');
       
-      // Navigate to dashboard (skipping integrations setup for now as per user instruction)
       navigate('/');
     } catch (err) {
       console.error("Save error:", err);
@@ -156,7 +165,7 @@ export default function Onboarding() {
             Complete your profile
           </h2>
           <p className="text-lg text-[#4a4a45] leading-relaxed">
-            Welcome aboard! Before you get started, please set up a unique username and confirm your email. Later, you can connect your workspaces to fully unlock Orchestra's capabilities.
+            Welcome aboard! Before you get started, please set up a unique username and confirm your email. You can connect integrated platforms at your own pace whenever you are ready.
           </p>
         </div>
       </div>
@@ -170,99 +179,185 @@ export default function Onboarding() {
 
         <div className="max-w-[550px] w-full mx-auto py-8 lg:py-0">
           <h1 className="text-3xl font-bold text-[#1c1c1a] mb-2 mt-0" style={{ fontFamily: '"Playfair Display", Georgia, serif' }}>Almost there!</h1>
-          <p className="text-[#8a8a82] mb-6 text-base">Please provide some basic info.</p>
+          <p className="text-[#8a8a82] mb-4 text-base">Please provide some basic info or link an existing account.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-2 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Full Name</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your full name"
-                required
-                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Username</label>
-              <Input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Choose a unique username"
-                required
-                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Email Address</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
-              />
-            </div>
-
-            {/* Integrations Section */}
-            <div className="pt-4 border-t border-[#e8e4dc]">
-              <label className="text-sm lg:text-base font-medium text-[#4a4a45] mb-2 block">Connect other platforms</label>
-              <div className="grid grid-cols-2 gap-2 lg:gap-3">
-                {currentUser?.platform !== 'google' && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => handlePopupConnect('google', `https://orchestra-backend-30fy.onrender.com/auth/google?user_id=${currentUser?.id}`)}
-                    disabled={connectedPlatforms['google']}
-                    className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-11 lg:h-12 transition-all text-xs lg:text-sm"
-                  >
-                    {connectedPlatforms['google'] ? 'Google Connected' : 'Connect Google'}
-                  </Button>
-                )}
-                
-                {currentUser?.platform !== 'discord' && (
-                  <Button 
-                    type="button" 
-                    onClick={() => handlePopupConnect('discord', `https://orchestra-backend-30fy.onrender.com/auth/discord?user_id=${currentUser?.id}`)}
-                    disabled={connectedPlatforms['discord']}
-                    className="w-full bg-[#5865F2] hover:bg-[#4752C4] border-transparent shadow-sm text-white h-11 lg:h-12 transition-all text-xs lg:text-sm"
-                  >
-                    {connectedPlatforms['discord'] ? 'Discord Connected' : 'Connect Discord'}
-                  </Button>
-                )}
-                
-                {currentUser?.platform !== 'github' && (
-                  <Button 
-                    type="button" 
-                    onClick={() => handlePopupConnect('github', `https://orchestra-backend-30fy.onrender.com/auth/github?user_id=${currentUser?.id}`)}
-                    disabled={connectedPlatforms['github']}
-                    className="w-full bg-[#181717] hover:bg-[#2b2a2a] border-transparent shadow-sm text-white h-11 lg:h-12 transition-all text-xs lg:text-sm"
-                  >
-                    {connectedPlatforms['github'] ? 'GitHub Connected' : 'Connect GitHub'}
-                  </Button>
-                )}
-                
-
-              </div>
-            </div>
-
-            <Button 
-              disabled={loading || !['google', 'discord', 'github'].every(p => connectedPlatforms[p])} 
-              type="submit" 
-              className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-12 lg:h-14 mt-6 text-sm lg:text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          {/* Already Have an Account Prompt Toggle */}
+          <div className="mb-5 p-3.5 bg-[#eef5eb] border border-[#6b8f5e]/30 rounded-xl flex items-center justify-between shadow-sm">
+            <span className="text-xs lg:text-sm font-medium text-[#2d4025]">Already have an account?</span>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAccountLookup(!showAccountLookup);
+                setMatchedAccount(null);
+                setLookupError('');
+              }}
+              className="text-xs lg:text-sm text-[#6b8f5e] font-semibold underline hover:text-[#5a7a4e] transition-colors"
             >
-              {loading ? 'Saving...' : 'Continue to Dashboard'}
-            </Button>
-          </form>
+              {showAccountLookup ? 'Create New Account' : 'Link Existing Account'}
+            </button>
+          </div>
+
+          {/* Account Lookup Section */}
+          {showAccountLookup && (
+            <div className="p-4 bg-white border border-[#e8e4dc] rounded-2xl mb-6 space-y-3 shadow-sm">
+              <h3 className="text-xs lg:text-sm font-semibold text-[#1c1c1a]">Find your registered account by email</h3>
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="Enter registered email address"
+                  value={lookupEmail}
+                  onChange={(e) => setLookupEmail(e.target.value)}
+                  className="!bg-[#f9f7f3] border-[#e8e4dc] text-xs lg:text-sm flex-1 h-10"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAccountSearch}
+                  className="bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white text-xs whitespace-nowrap px-4 h-10"
+                >
+                  Search
+                </Button>
+              </div>
+
+              {matchedAccount && (
+                <div className="p-3 bg-[#eef5eb] border border-[#6b8f5e]/40 rounded-xl space-y-2.5 mt-2">
+                  <p className="text-xs font-semibold text-[#2d4025]">
+                    Account Found: <strong>{matchedAccount.name || matchedAccount.username || 'Registered User'}</strong> ({matchedAccount.email})
+                  </p>
+                  <p className="text-[11px] text-[#4a4a45]">Log in using your registered integrated platform:</p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        sessionStorage.setItem('pre_auth_users', JSON.stringify(existingUsers));
+                        window.location.href = `https://orchestra-backend-30fy.onrender.com/auth/google`;
+                      }}
+                      className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs h-9 cursor-pointer"
+                    >
+                      Log in with Google
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        sessionStorage.setItem('pre_auth_users', JSON.stringify(existingUsers));
+                        window.location.href = `https://orchestra-backend-30fy.onrender.com/auth/github`;
+                      }}
+                      className="bg-[#181717] text-white hover:bg-[#2b2a2a] text-xs h-9 cursor-pointer"
+                    >
+                      Log in with GitHub
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        sessionStorage.setItem('pre_auth_users', JSON.stringify(existingUsers));
+                        window.location.href = `https://orchestra-backend-30fy.onrender.com/auth/discord`;
+                      }}
+                      className="bg-[#5865F2] text-white hover:bg-[#4752C4] text-xs h-9 cursor-pointer"
+                    >
+                      Log in with Discord
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {lookupError && (
+                <div className="p-2 bg-red-50 text-red-600 rounded-md text-xs">
+                  {lookupError}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!showAccountLookup && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 text-red-600 p-2 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Full Name</label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                  className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Username</label>
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Choose a unique username"
+                  required
+                  className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm lg:text-base font-medium text-[#4a4a45]">Email Address</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="!bg-[#f9f7f3] dark:!bg-[#f9f7f3] border-[#e8e4dc] !text-[#1c1c1a] dark:!text-[#1c1c1a] placeholder:text-[#8a8a82] h-11 lg:h-12 text-sm lg:text-base"
+                />
+              </div>
+
+              {/* Optional Integrations Section */}
+              <div className="pt-4 border-t border-[#e8e4dc]">
+                <label className="text-sm lg:text-base font-medium text-[#4a4a45] mb-2 block">Connect platforms (optional)</label>
+                <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                  {currentUser?.platform !== 'google' && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => handlePopupConnect('google', `https://orchestra-backend-30fy.onrender.com/auth/google?user_id=${currentUser?.id}`)}
+                      disabled={connectedPlatforms['google']}
+                      className="w-full bg-white border border-[#eae6df] shadow-sm text-[#4a4a45] hover:bg-gray-50 h-11 lg:h-12 transition-all text-xs lg:text-sm"
+                    >
+                      {connectedPlatforms['google'] ? 'Google Connected' : 'Connect Google'}
+                    </Button>
+                  )}
+                  
+                  {currentUser?.platform !== 'discord' && (
+                    <Button 
+                      type="button" 
+                      onClick={() => handlePopupConnect('discord', `https://orchestra-backend-30fy.onrender.com/auth/discord?user_id=${currentUser?.id}`)}
+                      disabled={connectedPlatforms['discord']}
+                      className="w-full bg-[#5865F2] hover:bg-[#4752C4] border-transparent shadow-sm text-white h-11 lg:h-12 transition-all text-xs lg:text-sm"
+                    >
+                      {connectedPlatforms['discord'] ? 'Discord Connected' : 'Connect Discord'}
+                    </Button>
+                  )}
+                  
+                  {currentUser?.platform !== 'github' && (
+                    <Button 
+                      type="button" 
+                      onClick={() => handlePopupConnect('github', `https://orchestra-backend-30fy.onrender.com/auth/github?user_id=${currentUser?.id}`)}
+                      disabled={connectedPlatforms['github']}
+                      className="w-full bg-[#181717] hover:bg-[#2b2a2a] border-transparent shadow-sm text-white h-11 lg:h-12 transition-all text-xs lg:text-sm"
+                    >
+                      {connectedPlatforms['github'] ? 'GitHub Connected' : 'Connect GitHub'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <Button 
+                disabled={loading} 
+                type="submit" 
+                className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4e] text-white h-12 lg:h-14 mt-6 text-sm lg:text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Saving...' : 'Continue to Dashboard'}
+              </Button>
+            </form>
+          )}
         </div>
       </div>
     </div>

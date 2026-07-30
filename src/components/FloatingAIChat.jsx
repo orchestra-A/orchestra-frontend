@@ -4,6 +4,7 @@ import { Bot, Send, X, MessageSquare } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { useProject } from '../context/ProjectContext';
+import { sendCloverMessage } from '../services/api';
 
 export function FloatingAIChat() {
   const location = useLocation();
@@ -80,32 +81,34 @@ export function FloatingAIChat() {
   const handleSend = async () => {
     if (!inputText.trim() || isLoading) return;
     
-    const userMsg = { role: 'user', content: inputText.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    const userQuery = inputText.trim();
+    const userMsg = { role: 'user', content: userQuery };
+    
+    // Extract last 5 query/response turns (up to 10 messages) for conversation_history
+    const historySlice = messages.slice(-10);
+    const conversationHistory = historySlice.map(m => ({
+      content: m.content,
+      role: m.role === 'user' ? 'user' : 'assistant'
+    }));
+
+    setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsLoading(true);
 
     try {
-      // Get last 5 pairs of interactions (up to 10 messages)
-      const history = newMessages.slice(1, -1).slice(-10).map(m => m.content);
+      const data = await sendCloverMessage(userQuery, conversationHistory);
+      let replyContent = '';
+      if (typeof data === 'string') {
+        replyContent = data;
+      } else if (data && typeof data === 'object') {
+        replyContent = data.answer || data.reply || data.response || data.message || JSON.stringify(data);
+      } else {
+        replyContent = String(data);
+      }
 
-      const response = await fetch('https://orchestra-backend-30fy.onrender.com/clover', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-        },
-        body: JSON.stringify({
-          question: `[System Context: User is currently on URL path: ${location.pathname}]\n\n${userMsg.content}`,
-          conversation_history: history
-        })
-      });
-
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.answer || data.response || data.reply || JSON.stringify(data) }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: replyContent }]);
     } catch (error) {
-      console.error(error);
+      console.error('Clover AI Chat Error:', error);
       setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error connecting to the AI server." }]);
     } finally {
       setIsLoading(false);
@@ -207,6 +210,7 @@ export function FloatingAIChat() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       )}
     </>

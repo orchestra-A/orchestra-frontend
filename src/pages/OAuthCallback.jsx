@@ -1,16 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { fetchUsers } from '../services/api';
 
 // Handles the redirect from the backend after a successful OAuth flow.
-// Extracts user info from the JWT token / query params, then hydrates the
-// full user profile from the backend before redirecting into the app.
+// Checks if the authenticated platform account is already integrated for an
+// existing user. If yes → dashboard. If no → onboarding.
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { signup } = useAuth();
+  const hasRun = useRef(false);
 
   useEffect(() => {
+    // Prevent double-execution from React StrictMode
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const status = searchParams.get('status');
     const token = searchParams.get('token');
 
@@ -23,7 +29,6 @@ export default function OAuthCallback() {
     if (token) {
       localStorage.setItem('authToken', token);
       try {
-        // Also decode the JWT to get user info if not in query params
         const base64Url = token.split('.')[1];
         if (base64Url) {
           const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -53,11 +58,84 @@ export default function OAuthCallback() {
       }
 
       if (status === 'error') {
-        navigate('/login?error=OAuthFailed');
+        navigate('/login?error=OAuthFailed', { replace: true });
         return;
       }
 
-      // signup() triggers fetchAndHydrateUser → full backend profile is loaded
+      // ──────────────────────────────────────────────────────────────────
+      // PLATFORM INTEGRATION & ACCOUNT LOOKUP CHECK
+      // Check pre-auth snapshot cached in sessionStorage by Login / Onboarding.
+      // If missing, dynamically fetch existing users from backend.
+      // ──────────────────────────────────────────────────────────────────
+      let integratedUser = null;
+      try {
+        let preAuthUsers = [];
+        const cached = sessionStorage.getItem('pre_auth_users');
+        if (cached) {
+          try { preAuthUsers = JSON.parse(cached); } catch (e) {}
+          sessionStorage.removeItem('pre_auth_users');
+        }
+
+        // Fallback: If cache was not set or empty, fetch users from API
+        if (!Array.isArray(preAuthUsers) || preAuthUsers.length === 0) {
+          preAuthUsers = await fetchUsers();
+        }
+
+        console.log(`[OAuthCallback] Comparing against ${preAuthUsers.length} users for platform integration`);
+
+        if (Array.isArray(preAuthUsers) && preAuthUsers.length > 0) {
+          integratedUser = preAuthUsers.find((u) => {
+            // Must have completed onboarding profile (has a name or username)
+            const hasProfile = Boolean((u.name && u.name.trim()) || (u.username && u.username.trim()));
+            if (!hasProfile) return false;
+
+            const connectedList = Array.isArray(u.platforms_connected) ? u.platforms_connected : [];
+
+            // 1. Email match with registered integrated account
+            if (email && u.email && u.email.toLowerCase() === email.toLowerCase()) {
+              // If platform is already connected OR account has completed profile
+              if (connectedList.includes(platform) || u.user_id) return true;
+            }
+
+            // 2. Platform-specific username / ID checks
+            if (platform === 'github') {
+              if (u.github_username && username && u.github_username.toLowerCase() === username.toLowerCase()) return true;
+              if (connectedList.includes('github') && email && u.email && u.email.toLowerCase() === email.toLowerCase()) return true;
+            }
+
+            if (platform === 'discord') {
+              if (u.discord_id && userId && u.discord_id.toString() === userId.toString()) return true;
+              if (connectedList.includes('discord') && email && u.email && u.email.toLowerCase() === email.toLowerCase()) return true;
+            }
+
+            if (platform === 'google') {
+              if (connectedList.includes('google') && email && u.email && u.email.toLowerCase() === email.toLowerCase()) return true;
+            }
+
+            return false;
+          });
+        }
+      } catch (err) {
+        console.warn('[OAuthCallback] Platform integration check warning:', err);
+      }
+
+      if (integratedUser) {
+        // Existing onboarded user with this platform already linked
+        console.log('[OAuthCallback] Platform already integrated for user:', integratedUser.user_id || integratedUser.id);
+        localStorage.setItem('onboarded', 'true');
+        await signup({
+          ...integratedUser,
+          id: integratedUser.user_id || integratedUser.id,
+          user_id: integratedUser.user_id || integratedUser.id,
+        });
+        navigate('/', { replace: true });
+        return;
+      }
+
+      // New user or platform not yet integrated → onboarding
+      console.log('[OAuthCallback] Platform not integrated. Routing to /onboarding');
+      localStorage.removeItem('onboarded');
+
       if (userId || email || username) {
         await signup({
           id: userId || `usr_${Date.now()}`,
@@ -68,18 +146,11 @@ export default function OAuthCallback() {
         });
       }
 
-      const isOnboarded = localStorage.getItem('onboarded') === 'true';
-      if (searchParams.get('isNewUser') === 'true' || !isOnboarded) {
-        navigate('/onboarding');
-      } else {
-        navigate('/');
-      }
+      navigate('/onboarding', { replace: true });
     };
 
-    setTimeout(() => {
-      initSession();
-    }, 1500);
-  }, [navigate, searchParams, signup]);
+    initSession();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f5f2ed] p-4">

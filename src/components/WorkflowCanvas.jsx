@@ -55,8 +55,8 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
 
   const decodedId = decodeURIComponent(projectId || "").trim();
   
-  // Filter tasks by project to extract lists and build nodes
-  const projectTasks = (tasks || []).filter(t => {
+  // Use tasksOverride directly when passed (e.g. from Blueprint generator), otherwise filter globalTasks by project ID
+  const projectTasks = tasksOverride || (globalTasks || []).filter(t => {
     const pName = (t.project_id || "Project 1").trim();
     return pName === decodedId || pName === projectId;
   });
@@ -69,7 +69,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
         setSelectedTask(updated);
       }
     }
-  }, [tasks]);
+  }, [projectTasks]);
 
   const uniqueMembers = Array.from(new Set(projectTasks.map(t => t.assigned_to).filter(Boolean))).sort();
   const uniqueStatuses = Array.from(new Set(projectTasks.map(t => t.status).filter(Boolean))).sort();
@@ -78,7 +78,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
     function loadTasks() {
       try {
         setLoading(true);
-        if (!tasks || tasks.length === 0) {
+        if (!projectTasks || projectTasks.length === 0) {
            setNodes([]);
            setEdges([]);
            setLoading(false);
@@ -97,14 +97,15 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
           taskMap[t.id] = t;
         });
 
-        // Build adjacency list for dependents (inverse of depends_on)
+        // Build adjacency list for dependents (inverse of depends_on / dependencies)
         const dependentsMap = {};
         projectTasks.forEach(t => {
           dependentsMap[t.id] = [];
         });
         projectTasks.forEach(t => {
-          if (t.depends_on && t.depends_on.length > 0) {
-            t.depends_on.forEach(depId => {
+          const deps = t.depends_on || t.dependencies || [];
+          if (deps.length > 0) {
+            deps.forEach(depId => {
               if (dependentsMap[depId]) {
                 dependentsMap[depId].push(t.id);
               }
@@ -203,12 +204,13 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
           });
         });
 
-        // Build Edges based on depends_on
+        // Build Edges based on depends_on / dependencies
         const projectNodeIds = new Set(newNodes.map(n => n.id));
         
         projectTasks.forEach(t => {
-          if (t.depends_on && t.depends_on.length > 0) {
-            t.depends_on.forEach(dep => {
+          const deps = t.depends_on || t.dependencies || [];
+          if (deps.length > 0) {
+            deps.forEach(dep => {
                // Only draw edges if the dependency is also in this project view
                if (projectNodeIds.has(dep) && projectNodeIds.has(t.id)) {
                  const sourceTask = taskMap[dep];
