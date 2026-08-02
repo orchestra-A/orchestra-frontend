@@ -4,6 +4,8 @@ import { ChevronRight, ChevronLeft, Inbox, Archive, Home, Calendar, Settings, Us
 import { Badge } from '../ui/badge';
 import { useProject } from '../../context/ProjectContext';
 
+import { useAuth } from '../../context/AuthContext';
+
 // Main Navigation Sidebar
 // Supports collapsing/expanding on hover, and dynamically renders the list of active projects.
 export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSidebar, setIsHoveringsidebar }) {
@@ -13,8 +15,17 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
   const currentPage = location.pathname.substring(1) || 'dashboard';
 
   const navigate = useNavigate();
-  const { projects, deleteProject } = useProject();
+  const { projects, tasks, deleteProject } = useProject();
+  const { currentUser } = useAuth();
   const [projectToDelete, setProjectToDelete] = useState(null);
+
+  // Dynamic count of all non-completed tasks across the user's projects
+  // Task project_ids are normalized to canonical IDs by ProjectContext
+  const projectIds = new Set(projects.map(p => p.id));
+  const myTasksCount = (tasks || []).filter(t => {
+    if (!t.project_id || t.status === 'completed') return false;
+    return projectIds.has(t.project_id);
+  }).length;
 
   // Delete project handler - redirects to home if the currently viewed project is deleted
   const confirmDelete = () => {
@@ -163,7 +174,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
           )}
           {isSidebarExpanded && (
             <Badge variant="secondary" className="bg-[#F59E42]/20 text-[#F59E42] border-0 text-[10px] px-1.5 h-5">
-              12
+              {myTasksCount}
             </Badge>
           )}
         </NavLink>

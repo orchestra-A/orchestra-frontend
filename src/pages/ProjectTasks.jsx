@@ -31,26 +31,24 @@ export default function ProjectTasks() {
   const project = projects.find(p => p.id.trim() === decodedId || p.id === projectId);
   const projectName = project ? project.name : "Project";
 
-  // Filter all tasks for this project
-  const allProjectTasks = tasks.filter(t => {
-    const pId = (t.project_id || "Project 1").trim();
-    return (pId === decodedId || pId === projectId);
+  // Filter all tasks for this project using canonical project IDs
+  // Task project_ids are normalized to canonical IDs by ProjectContext
+  const projectTasks = project
+    ? tasks.filter(t => t.project_id === project.id)
+    : [];
+
+  const getStatus = (t) => (t.status || 'todo').toLowerCase();
+
+  const haltedTasks = projectTasks.filter(t => {
+    const s = getStatus(t);
+    return s === 'stopped' || s === 'delayed' || s === 'blocked' || s === 'paused' || s === 'error';
   });
-
-  // Filter tasks assigned specifically to the logged-in user within this project
-  const username = currentUser?.username || '';
-  const projectTasks = allProjectTasks.filter(t => t.assigned_to === username);
-
-  const haltedTasks = projectTasks.filter(t => 
-    t.status === 'stopped' || 
-    t.status === 'delayed' || 
-    t.status === 'blocked' || 
-    t.status === 'paused' || 
-    t.status === 'error'
-  );
-  const inProgressTasks = projectTasks.filter(t => t.status === 'in_progress');
-  const upcomingTasks = projectTasks.filter(t => t.status === 'todo' || t.status === 'upcoming');
-  const completedTasks = projectTasks.filter(t => t.status === 'completed');
+  const inProgressTasks = projectTasks.filter(t => getStatus(t) === 'in_progress');
+  const upcomingTasks = projectTasks.filter(t => {
+    const s = getStatus(t);
+    return s === 'todo' || s === 'upcoming' || s === 'pending';
+  });
+  const completedTasks = projectTasks.filter(t => getStatus(t) === 'completed');
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
     return (
@@ -79,7 +77,7 @@ export default function ProjectTasks() {
     <div className="w-full h-full flex flex-col">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} — My Tasks</h1>
+          <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} — Tasks</h1>
         </div>
         <Button className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white">
           <Plus className="w-4 h-4 mr-2" /> Add Task
@@ -224,7 +222,16 @@ export default function ProjectTasks() {
               setContextMenu(null);
             }}
           >
-            Set Halted
+            Set Stopped
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+            onClick={() => {
+              changeTaskStatus(contextMenu.id, 'blocked');
+              setContextMenu(null);
+            }}
+          >
+            Set Blocked
           </button>
         </div>
       )}

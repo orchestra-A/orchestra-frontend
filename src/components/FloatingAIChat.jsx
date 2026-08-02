@@ -96,7 +96,7 @@ export function FloatingAIChat() {
     setIsLoading(true);
 
     try {
-      const data = await sendCloverMessage(userQuery, conversationHistory);
+      const data = await sendCloverMessage(userQuery, conversationHistory, currentProjectId);
       let replyContent = '';
       if (typeof data === 'string') {
         replyContent = data;
