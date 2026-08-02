@@ -24,33 +24,42 @@ export default function Dashboard() {
     }
   };
 
-  // Filter tasks to only show the logged-in user's tasks (username matches assigned_to)
-  const username = currentUser?.username || '';
-  const myTasks = tasks.filter(t => t.assigned_to === username);
+  // Filter tasks to only those belonging to projects the user is a part of
+  // Projects array is already filtered by ProjectContext to only include accessible ones
+  const accessibleProjectIds = new Set(projects.map(p => p.id));
+  const filteredTasks = tasks.filter(t => t.project_id && accessibleProjectIds.has(t.project_id));
 
   // Resolve a task's project_id to the project display name
-  // Task project_ids are normalized to canonical IDs by ProjectContext
   const resolveProjectName = (taskProjectId) => {
     if (!taskProjectId) return 'General';
     const match = projects.find(p => p.id === taskProjectId);
     return match ? match.name : taskProjectId;
   };
 
-  const delayedTasks = myTasks.filter(t => t.status === 'stopped' || t.status === 'delayed').slice(0, 3);
-  const inProgressTasks = myTasks.filter(t => t.status === 'in_progress').slice(0, 3);
+  const getStatus = (t) => t.status ? t.status.toLowerCase() : '';
+  const haltedTasks = filteredTasks.filter(t => {
+    const s = getStatus(t);
+    return s === 'stopped' || s === 'blocked' || s === 'delayed';
+  });
+  const inProgressTasks = filteredTasks.filter(t => getStatus(t) === 'in_progress');
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => (
     <div
-      onClick={() => navigate('/todo')}
-      className={`rounded-lg border shadow-sm p-2.5 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
+      onClick={() => task.project_id ? navigate(`/project/${task.project_id}/workflow`, { state: { selectedTaskId: task.id } }) : navigate('/todo')}
+      className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
     >
-      <div className="flex justify-between items-start mb-1.5">
-        <h3 className={`font-semibold ${textClass} text-[13px] leading-snug`}>{task.title}</h3>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className={`font-semibold ${textClass} text-sm leading-snug`}>{task.title}</h3>
       </div>
-      <div className="flex items-center justify-between mt-2">
-        <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100/50 text-[#2B3B26]">
+      <div className="flex items-center justify-between mt-3">
+        <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100/50 border-none text-[#2B3B26]">
           {resolveProjectName(task.project_id)}
         </Badge>
+        {task.priority && (
+          <span className={`text-[10px] font-semibold uppercase tracking-wider ${textClass}`}>
+            {task.priority}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -134,17 +143,17 @@ export default function Dashboard() {
             <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
               <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <AlertCircle className="w-4 h-4 text-red-600" />
-                <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Behind / Delayed</h2>
-                <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{delayedTasks.length}</span>
+                <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Halted</h2>
+                <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{haltedTasks.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {delayedTasks.length === 0 ? (
+                {haltedTasks.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center opacity-70 py-8">
                     <AlertCircle className="w-8 h-8 text-gray-400 dark:text-[#27272A] mb-2" />
                     <span className="text-sm font-medium text-gray-500 dark:text-white/40">You're all caught up!</span>
                   </div>
                 ) : (
-                  delayedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-200 border-red-300" />)
+                  haltedTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-red-100 border-red-200 dark:bg-red-950/20 dark:border-red-900/30" textClass="text-red-900 dark:text-red-200" />)
                 )}
               </div>
             </div>
@@ -163,7 +172,7 @@ export default function Dashboard() {
                     <span className="text-sm font-medium text-gray-500 dark:text-white/40">No active tasks</span>
                   </div>
                 ) : (
-                  inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-[#6B905F] border-[#5A7A50]" textClass="text-white dark:text-white/90" />)
+                  inProgressTasks.map(task => <TaskCard key={task.id} task={task} colorClass="bg-amber-100 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30" textClass="text-amber-900 dark:text-amber-200" />)
                 )}
               </div>
             </div>

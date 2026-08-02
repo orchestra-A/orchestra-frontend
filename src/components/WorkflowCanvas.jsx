@@ -5,6 +5,7 @@ import '@xyflow/react/dist/style.css';
 import { TaskNode, TrunkNode, DeveloperNode, SkillNode } from './workflow/Nodes';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 const nodeTypes = {
   task: TaskNode,
@@ -43,7 +44,11 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState(null);
+  const location = useLocation();
   const [selectedTask, setSelectedTask] = useState(null);
+  const [rfInstance, setRfInstance] = useState(null);
+
+
 
   // Filter States
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -70,6 +75,27 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
       }
     }
   }, [projectTasks]);
+
+  // Read selectedTaskId from navigation state on mount
+  useEffect(() => {
+    if (location.state?.selectedTaskId && !selectedTask) {
+      // Find the task inside projectTasks once it's populated
+      const task = projectTasks.find(t => t.id === location.state.selectedTaskId);
+      if (task) {
+        setSelectedTask(task);
+      }
+    }
+  }, [location.state?.selectedTaskId, projectTasks]);
+
+  // Pan and zoom to selected task whenever it changes
+  useEffect(() => {
+    if (selectedTask && rfInstance) {
+      // Small timeout ensures the node is rendered before fitting view
+      setTimeout(() => {
+        rfInstance.fitView({ nodes: [{ id: selectedTask.id }], duration: 800, maxZoom: 1.2, padding: 0.2 });
+      }, 50);
+    }
+  }, [selectedTask, rfInstance]);
 
   const uniqueMembers = Array.from(new Set(projectTasks.map(t => t.assigned_to).filter(Boolean))).sort();
   const uniqueStatuses = Array.from(new Set(projectTasks.map(t => t.status).filter(Boolean))).sort();
@@ -462,6 +488,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
             onNodeContextMenu={onNodeContextMenu}
             onNodeClick={onNodeClick}
             onPaneClick={closeMenu}
+            onInit={setRfInstance}
             fitView
             fitViewOptions={{ padding: 0.1 }}
             proOptions={{ hideAttribution: true }}

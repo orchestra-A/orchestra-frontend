@@ -96,7 +96,9 @@ export function FloatingAIChat() {
     setIsLoading(true);
 
     try {
-      const data = await sendCloverMessage(userQuery, conversationHistory, currentProjectId);
+      // Pass the canonical project ID (with underscores) rather than the raw URL slug
+      const canonicalId = project ? project.id : null;
+      const data = await sendCloverMessage(userQuery, conversationHistory, canonicalId);
       let replyContent = '';
       if (typeof data === 'string') {
         replyContent = data;

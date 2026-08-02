@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { AlertCircle, PlayCircle, CalendarClock, CheckCircle2, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProjectTasks() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const { projects, tasks, changeTaskStatus } = useProject();
   const { currentUser } = useAuth();
   const [contextMenu, setContextMenu] = useState(null);
@@ -53,6 +54,7 @@ export default function ProjectTasks() {
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
     return (
       <div 
+        onClick={() => navigate(`/project/${projectId}/workflow`, { state: { selectedTaskId: task.id } })}
         onContextMenu={(e) => handleContextMenu(e, task)}
         className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
       >

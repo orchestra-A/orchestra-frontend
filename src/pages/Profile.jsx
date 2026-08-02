@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, User, Contact, LayoutGrid, Lock, Fingerprint, Code, Search, Check, X,
   MessageCircle, Globe, ExternalLink,
@@ -52,9 +52,17 @@ const PLATFORM_CONFIG = {
 // User Profile Page
 // Displays and allows editing of the authenticated user's backend profile data.
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState('details');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'details');
   const navigate = useNavigate();
   const { currentUser, updateProfile } = useAuth();
+
+  // Listen for navigation state changes (e.g. clicking the bell while already on the Profile page)
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state?.activeTab]);
 
   // ── Skills ────────────────────────────────────────────────────────────────
   const [savedSkills, setSavedSkills] = useState([]);

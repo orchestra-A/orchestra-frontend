@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { FloatingAIChat } from '../FloatingAIChat';
@@ -12,8 +12,19 @@ export function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isHoveringSidebar, setIsHoveringsidebar] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { loading: dataLoading } = useProject();
   const [navLoading, setNavLoading] = useState(false);
+
+  // Redirect to home page on manual browser refresh
+  useEffect(() => {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0 && navEntries[0].type === "reload") {
+      if (location.pathname !== '/') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, []);
 
   // Trigger a loading animation on route transition
   useEffect(() => {

@@ -204,23 +204,9 @@ export async function validateTeamMembers(memberInputs = []) {
  * Helper to execute fetch requests with a configurable timeout (default 65 seconds).
  */
 async function fetchWithTimeout(resource, options = {}) {
-  const { timeout = 65000, ...fetchOptions } = options;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  try {
-    const response = await fetch(resource, {
-      ...fetchOptions,
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error(`AI request timed out after ${Math.round(timeout / 1000)}s while waiting for backend response.`);
-    }
-    throw error;
-  }
+  const { timeout, ...fetchOptions } = options;
+  // Timeout logic has been completely removed to allow long-running AI requests
+  return await fetch(resource, fetchOptions);
 }
 
 /**
@@ -299,7 +285,7 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
   const payload = {
     conversation_history: conversationHistory,
     question: question,
-    ...(projectId ? { project_id: projectId } : {}),
+    project_id: projectId || "",
   };
   const url = `${BASE_URL}/clover`;
   console.log('[API] Calling sendCloverMessage endpoint (65s timeout):', payload);

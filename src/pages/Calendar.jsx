@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Calendar() {
   const { tasks, projects } = useProject();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -127,6 +129,7 @@ export default function Calendar() {
                   {dayTasks.map(task => (
                     <div 
                       key={task.id}
+                      onClick={() => task.project_id ? navigate(`/project/${task.project_id}/workflow`, { state: { selectedTaskId: task.id } }) : undefined}
                       className="bg-white dark:bg-[#27272A] border border-gray-200 dark:border-gray-700 rounded p-1.5 shadow-sm text-xs group relative hover:z-10 hover:shadow-md transition-all cursor-pointer"
                       title={`${task.title}\nProject: ${resolveProjectName(task.project_id)}`}
                     >
