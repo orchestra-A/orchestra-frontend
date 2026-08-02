@@ -28,6 +28,14 @@ export default function Dashboard() {
   const username = currentUser?.username || '';
   const myTasks = tasks.filter(t => t.assigned_to === username);
 
+  // Resolve a task's project_id to the project display name
+  // Task project_ids are normalized to canonical IDs by ProjectContext
+  const resolveProjectName = (taskProjectId) => {
+    if (!taskProjectId) return 'General';
+    const match = projects.find(p => p.id === taskProjectId);
+    return match ? match.name : taskProjectId;
+  };
+
   const delayedTasks = myTasks.filter(t => t.status === 'stopped' || t.status === 'delayed').slice(0, 3);
   const inProgressTasks = myTasks.filter(t => t.status === 'in_progress').slice(0, 3);
 
@@ -41,7 +49,7 @@ export default function Dashboard() {
       </div>
       <div className="flex items-center justify-between mt-2">
         <Badge variant="secondary" className="text-[10px] font-medium bg-gray-100/50 text-[#2B3B26]">
-          {projects.find(p => p.id === task.project_id)?.name || task.project_id || 'General'}
+          {resolveProjectName(task.project_id)}
         </Badge>
       </div>
     </div>

@@ -30,16 +30,14 @@ export async function fetchUsers() {
 }
 
 /**
- * Fetch projects from the backend via GET /projects.
- * When userId is provided, sends ?user_id= to let the backend filter
- * to only projects the user created or is a member of.
- * @param {string} [userId] - Optional user_id for server-side filtering
+ * Fetch all projects from the backend via GET /projects.
+ * We fetch all projects because the frontend handles complex filtering
+ * (checking members, and created_by) which the backend query param misses if fields are NULL.
  * @returns {Promise<Array>} Array of project objects
  */
-export async function fetchProjects(userId) {
-  const query = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
-  const url = `${BASE_URL}/projects${query}`;
-  const directUrl = `https://orchestra-backend-30fy.onrender.com/projects${query}`;
+export async function fetchProjects() {
+  const url = `${BASE_URL}/projects`;
+  const directUrl = `https://orchestra-backend-30fy.onrender.com/projects`;
   
   let projectsList = [];
 
@@ -62,19 +60,6 @@ export async function fetchProjects(userId) {
       }
     } catch (err) {
       console.warn('[API] Direct fetch projects failed:', err);
-    }
-  }
-
-  // Fallback: If filtered fetch returned empty array but userId was passed, fetch ALL projects
-  if (projectsList.length === 0 && userId) {
-    try {
-      const allRes = await fetch(`https://orchestra-backend-30fy.onrender.com/projects`);
-      if (allRes.ok) {
-        const data = await allRes.json();
-        projectsList = Array.isArray(data) ? data : (data.projects || []);
-      }
-    } catch (err) {
-      console.warn('[API] Fallback all projects fetch failed:', err);
     }
   }
 
@@ -307,20 +292,21 @@ export async function createBlueprint(payload, userId) {
  * Send a chat message to Clover AI endpoint via POST /clover.
  * @param {string} question - Current user message
  * @param {Array<{ content: string, role: string }>} conversationHistory - Last 5 turns of conversation history
+ * @param {string|null} projectId - The canonical project ID the user is currently viewing (for context)
  * @returns {Promise<Object|string>} Response data
  */
-export async function sendCloverMessage(question, conversationHistory = []) {
+export async function sendCloverMessage(question, conversationHistory = [], projectId = null) {
   const payload = {
     conversation_history: conversationHistory,
     question: question,
+    ...(projectId ? { project_id: projectId } : {}),
   };
   const url = `${BASE_URL}/clover`;
   console.log('[API] Calling sendCloverMessage endpoint (65s timeout):', payload);
 
   try {
-    const res = await fetchWithTimeout(url, {
+    const res = await fetch(url, {
       method: 'POST',
-      timeout: 65000,
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
@@ -329,9 +315,8 @@ export async function sendCloverMessage(question, conversationHistory = []) {
     });
 
     if (!res.ok) {
-      const directRes = await fetchWithTimeout('https://orchestra-backend-30fy.onrender.com/clover', {
+      const directRes = await fetch('https://orchestra-backend-30fy.onrender.com/clover', {
         method: 'POST',
-        timeout: 65000,
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''

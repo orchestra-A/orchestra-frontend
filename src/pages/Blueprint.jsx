@@ -208,24 +208,9 @@ export default function Blueprint() {
           console.warn('[Blueprint] Backend project update error:', patchErr);
         }
 
-        // 3. Save each generated task to the tasks table via POST /tasks
-        if (tasksList.length > 0) {
-          const saveTasksPromises = tasksList.map((t) =>
-            createTaskBackend({
-              title: t.title || 'Untitled Task',
-              description: t.description || '',
-              project_id: projectId,
-              track: t.track || 'general',
-              assigned_to: t.assigned_to || currentUserId || '',
-              status: t.status || 'todo',
-              dependencies: t.dependencies || t.depends_on || []
-            }).catch((err) =>
-              console.warn(`[Blueprint] Failed to save task ${t.id || t.title} to backend:`, err)
-            )
-          );
-          await Promise.all(saveTasksPromises);
-        }
-
+        // Note: We don't need to manually create tasks here.
+        // The POST /blueprint endpoint on the backend automatically handles
+        // updating the database with the newly generated tasks.
         // 4. Update local project context
         updateProject(projectId, { title, description, members, techStack });
       } catch (err) {
@@ -289,26 +274,9 @@ export default function Blueprint() {
          const finalProjectId = realDbProjectId || `proj_${Date.now()}`;
          console.log('[Blueprint] Real DB project ID from blueprint creation:', finalProjectId);
 
-         // Persist all blueprint generated tasks to backend DB table under finalProjectId
-         if (tasksList.length > 0) {
-           console.log(`[Blueprint] Persisting ${tasksList.length} tasks to database under project_id "${finalProjectId}"...`);
-           const saveTasksPromises = tasksList.map((t, idx) =>
-             createTaskBackend({
-               id: t.id ? `${finalProjectId}-${t.id}` : `${finalProjectId}-T${idx + 1}`,
-               title: t.title || 'Untitled Task',
-               description: t.description || '',
-               project_id: finalProjectId,
-               track: t.track || 'general',
-               assigned_to: t.assigned_to || currentUserId || '',
-               status: t.status || 'todo',
-               dependencies: t.dependencies || t.depends_on || []
-             }).catch((err) =>
-               console.warn(`[Blueprint] Task persistence warning for "${t.title}":`, err)
-             )
-           );
-           await Promise.all(saveTasksPromises);
-         }
-
+         // Note: We don't need to manually create tasks here.
+         // The POST /blueprint endpoint on the backend automatically handles
+         // saving the initial generated tasks to the database.
          // Add to local state/context
          addProject(
            { id: finalProjectId, title, description, members, techStack }, 

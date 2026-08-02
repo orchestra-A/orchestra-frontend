@@ -95,6 +95,7 @@ export default function ProjectActivity() {
   const users = [...new Set(enrichedEvents.map(e => e.displayActor))].filter(Boolean);
 
   const displayedEvents = enrichedEvents
+    .filter(e => e.project_id === project?.id)
     .filter(e => selectedPlatforms.length === 0 || selectedPlatforms.includes(e.platform))
     .filter(e => selectedUsers.length === 0 || selectedUsers.includes(e.displayActor))
     .sort((a, b) => {

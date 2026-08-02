@@ -24,20 +24,35 @@ export default function Todo() {
     });
   };
 
-  const myTasks = tasks.filter(t => t.assigned_to === (currentUser?.username || ''));
+  // Show ALL non-completed tasks from every project the user belongs to
+  // Task project_ids are normalized to canonical IDs by ProjectContext
+  const projectIds = new Set(projects.map(p => p.id));
+  const myTasks = tasks.filter(t => {
+    if (t.status === 'completed') return false;
+    return projectIds.has(t.project_id);
+  });
 
-  const delayedTasks = myTasks.filter(t => 
-    t.status === 'stopped' || 
-    t.status === 'delayed' || 
-    t.status === 'blocked' || 
-    t.status === 'paused' || 
-    t.status === 'error'
-  );
-  const inProgressTasks = myTasks.filter(t => t.status === 'in_progress');
-  const upcomingTasks = myTasks.filter(t => t.status === 'todo' || t.status === 'upcoming');
+  // Resolve a task's project_id to the project display name
+  const resolveProjectName = (taskProjectId) => {
+    if (!taskProjectId) return 'General';
+    const match = projects.find(p => p.id === taskProjectId);
+    return match ? match.name : taskProjectId;
+  };
+
+  const getStatus = (t) => (t.status || 'todo').toLowerCase();
+
+  const delayedTasks = myTasks.filter(t => {
+    const s = getStatus(t);
+    return s === 'stopped' || s === 'delayed' || s === 'blocked' || s === 'paused' || s === 'error';
+  });
+  const inProgressTasks = myTasks.filter(t => getStatus(t) === 'in_progress');
+  const upcomingTasks = myTasks.filter(t => {
+    const s = getStatus(t);
+    return s === 'todo' || s === 'upcoming' || s === 'pending';
+  });
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
-    const projectName = projects.find(p => p.id === task.project_id)?.name || task.project_id || 'General';
+    const projectName = resolveProjectName(task.project_id);
     return (
       <div 
         onContextMenu={(e) => handleContextMenu(e, task)}
@@ -180,7 +195,16 @@ export default function Todo() {
               setContextMenu(null);
             }}
           >
-            Set Halted
+            Set Stopped
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+            onClick={() => {
+              changeTaskStatus(contextMenu.id, 'blocked');
+              setContextMenu(null);
+            }}
+          >
+            Set Blocked
           </button>
         </div>
       )}

@@ -34,7 +34,6 @@ export function ProjectProvider({ children }) {
       ]);
 
       setAllUsers(users);
-      setTasks(allTasks);
 
       // Build comprehensive set of user aliases (ID, username, email, etc.)
       const userAliases = new Set();
@@ -114,94 +113,129 @@ export function ProjectProvider({ children }) {
 
       bProjects.forEach((bp, idx) => {
         const pId = bp.project_id || bp.id || `proj_${idx}`;
+        // Strictly use the name field from the projects table
         const pName = bp.name || bp.title || pId;
 
         const pMembers = Array.isArray(bp.members) 
           ? bp.members 
           : (typeof bp.members === 'string' ? [bp.members] : []);
 
-        const creatorVal = bp.created_by || bp.user_id || 'System';
-        const isCreator = isUserMatch(creatorVal);
+        // User is the creator if created_by matches them (if created_by is NULL/missing, it's false)
+        const isCreator = bp.created_by ? isUserMatch(bp.created_by) : false;
 
         const projectItems = isCreator
           ? ['Workflow', 'Tasks', 'Team', 'Activity', 'Modify']
           : ['Workflow', 'Tasks', 'Team', 'Activity'];
 
-        projectMap[pId] = {
+        const projectObj = {
           id: pId,
-          name: pName,
+          name: pName, // Name strictly from projects table
           description: bp.description || 'No description provided.',
           taskCount: 0,
           memberCount: pMembers.length,
           teamMembers: pMembers.map(m => ({ id: m, name: m })),
-          created_by: creatorVal,
+          created_by: bp.created_by || null,
           isCreator,
           color: projectColors[idx % projectColors.length],
           items: projectItems,
           techStack: bp.tech_stack || bp.techStack || [],
           members: pMembers,
         };
+
+        projectMap[pId] = projectObj;
+        if (bp.name) {
+          projectMap[bp.name] = projectObj;
+        }
       });
 
       // Incorporate tasks into task counts for each project retrieved
-      // ONLY synthesize virtual project if task is assigned to current user
+      // Map task project_id aliases to existing projects table entries
       allTasks.forEach((t) => {
         const pid = t.project_id;
-        if (pid) {
-          if (projectMap[pid]) {
-            projectMap[pid].taskCount += 1;
-          } else if (isUserMatch(t.assigned_to)) {
-            // Synthesize virtual project ONLY for tasks assigned to current user
-            projectMap[pid] = {
-              id: pid,
-              name: pid.startsWith('proj-') ? pid.replace('proj-', '').replace(/-/g, ' ') : pid,
-              description: 'Project generated from assigned workflow tasks.',
-              taskCount: 1,
-              memberCount: 1,
-              teamMembers: currentUser ? [{ id: currentUser.username || currentUser.user_id, name: currentUser.username || currentUser.name || 'User' }] : [],
-              created_by: t.assigned_to || 'System',
-              isCreator: false,
-              color: projectColors[Object.keys(projectMap).length % projectColors.length],
-              items: ['Workflow', 'Tasks', 'Team', 'Activity'],
-              techStack: [],
-              members: [t.assigned_to],
-            };
+        if (!pid) return;
+
+        // 1. Direct match in projectMap
+        if (projectMap[pid]) {
+          projectMap[pid].taskCount += 1;
+          return;
+        }
+
+        // 2. Match task project_id to an existing project from bProjects table by ID, name, or slug
+        const matchingBp = bProjects.find((bp) => {
+          const bId = (bp.project_id || bp.id || '').toLowerCase().trim();
+          const bName = (bp.name || bp.title || '').toLowerCase().trim();
+          const target = pid.toLowerCase().trim();
+
+          if (target === bId || target === bName) return true;
+
+          const cleanTarget = target.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+          const cleanBId = bId.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+          const cleanBName = bName.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+
+          return cleanTarget && (cleanTarget === cleanBId || cleanTarget === cleanBName || cleanBName.includes(cleanTarget) || cleanTarget.includes(cleanBName));
+        });
+
+        if (matchingBp) {
+          const realId = matchingBp.project_id || matchingBp.id;
+          if (projectMap[realId]) {
+            projectMap[realId].taskCount += 1;
+            projectMap[pid] = projectMap[realId];
+            return;
           }
         }
       });
 
-      const allComputedProjects = Object.values(projectMap);
+      // Normalize every task's project_id to the canonical project ID
+      // so all downstream code can use simple exact ID matching.
+      // Names are for display only; IDs are the single source of truth.
+      const normalizedTasks = allTasks.map((t) => {
+        const pid = t.project_id;
+        if (!pid) return t;
 
-      // Filter projects to ONLY those created by, assigned to, or containing tasks for current user
+        // 1. Already a canonical project ID in the map
+        if (projectMap[pid]) {
+          return { ...t, project_id: projectMap[pid].id };
+        }
+
+        // 2. Fuzzy match to find canonical ID
+        const matchingBp = bProjects.find((bp) => {
+          const bId = (bp.project_id || bp.id || '').toLowerCase().trim();
+          const bName = (bp.name || bp.title || '').toLowerCase().trim();
+          const target = pid.toLowerCase().trim();
+
+          if (target === bId || target === bName) return true;
+
+          const cleanTarget = target.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+          const cleanBId = bId.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+          const cleanBName = bName.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
+
+          return cleanTarget && (cleanTarget === cleanBId || cleanTarget === cleanBName || cleanBName.includes(cleanTarget) || cleanTarget.includes(cleanBName));
+        });
+
+        if (matchingBp) {
+          const realId = matchingBp.project_id || matchingBp.id;
+          return { ...t, project_id: realId };
+        }
+
+        return t;
+      });
+
+      setTasks(normalizedTasks);
+
+      // Deduplicate unique project objects
+      const allComputedProjects = Array.from(new Set(Object.values(projectMap)));
+
+      // Filter projects to ONLY those created by or containing the user as a member
       const userAssignedProjects = currentUser
         ? allComputedProjects.filter((p) => {
             // 1. User created the project
-            if (isUserMatch(p.created_by)) return true;
+            if (p.created_by && isUserMatch(p.created_by)) return true;
             // 2. User is listed in members list
             if (Array.isArray(p.members) && p.members.some(m => isUserMatch(m))) return true;
-            // 3. User is assigned to at least one task in this project
-            const hasAssignedTask = allTasks.some((t) => {
-              if (!isUserMatch(t.assigned_to)) return false;
-              const tid = (t.project_id || '').toLowerCase().trim();
-              const pid = (p.id || '').toLowerCase().trim();
-              const pname = (p.name || '').toLowerCase().trim();
-
-              if (!tid) return false;
-              if (tid === pid || tid === pname) return true;
-
-              const cleanTid = tid.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
-              const cleanPid = pid.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
-              const cleanPname = pname.replace(/^proj[-_]/, '').replace(/[^a-z0-9]/g, '');
-
-              if (cleanTid && (cleanTid === cleanPid || cleanTid === cleanPname || cleanPid.includes(cleanTid) || cleanPname.includes(cleanTid))) {
-                return true;
-              }
-              return false;
-            });
-            if (hasAssignedTask) return true;
+            
             return false;
           })
-        : allComputedProjects;
+        : [];
 
       setProjects(userAssignedProjects);
     } catch (error) {
