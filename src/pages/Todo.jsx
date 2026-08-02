@@ -3,10 +3,12 @@ import { Clock, AlertCircle, PlayCircle, CalendarClock } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Todo() {
   const { tasks, projects, changeTaskStatus } = useProject();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [contextMenu, setContextMenu] = useState(null);
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function Todo() {
     const projectName = resolveProjectName(task.project_id);
     return (
       <div 
+        onClick={() => task.project_id ? navigate(`/project/${task.project_id}/workflow`, { state: { selectedTaskId: task.id } }) : undefined}
         onContextMenu={(e) => handleContextMenu(e, task)}
         className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
       >

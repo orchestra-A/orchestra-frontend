@@ -1,5 +1,6 @@
-import { Search, Bell, User, Settings, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
+import { Search, Bell, User, Settings, HelpCircle, LogOut, ChevronRight, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Avatar, AvatarFallback } from '../ui/avatar';
@@ -21,6 +22,16 @@ export function Header() {
   const location = useLocation();
   const { currentUser, logout } = useAuth();
   const { projects } = useProject();
+
+  const [showMissingPopup, setShowMissingPopup] = useState(false);
+  const isMissingPlatforms = currentUser && (!currentUser.github_username || !currentUser.discord_id);
+
+  useEffect(() => {
+    if (isMissingPlatforms && !sessionStorage.getItem('workspacesPrompted')) {
+      setShowMissingPopup(true);
+      sessionStorage.setItem('workspacesPrompted', 'true');
+    }
+  }, [isMissingPlatforms]);
 
   // Clears the current user session and redirects to login (handled by PublicRoute logic)
 
@@ -71,14 +82,7 @@ export function Header() {
       <div className="flex items-center flex-1">
         {getBreadcrumbs()}
         
-        {/* Search */}
-        <div className="flex-1 max-w-md relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
-        <Input
-          placeholder="Search projects, tasks..."
-          className="w-full pl-10 bg-[#F3F7F1] dark:bg-[#18181B] border-gray-200 dark:border-[#27272A] text-[#1D1E1B] dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/40 focus-visible:ring-[#6B905F] dark:ring-[#6B905F]/30 focus-visible:border-[#6B905F] dark:border-[#6B905F]/30 h-9"
-        />
-        </div>
+
       </div>
 
       {/* Right Section */}
@@ -91,10 +95,44 @@ export function Header() {
           New Project
         </Button>
 
-        <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-[#2B3B26] rounded-md transition-colors cursor-pointer">
-          <Bell className="w-[18px] h-[18px] text-gray-600 dark:text-white/70" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#E74C3C] rounded-full"></span>
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => navigate('/profile', { state: { activeTab: 'platform' } })}
+            className="relative p-2 hover:bg-gray-100 dark:hover:bg-[#2B3B26] rounded-md transition-colors cursor-pointer"
+          >
+            <Bell className="w-[18px] h-[18px] text-gray-600 dark:text-white/70" />
+            {isMissingPlatforms && (
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#E74C3C] rounded-full shadow-[0_0_0_2px_#F4F1EB] dark:shadow-[0_0_0_2px_#09090B]"></span>
+            )}
+          </button>
+          
+          {showMissingPopup && (
+            <div className="absolute top-12 right-0 z-50 bg-white dark:bg-[#1D1E1B] border border-gray-200 dark:border-gray-800 shadow-xl rounded-xl p-4 w-72 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Action Required</h3>
+                <button 
+                  onClick={() => setShowMissingPopup(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                You haven't connected all your workspaces yet. Connect GitHub and Discord to unlock automatic activity tracking.
+              </p>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setShowMissingPopup(false);
+                  navigate('/profile', { state: { activeTab: 'platform' } });
+                }}
+                className="w-full bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#5A7A4F] text-white cursor-pointer"
+              >
+                Connect Workspaces
+              </Button>
+            </div>
+          )}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
