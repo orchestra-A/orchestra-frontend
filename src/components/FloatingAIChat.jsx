@@ -98,17 +98,32 @@ export function FloatingAIChat() {
     try {
       // Pass the canonical project ID (with underscores) rather than the raw URL slug
       const canonicalId = project ? project.id : null;
-      const data = await sendCloverMessage(userQuery, conversationHistory, canonicalId);
-      let replyContent = '';
-      if (typeof data === 'string') {
-        replyContent = data;
-      } else if (data && typeof data === 'object') {
-        replyContent = data.answer || data.reply || data.response || data.message || JSON.stringify(data);
-      } else {
-        replyContent = String(data);
-      }
+      
+      // Initialize an empty message placeholder for the assistant
+      setMessages(prev => [...prev, { role: 'assistant', content: "" }]);
 
-      setMessages(prev => [...prev, { role: 'assistant', content: replyContent }]);
+      const data = await sendCloverMessage(userQuery, conversationHistory, canonicalId, (chunk, fullText) => {
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = { role: 'assistant', content: fullText };
+          return newMessages;
+        });
+      });
+      
+      // If it returned a static JSON for some reason instead of streaming, handle it safely
+      if (typeof data !== 'string') {
+        let replyContent = '';
+        if (data && typeof data === 'object') {
+          replyContent = data.answer || data.reply || data.response || data.message || JSON.stringify(data);
+        } else {
+          replyContent = String(data);
+        }
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = { role: 'assistant', content: replyContent };
+          return newMessages;
+        });
+      }
     } catch (error) {
       console.error('Clover AI Chat Error:', error);
       setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error connecting to the AI server." }]);
@@ -173,22 +188,18 @@ export function FloatingAIChat() {
                       ? 'bg-white dark:bg-[#1E1E22] text-[#1D1E1B] dark:text-white rounded-tr-sm border border-gray-200 dark:border-[#27272A]' 
                       : 'bg-gradient-to-br from-[#6B905F] to-[#3B5432] text-white rounded-tl-sm'
                   }`}>
-                    {msg.content}
+                    {msg.role === 'assistant' && msg.content === "" ? (
+                      <div className="flex gap-1 items-center h-4 px-1">
+                        <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
+                      </div>
+                    ) : (
+                      msg.content
+                    )}
                   </div>
                 </div>
               ))}
-              {isLoading && (
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6B905F] to-[#5A7A4F] flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="bg-gradient-to-br from-[#6B905F] to-[#3B5432] text-white p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm max-w-[85%] flex gap-1 items-center">
-                    <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
-                    <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
-                  </div>
-                </div>
-              )}
               <div ref={messagesEndRef} />
             </div>
             

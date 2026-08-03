@@ -281,56 +281,118 @@ export async function createBlueprint(payload, userId) {
  * @param {string|null} projectId - The canonical project ID the user is currently viewing (for context)
  * @returns {Promise<Object|string>} Response data
  */
-export async function sendCloverMessage(question, conversationHistory = [], projectId = null) {
+export async function sendCloverMessage(question, conversationHistory = [], projectId = null, onChunk = null) {
   const payload = {
     conversation_history: conversationHistory,
     question: question,
     project_id: projectId || "",
   };
   const url = `${BASE_URL}/clover`;
-  console.log('[API] Calling sendCloverMessage endpoint (65s timeout):', payload);
+  console.log('[API] Calling sendCloverMessage endpoint:', payload);
+
+  const fetchOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+    },
+    body: JSON.stringify(payload),
+  };
+
+  const processStream = async (response) => {
+    if (!response.body) throw new Error("ReadableStream not supported");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+    let buffer = "";
+
+    // Artificial queue for typewriter effect
+    let typingQueue = "";
+    let isTyping = false;
+    let displayedText = "";
+
+    const typeQueue = async () => {
+      if (isTyping) return;
+      isTyping = true;
+      while (typingQueue.length > 0) {
+        const char = typingQueue[0];
+        typingQueue = typingQueue.slice(1);
+        displayedText += char;
+        if (onChunk) onChunk(char, displayedText);
+        
+        // 3-5 words per sec = ~25 characters per sec = ~40ms per character
+        await new Promise(r => setTimeout(r, 40));
+      }
+      isTyping = false;
+    };
+
+    const processLine = (line) => {
+      line = line.trim();
+      if (line.startsWith('data:')) {
+        const dataStr = line.replace(/^data:\s*/, '').trim();
+        if (dataStr === '[DONE]') return;
+        try {
+          const parsed = JSON.parse(dataStr);
+          if (parsed.chunk) {
+            fullText += parsed.chunk;
+            if (onChunk) {
+              typingQueue += parsed.chunk;
+              typeQueue();
+            }
+          }
+        } catch (e) {
+          // ignore incomplete or unparseable JSON lines
+        }
+      }
+    };
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        if (buffer.trim()) processLine(buffer);
+        break;
+      }
+      buffer += decoder.decode(value, { stream: true });
+      
+      let newlineIndex;
+      while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+        processLine(line);
+      }
+    }
+    
+    // Hold the promise resolution until the UI has finished typing everything!
+    while (isTyping || typingQueue.length > 0) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    
+    return fullText;
+  };
 
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await fetch(url, fetchOptions);
 
     if (!res.ok) {
-      const directRes = await fetch('https://orchestra-backend-30fy.onrender.com/clover', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-        },
-        body: JSON.stringify(payload),
-      });
+      const directRes = await fetch('https://orchestra-backend-30fy.onrender.com/clover', fetchOptions);
       if (!directRes.ok) {
         const errText = await directRes.text().catch(() => 'No details');
         throw new Error(`Clover API error (${directRes.status}): ${errText}`);
       }
-      return await directRes.json();
+      return onChunk ? await processStream(directRes) : await directRes.json();
     }
-    return await res.json();
+    
+    return onChunk ? await processStream(res) : await res.json();
   } catch (err) {
     console.warn('[API] Proxy clover call failed, trying direct endpoint...', err);
-    const directRes = await fetchWithTimeout('https://orchestra-backend-30fy.onrender.com/clover', {
-      method: 'POST',
-      timeout: 65000,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-      },
-      body: JSON.stringify(payload),
-    });
+    // Add timeout manually for the final fallback if no stream
+    const finalOptions = onChunk ? fetchOptions : { ...fetchOptions, timeout: 65000 };
+    const directRes = await (onChunk ? fetch('https://orchestra-backend-30fy.onrender.com/clover', finalOptions) : fetchWithTimeout('https://orchestra-backend-30fy.onrender.com/clover', finalOptions));
+    
     if (!directRes.ok) {
       throw err;
     }
-    return await directRes.json();
+    return onChunk ? await processStream(directRes) : await directRes.json();
   }
 }
 
@@ -351,6 +413,8 @@ export async function createProjectBackend(payload, userId) {
     description: payload.description || '',
     tech_stack: payload.tech_stack || [],
     members: payload.members || [],
+    tracked_repos: payload.tracked_repos || [],
+    tracked_channels: payload.tracked_channels || [],
     created_by: userId || null,
     ...(payload.summary ? { summary: payload.summary } : {}),
   };
@@ -424,6 +488,67 @@ export async function updateProjectBackend(projectId, payload) {
     });
     if (!directRes.ok) throw err;
     return await directRes.json();
+  }
+}
+
+/**
+ * Delete a project in backend via DELETE /projects/{project_id}.
+ * @param {string} projectId - Path param project_id
+ * @returns {Promise<Object>} Response data
+ */
+export async function deleteProjectBackend(projectId) {
+  const url = `${BASE_URL}/projects/${encodeURIComponent(projectId)}`;
+  console.log(`[API] Attempting to delete project ${projectId} via proxy:`, url);
+
+  const safelyParse = async (response) => {
+    const text = await response.text();
+    console.log(`[API] deleteProject response status: ${response.status}. Body:`, text);
+    if (!text) return { success: true };
+    try { return JSON.parse(text); } catch { return { message: text }; }
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      }
+    });
+
+    if (!res.ok) {
+      console.warn(`[API] Proxy delete returned ${res.status}. Falling back to direct URL.`);
+      const directUrl = `https://orchestra-backend-30fy.onrender.com/projects/${encodeURIComponent(projectId)}`;
+      console.log(`[API] Calling direct URL:`, directUrl);
+      
+      const directRes = await fetch(directUrl, {
+        method: 'DELETE',
+        headers: {
+          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+        }
+      });
+      if (!directRes.ok) {
+        const errText = await directRes.text().catch(() => 'No details');
+        console.error(`[API] Direct delete failed with status ${directRes.status}:`, errText);
+        throw new Error(`Delete Project API error (${directRes.status}): ${errText}`);
+      }
+      return await safelyParse(directRes);
+    }
+    return await safelyParse(res);
+  } catch (err) {
+    console.warn('[API] Fetch exception in deleteProject. Retrying directly...', err);
+    const directUrl = `https://orchestra-backend-30fy.onrender.com/projects/${encodeURIComponent(projectId)}`;
+    const directRes = await fetch(directUrl, {
+      method: 'DELETE',
+      headers: {
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      }
+    });
+    if (!directRes.ok) {
+      const errText = await directRes.text().catch(() => 'No details');
+      console.error(`[API] Fallback direct delete failed with status ${directRes.status}:`, errText);
+      throw err;
+    }
+    return await safelyParse(directRes);
   }
 }
 

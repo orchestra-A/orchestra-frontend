@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Edit2, Check, Layout, FileText, Loader2, AlertCircle, ShieldAlert } from 'lucide-react';
+import { X, Plus, Edit2, Check, Layout, FileText, Loader2, AlertCircle, ShieldAlert, GitBranch, MessageSquare, Archive } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +30,8 @@ export default function Blueprint() {
   const [techInput, setTechInput] = useState('');
   
   const [members, setMembers] = useState([{ id: 1, value: "" }]);
+  const [trackedRepos, setTrackedRepos] = useState([{ id: 1, value: "" }]);
+  const [trackedChannels, setTrackedChannels] = useState([{ id: 1, value: "" }]);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isValidatingUsers, setIsValidatingUsers] = useState(false);
@@ -41,6 +43,7 @@ export default function Blueprint() {
   // Check if logged-in user is the creator of the selected project
   const currentProject = projectId ? projects.find(p => p.id === projectId) : null;
   const projectCreator = currentProject?.created_by || null;
+  const isArchived = currentProject?.is_archived || false;
   
   const isCreator = !currentProject || !projectCreator || (
     currentUserId && (
@@ -63,6 +66,18 @@ export default function Blueprint() {
           setMembers(proj.members);
         } else {
           setMembers([{ id: 1, value: "" }]);
+        }
+
+        if (proj.tracked_repos && proj.tracked_repos.length > 0) {
+          setTrackedRepos(proj.tracked_repos.map((val, i) => ({ id: i + 1, value: val })));
+        } else {
+          setTrackedRepos([{ id: 1, value: "" }]);
+        }
+
+        if (proj.tracked_channels && proj.tracked_channels.length > 0) {
+          setTrackedChannels(proj.tracked_channels.map((val, i) => ({ id: i + 1, value: val })));
+        } else {
+          setTrackedChannels([{ id: 1, value: "" }]);
         }
 
         // Find associated tasks for this project to render in Workflow canvas & Description tab
@@ -101,6 +116,8 @@ export default function Blueprint() {
       setDescription("");
       setTechStack([]);
       setMembers([{ id: 1, value: "" }]);
+      setTrackedRepos([{ id: 1, value: "" }]);
+      setTrackedChannels([{ id: 1, value: "" }]);
       setViewState('centered');
       setIsEditing(true);
       setMemberError(null);
@@ -145,6 +162,20 @@ export default function Blueprint() {
     }
   };
 
+  const handleRepoChange = (id, val) => setTrackedRepos(trackedRepos.map(r => r.id === id ? { ...r, value: val } : r));
+  const addRepo = () => setTrackedRepos([...trackedRepos, { id: Date.now(), value: '' }]);
+  const removeRepo = (id) => {
+    if (trackedRepos.length > 1) setTrackedRepos(trackedRepos.filter(r => r.id !== id));
+    else setTrackedRepos([{ id: Date.now(), value: '' }]);
+  };
+
+  const handleChannelChange = (id, val) => setTrackedChannels(trackedChannels.map(c => c.id === id ? { ...c, value: val } : c));
+  const addChannel = () => setTrackedChannels([...trackedChannels, { id: Date.now(), value: '' }]);
+  const removeChannel = (id) => {
+    if (trackedChannels.length > 1) setTrackedChannels(trackedChannels.filter(c => c.id !== id));
+    else setTrackedChannels([{ id: Date.now(), value: '' }]);
+  };
+
   const handleCreate = async () => {
     // If modifying an existing project, verify creator permissions
     if (projectId && !isCreator) {
@@ -154,6 +185,8 @@ export default function Blueprint() {
 
     setMemberError(null);
     const rawMemberInputs = members.map(m => typeof m === 'string' ? m.trim() : (m.value || '').trim()).filter(Boolean);
+    const rawRepoInputs = trackedRepos.map(r => typeof r === 'string' ? r.trim() : (r.value || '').trim()).filter(Boolean);
+    const rawChannelInputs = trackedChannels.map(c => typeof c === 'string' ? c.trim() : (c.value || '').trim()).filter(Boolean);
 
     // Validate team user IDs against user table
     if (rawMemberInputs.length > 0) {
@@ -179,6 +212,8 @@ export default function Blueprint() {
       description: description || '',
       tech_stack: techStack,
       members: rawMemberInputs,
+      tracked_repos: rawRepoInputs,
+      tracked_channels: rawChannelInputs,
       created_by: currentUserId || null,
     };
 
@@ -306,6 +341,13 @@ export default function Blueprint() {
   const formContent = (
     <>
       <div className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        {isArchived && (
+          <div className="p-2.5 bg-gray-100 dark:bg-[#1E1E22] border border-gray-300 dark:border-[#27272A] rounded-md flex items-start gap-2 text-gray-700 dark:text-gray-300 text-[11px] mb-2 font-medium">
+            <Archive className="w-4 h-4 shrink-0 mt-0.5 text-gray-500" />
+            <span>This project is archived and locked from further edits.</span>
+          </div>
+        )}
+
         {projectId && !isCreator && (
           <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-md flex items-start gap-2 text-amber-700 dark:text-amber-300 text-[11px] mb-1">
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
@@ -439,6 +481,99 @@ export default function Blueprint() {
             </div>
           )}
         </div>
+
+        {/* Tracked Repos */}
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-800 dark:text-gray-300 mb-0.5">Tracked Repos:</label>
+          {isEditing ? (
+            <div className="space-y-1 mb-1">
+              {trackedRepos.map((r) => (
+                <div key={r.id} className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-[#6B905F] dark:text-[#6B905F] font-semibold w-[80px] shrink-0"><GitBranch className="w-3 h-3 inline mr-1" />Repo URL:</span>
+                  <input 
+                    type="text" 
+                    value={typeof r === 'string' ? r : (r?.value || '')} 
+                    onChange={e => handleRepoChange(r.id || r, e.target.value)} 
+                    placeholder="Enter repository URL"
+                    className="flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
+                  />
+                  <button onClick={() => removeRepo(r.id)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 p-1 rounded-md transition-colors shrink-0">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={addRepo}
+                className="w-full py-1 bg-[#6B905F]/10 dark:bg-[#6B905F]/10 text-[#6B905F] dark:text-[#6B905F] font-semibold text-[11px] rounded-md hover:bg-[#6B905F]/20 dark:hover:bg-[#6B905F]/20 transition-colors flex items-center justify-center gap-1 border border-[#6B905F]/30 dark:border-[#6B905F]/30 mt-1 shadow-sm"
+              >
+                <Plus className="w-3 h-3" /> Add Repo
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-1 bg-[#F3F7F1] dark:bg-[#18181B] p-2 rounded-md border border-transparent">
+              {trackedRepos.filter(r => (typeof r === 'string' ? r : (r?.value || '')).trim()).length > 0 ? (
+                trackedRepos.filter(r => (typeof r === 'string' ? r : (r?.value || '')).trim()).map((r, idx) => {
+                  const val = typeof r === 'string' ? r : (r?.value || '');
+                  return (
+                    <div key={typeof r === 'object' ? (r.id || idx) : idx} className="text-[12px] text-gray-700 dark:text-white/90 font-medium flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                      {val}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-[11px] text-gray-500 dark:text-white/50 italic">No tracked repos</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Tracked Channels */}
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-800 dark:text-gray-300 mb-0.5">Tracked Channels:</label>
+          {isEditing ? (
+            <div className="space-y-1 mb-1">
+              {trackedChannels.map((c) => (
+                <div key={c.id} className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-[#6B905F] dark:text-[#6B905F] font-semibold w-[80px] shrink-0"><MessageSquare className="w-3 h-3 inline mr-1" />Channel ID:</span>
+                  <input 
+                    type="text" 
+                    value={typeof c === 'string' ? c : (c?.value || '')} 
+                    onChange={e => handleChannelChange(c.id || c, e.target.value)} 
+                    placeholder="Enter channel ID"
+                    className="flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm" 
+                  />
+                  <button onClick={() => removeChannel(c.id)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 p-1 rounded-md transition-colors shrink-0">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={addChannel}
+                className="w-full py-1 bg-[#6B905F]/10 dark:bg-[#6B905F]/10 text-[#6B905F] dark:text-[#6B905F] font-semibold text-[11px] rounded-md hover:bg-[#6B905F]/20 dark:hover:bg-[#6B905F]/20 transition-colors flex items-center justify-center gap-1 border border-[#6B905F]/30 dark:border-[#6B905F]/30 mt-1 shadow-sm"
+              >
+                <Plus className="w-3 h-3" /> Add Channel
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-1 bg-[#F3F7F1] dark:bg-[#18181B] p-2 rounded-md border border-transparent">
+              {trackedChannels.filter(c => (typeof c === 'string' ? c : (c?.value || '')).trim()).length > 0 ? (
+                trackedChannels.filter(c => (typeof c === 'string' ? c : (c?.value || '')).trim()).map((c, idx) => {
+                  const val = typeof c === 'string' ? c : (c?.value || '');
+                  return (
+                    <div key={typeof c === 'object' ? (c.id || idx) : idx} className="text-[12px] text-gray-700 dark:text-white/90 font-medium flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+                      {val}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-[11px] text-gray-500 dark:text-white/50 italic">No tracked channels</div>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
       <div className="pt-2 border-t border-gray-200 dark:border-[#27272A] mt-2 flex gap-2 shrink-0">
@@ -464,14 +599,18 @@ export default function Blueprint() {
         ) : (
           <button 
             onClick={() => {
+              if (isArchived) {
+                alert(`This project is archived and cannot be edited.`);
+                return;
+              }
               if (!isCreator) {
                 alert(`Modify controls are only accessible to the project creator (${projectCreator || 'another user'}).`);
                 return;
               }
               setIsEditing(true);
             }} 
-            disabled={!isCreator}
-            title={!isCreator ? `Only project creator (${projectCreator}) can modify details` : 'Edit Project Details'}
+            disabled={!isCreator || isArchived}
+            title={isArchived ? 'Project is archived and locked' : !isCreator ? `Only project creator (${projectCreator}) can modify details` : 'Edit Project Details'}
             className="w-full py-1.5 bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] text-gray-800 dark:text-white/90 font-semibold text-[13px] rounded-md hover:bg-gray-50 dark:hover:bg-[#2B3B26] transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit2 className="w-3.5 h-3.5" /> Edit Details

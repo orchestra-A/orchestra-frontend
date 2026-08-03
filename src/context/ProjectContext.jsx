@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { fetchTasks, fetchUsers, fetchProjects, updateTaskStatus } from '../services/api';
+import { fetchTasks, fetchUsers, fetchProjects, updateTaskStatus, deleteProjectBackend, updateProjectBackend } from '../services/api';
 import { useAuth } from './AuthContext';
 
 const ProjectContext = createContext();
@@ -140,6 +140,9 @@ export function ProjectProvider({ children }) {
           items: projectItems,
           techStack: bp.tech_stack || bp.techStack || [],
           members: pMembers,
+          tracked_repos: bp.tracked_repos || [],
+          tracked_channels: bp.tracked_channels || [],
+          is_archived: bp.is_archived || false,
         };
 
         projectMap[pId] = projectObj;
@@ -292,8 +295,26 @@ export function ProjectProvider({ children }) {
     );
   };
 
-  const deleteProject = (id) => {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+  const deleteProject = async (id) => {
+    try {
+      console.log(`[ProjectContext] Initiating deletion for project: ${id}`);
+      await deleteProjectBackend(id);
+      console.log(`[ProjectContext] Backend deletion successful for project: ${id}. Updating local state...`);
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      await loadData();
+    } catch (err) {
+      console.error(`[ProjectContext] Failed to delete project ${id}:`, err);
+    }
+  };
+
+  const archiveProject = async (id, setArchived = true) => {
+    try {
+      await updateProjectBackend(id, { is_archived: setArchived });
+      setProjects((prev) => prev.map((p) => p.id === id ? { ...p, is_archived: setArchived } : p));
+      await loadData();
+    } catch (err) {
+      console.error('Failed to archive project:', err);
+    }
   };
 
   const changeTaskStatus = async (taskId, newStatus) => {
@@ -310,7 +331,7 @@ export function ProjectProvider({ children }) {
 
   return (
     <ProjectContext.Provider
-      value={{ projects, tasks, allUsers, addProject, updateProject, deleteProject, changeTaskStatus, loading, refreshData: loadData }}
+      value={{ projects, tasks, allUsers, addProject, updateProject, deleteProject, archiveProject, changeTaskStatus, loading, refreshData: loadData }}
     >
       {children}
     </ProjectContext.Provider>
