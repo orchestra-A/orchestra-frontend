@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProjectProvider } from './context/ProjectContext';
@@ -23,6 +24,28 @@ import Blueprint from './pages/Blueprint';
 import Workspaces from './pages/Workspaces';
 import WorkspaceDetail from './pages/WorkspaceDetail';
 import OAuthCallback from './pages/OAuthCallback';
+
+function GlobalLogger() {
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log(`[App Action] Page Changed to: ${location.pathname}`);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      const target = e.target.closest('button, a, [role="button"]');
+      if (target) {
+        const text = (target.innerText || target.title || target.className || 'Unknown Element').trim().substring(0, 50);
+        console.log(`[App Action] Interacted with: ${text}`);
+      }
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+
+  return null;
+}
 
 // A wrapper to protect routes.
 // - Unauthenticated users at "/" see the LandingPage.
@@ -76,6 +99,7 @@ export default function App() {
       <AuthProvider>
         <ProjectProvider>
           <BrowserRouter>
+            <GlobalLogger />
             <Routes>
             <Route path="/landing" element={<Navigate to="/" replace />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />

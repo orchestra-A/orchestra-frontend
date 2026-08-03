@@ -1,6 +1,6 @@
 import { UserPlus, MessageCircle, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 
 // Inline GitHub SVG (lucide-react Github export not available in this version)
@@ -31,6 +31,7 @@ function PlatformBadge({ platform }) {
 // Project Team page — shows all members on a specific project with enriched backend data.
 export default function ProjectTeam() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const { projects, allUsers } = useProject();
 
   const decodedId = decodeURIComponent(projectId || '').trim();
@@ -80,7 +81,21 @@ export default function ProjectTeam() {
           return (
             <div
               key={member.id || memberStr || idx}
-              className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-5 shadow-sm flex flex-col gap-3 hover:shadow-md hover:border-[#6B905F]/40 transition-all"
+              onClick={() => {
+                if (!project?.is_archived) {
+                  navigate(`/project/${projectId}/tasks`, { 
+                    state: { 
+                      assignee: name,
+                      assigneeAliases: [memberStr, matchedUser.username, matchedUser.name, matchedUser.email, matchedUser.user_id].filter(Boolean)
+                    } 
+                  });
+                }
+              }}
+              className={`bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-5 flex flex-col gap-3 transition-all ${
+                !project?.is_archived 
+                  ? 'hover:shadow-md hover:border-[#6B905F] dark:hover:border-[#6B905F]/40 cursor-pointer shadow-sm' 
+                  : 'opacity-80 cursor-default'
+              }`}
             >
               {/* Avatar + Name */}
               <div className="flex items-center gap-3">

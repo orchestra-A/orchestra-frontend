@@ -1,4 +1,4 @@
-import { FolderOpen, AlertCircle, PlayCircle, Clock, Plus, Trash2, X } from 'lucide-react';
+import { FolderOpen, AlertCircle, PlayCircle, Clock, Plus, Trash2, X, MoreVertical, Archive } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../context/AuthContext';
@@ -12,10 +12,12 @@ export default function Dashboard() {
   const { currentUser } = useAuth();
   
   // Consume global project and task data from the ProjectContext
-  const { projects, tasks, deleteProject } = useProject();
+  const { projects, tasks, deleteProject, archiveProject } = useProject();
 
   // Local state for managing project deletion confirmation modal
   const [projectToDelete, setProjectToDelete] = useState(null);
+  const [projectToArchive, setProjectToArchive] = useState(null);
+  const [dropdownOpenId, setDropdownOpenId] = useState(null);
 
   const confirmDelete = () => {
     if (projectToDelete) {
@@ -24,9 +26,29 @@ export default function Dashboard() {
     }
   };
 
+  const confirmArchive = () => {
+    if (projectToArchive) {
+      archiveProject(projectToArchive.id, true);
+      setProjectToArchive(null);
+    }
+  };
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.project-dashboard-dropdown')) {
+        setDropdownOpenId(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const activeProjects = projects.filter(p => !p.is_archived);
+
   // Filter tasks to only those belonging to projects the user is a part of
   // Projects array is already filtered by ProjectContext to only include accessible ones
-  const accessibleProjectIds = new Set(projects.map(p => p.id));
+  const accessibleProjectIds = new Set(activeProjects.map(p => p.id));
   const filteredTasks = tasks.filter(t => t.project_id && accessibleProjectIds.has(t.project_id));
 
   // Resolve a task's project_id to the project display name
@@ -89,7 +111,7 @@ export default function Dashboard() {
                 <FolderOpen className="w-5 h-5 text-[#7ED957] dark:text-[#7ED957]" />
               </div>
             </div>
-            <div className="text-5xl font-bold text-[#1D1E1B] dark:text-white/90">{projects.length}</div>
+            <div className="text-5xl font-bold text-[#1D1E1B] dark:text-white/90">{activeProjects.length}</div>
             <div className="text-sm text-gray-500 dark:text-white/50 mt-2">Currently being tracked</div>
           </div>
 
@@ -99,15 +121,15 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4">
 
               {/* Dynamic Project Cards */}
-              {projects.length === 0 ? (
+              {activeProjects.length === 0 ? (
                 <div className="col-span-2 bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-dashed border-gray-300 dark:border-[#27272A] p-8 flex flex-col items-center justify-center text-center">
                   <FolderOpen className="w-8 h-8 text-gray-400 dark:text-white/40 mb-3 opacity-50" />
                   <h3 className="text-[#1D1E1B] dark:text-white/90 font-medium text-sm mb-1">No projects yet</h3>
                   <p className="text-xs text-gray-500 dark:text-white/50">Click to create your first workflow</p>
                 </div>
               ) : (
-                projects.map(project => (
-                <div key={project.id} className="relative group">
+                activeProjects.map(project => (
+                <div key={project.id} className="relative group project-dashboard-dropdown">
                   <button
                     onClick={() => navigate(`/project/${project.id}/tasks`)}
                     className="w-full bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-4 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#6B905F]/30 text-left flex flex-col items-center justify-center aspect-square group/btn"
@@ -120,13 +142,37 @@ export default function Dashboard() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setProjectToDelete(project);
+                      setDropdownOpenId(dropdownOpenId === project.id ? null : project.id);
                     }}
-                    className="absolute top-2 right-2 p-1.5 rounded-md bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] text-gray-400 dark:text-white/40 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 z-10"
-                    title="Delete Project"
+                    className="absolute top-2 right-2 p-1.5 rounded-md bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] text-gray-400 dark:text-white/40 opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#1D1E1B] hover:border-[#6B905F]/30 hover:bg-[#6B905F]/10 dark:hover:bg-white/20 z-10"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <MoreVertical className="w-3.5 h-3.5" />
                   </button>
+
+                  {dropdownOpenId === project.id && (
+                    <div className="absolute right-0 top-10 w-32 bg-white dark:bg-[#1E1E22] border border-gray-200 dark:border-[#27272A] rounded-md shadow-lg z-50 py-1 flex flex-col">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProjectToArchive(project);
+                          setDropdownOpenId(null);
+                        }}
+                        className="w-full text-left px-3 py-1.5 text-sm text-[#1D1E1B] dark:text-white/90 hover:bg-gray-100 dark:hover:bg-white/5"
+                      >
+                        Archive
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProjectToDelete(project);
+                          setDropdownOpenId(null);
+                        }}
+                        className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               )))}
 
@@ -205,6 +251,37 @@ export default function Dashboard() {
                   className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors cursor-pointer"
                 >
                   Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Confirmation Dialog */}
+      {projectToArchive && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 page-enter">
+          <div className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-[#6B905F]/20 flex items-center justify-center mb-4">
+                <Archive className="w-6 h-6 text-[#6B905F]" />
+              </div>
+              <h3 className="text-xl font-bold text-[#1D1E1B] dark:text-white/90 mb-2">Archive Project?</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Are you sure you want to archive <span className="font-semibold text-gray-800 dark:text-gray-200">"{projectToArchive.name}"</span>? It will be locked from further edits but will remain accessible in the Archive tab.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setProjectToArchive(null)}
+                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmArchive}
+                  className="flex-1 px-4 py-2 bg-[#6B905F] hover:bg-[#5A7A4F] text-white font-medium rounded-lg transition-colors cursor-pointer"
+                >
+                  Yes, Archive
                 </button>
               </div>
             </div>

@@ -2,16 +2,28 @@ import { useState, useEffect } from 'react';
 import { AlertCircle, PlayCircle, CalendarClock, CheckCircle2, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
+import { X } from 'lucide-react';
 
 export default function ProjectTasks() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { projects, tasks, changeTaskStatus } = useProject();
   const { currentUser } = useAuth();
   const [contextMenu, setContextMenu] = useState(null);
+  
+  const [assigneeFilter, setAssigneeFilter] = useState(() => {
+    if (location.state && location.state.assignee !== undefined) return location.state.assignee;
+    return currentUser?.name || currentUser?.username || null;
+  });
+  
+  const [assigneeAliases, setAssigneeAliases] = useState(() => {
+    if (location.state && location.state.assigneeAliases !== undefined) return location.state.assigneeAliases;
+    return [currentUser?.username, currentUser?.name, currentUser?.email, currentUser?.user_id].filter(Boolean);
+  });
 
   useEffect(() => {
     const handleClose = () => setContextMenu(null);
@@ -34,22 +46,49 @@ export default function ProjectTasks() {
 
   // Filter all tasks for this project using canonical project IDs
   // Task project_ids are normalized to canonical IDs by ProjectContext
-  const projectTasks = project
+  let projectTasks = project
     ? tasks.filter(t => t.project_id === project.id)
     : [];
+
+  if (assigneeFilter) {
+    console.log('[DEBUG] Filtering tasks for Assignee:', assigneeFilter);
+    console.log('[DEBUG] Aliases:', assigneeAliases);
+    console.log('[DEBUG] All tasks before filter:', projectTasks);
+
+    projectTasks = projectTasks.filter(t => {
+      const assigned = t.assigned_to || t.assignee || '';
+      const assignedStr = typeof assigned === 'string' ? assigned : (Array.isArray(assigned) ? assigned.join(' ') : JSON.stringify(assigned));
+      const lowerAssigned = assignedStr.toLowerCase();
+      
+      const matchFilter = lowerAssigned.includes(assigneeFilter.toLowerCase());
+      const matchAlias = assigneeAliases.some(alias => typeof alias === 'string' && lowerAssigned.includes(alias.toLowerCase()));
+      
+      if (matchFilter || matchAlias) {
+         console.log(`[DEBUG] Task Match! Task: "${t.title}" | AssignedTo: "${assignedStr}"`);
+      }
+      
+      return matchFilter || matchAlias;
+    });
+    
+    console.log('[DEBUG] Tasks after filter:', projectTasks);
+  }
 
   const getStatus = (t) => (t.status || 'todo').toLowerCase();
 
   const haltedTasks = projectTasks.filter(t => {
     const s = getStatus(t);
-    return s === 'stopped' || s === 'delayed' || s === 'blocked' || s === 'paused' || s === 'error';
+    return ['stopped', 'delayed', 'blocked', 'paused', 'error'].includes(s);
   });
   const inProgressTasks = projectTasks.filter(t => getStatus(t) === 'in_progress');
+  const completedTasks = projectTasks.filter(t => ['completed', 'done', 'finished'].includes(getStatus(t)));
+  
+  // Upcoming acts as a catch-all for todo, pending, backlog, and any unmapped status
   const upcomingTasks = projectTasks.filter(t => {
     const s = getStatus(t);
-    return s === 'todo' || s === 'upcoming' || s === 'pending';
+    return !['stopped', 'delayed', 'blocked', 'paused', 'error'].includes(s) && 
+           s !== 'in_progress' && 
+           !['completed', 'done', 'finished'].includes(s);
   });
-  const completedTasks = projectTasks.filter(t => getStatus(t) === 'completed');
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
     return (
@@ -80,6 +119,15 @@ export default function ProjectTasks() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} — Tasks</h1>
+          {assigneeFilter && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-sm text-gray-500 dark:text-white/50">Filtered by:</span>
+              <Badge variant="secondary" className="flex items-center gap-1 bg-[#6B905F]/15 text-[#6B905F] dark:text-[#7ED957]">
+                {assigneeFilter}
+                <X className="w-3 h-3 cursor-pointer ml-1 hover:text-red-500" onClick={() => setAssigneeFilter(null)} />
+              </Badge>
+            </div>
+          )}
         </div>
         <Button className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white">
           <Plus className="w-4 h-4 mr-2" /> Add Task
@@ -216,15 +264,6 @@ export default function ProjectTasks() {
             }}
           >
             Set Completed
-          </button>
-          <button 
-            className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
-            onClick={() => {
-              changeTaskStatus(contextMenu.id, 'stopped');
-              setContextMenu(null);
-            }}
-          >
-            Set Stopped
           </button>
           <button 
             className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
