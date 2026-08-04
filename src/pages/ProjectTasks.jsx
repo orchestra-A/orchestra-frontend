@@ -93,9 +93,14 @@ export default function ProjectTasks() {
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
     return (
       <div 
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData('taskId', task.id);
+          e.dataTransfer.effectAllowed = 'move';
+        }}
         onClick={() => navigate(`/project/${projectId}/workflow`, { state: { selectedTaskId: task.id } })}
         onContextMenu={(e) => handleContextMenu(e, task)}
-        className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
+        className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-all duration-300 cursor-grab active:cursor-grabbing ${colorClass} ${task.isUpdating ? 'animate-pulse pointer-events-none' : ''}`}
       >
         <div className="flex justify-between items-start mb-2">
           <h3 className={`font-semibold ${textClass} text-sm leading-snug`}>{task.title}</h3>
@@ -136,7 +141,15 @@ export default function ProjectTasks() {
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 overflow-hidden pb-6">
         {/* Column 1: Halted */}
-        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner">
+        <div 
+          className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const taskId = e.dataTransfer.getData('taskId');
+            if (taskId) changeTaskStatus(taskId, 'stopped');
+          }}
+        >
           <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0">
             <AlertCircle className="w-4 h-4 text-red-600" />
             <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Halted</h2>
@@ -160,7 +173,15 @@ export default function ProjectTasks() {
         </div>
 
         {/* Column 2: In Progress */}
-        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner">
+        <div 
+          className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const taskId = e.dataTransfer.getData('taskId');
+            if (taskId) changeTaskStatus(taskId, 'in_progress');
+          }}
+        >
           <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0">
             <PlayCircle className="w-4 h-4 text-amber-500" />
             <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">In Progress</h2>
@@ -184,7 +205,15 @@ export default function ProjectTasks() {
         </div>
 
         {/* Column 3: Upcoming */}
-        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner">
+        <div 
+          className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const taskId = e.dataTransfer.getData('taskId');
+            if (taskId) changeTaskStatus(taskId, 'todo');
+          }}
+        >
           <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0">
             <CalendarClock className="w-4 h-4 text-blue-500" />
             <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Upcoming</h2>
@@ -208,7 +237,15 @@ export default function ProjectTasks() {
         </div>
 
         {/* Column 4: Completed */}
-        <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner">
+        <div 
+          className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const taskId = e.dataTransfer.getData('taskId');
+            if (taskId) changeTaskStatus(taskId, 'completed');
+          }}
+        >
           <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Completed</h2>

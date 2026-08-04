@@ -318,13 +318,26 @@ export function ProjectProvider({ children }) {
   };
 
   const changeTaskStatus = async (taskId, newStatus) => {
+    const oldTask = tasks.find(t => t.id === taskId);
+    const oldStatus = oldTask ? oldTask.status : null;
+
+    // Optimistically update the task in the local state instantly
+    setTasks(prevTasks =>
+      prevTasks.map(t => (t.id === taskId ? { ...t, status: newStatus, isUpdating: true } : t))
+    );
+
     try {
       await updateTaskStatus(taskId, newStatus);
+      // Remove the updating flag on success
       setTasks(prevTasks =>
-        prevTasks.map(t => (t.id === taskId ? { ...t, status: newStatus } : t))
+        prevTasks.map(t => (t.id === taskId ? { ...t, isUpdating: false } : t))
       );
     } catch (error) {
       console.error('Failed to change task status:', error);
+      // Revert to original status on failure
+      setTasks(prevTasks =>
+        prevTasks.map(t => (t.id === taskId ? { ...t, status: oldStatus, isUpdating: false } : t))
+      );
       throw error;
     }
   };
