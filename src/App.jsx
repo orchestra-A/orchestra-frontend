@@ -6,7 +6,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AppShell } from './components/layout/AppShell';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
-import Team from './pages/Team';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
@@ -22,7 +21,6 @@ import ProjectTeam from './pages/ProjectTeam';
 import ProjectActivity from './pages/ProjectActivity';
 import Blueprint from './pages/Blueprint';
 import Workspaces from './pages/Workspaces';
-import WorkspaceDetail from './pages/WorkspaceDetail';
 import OAuthCallback from './pages/OAuthCallback';
 
 function GlobalLogger() {
@@ -110,10 +108,8 @@ export default function App() {
             <Route path="/" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="projects" element={<Projects />} />
-              <Route path="team" element={<Team />} />
               <Route path="settings" element={<Settings />} />
               <Route path="workspaces" element={<Workspaces />} />
-              <Route path="workspaces/:id" element={<WorkspaceDetail />} />
               <Route path="blueprint" element={<Blueprint />} />
               <Route path="blueprint/:projectId" element={<Blueprint />} />
               

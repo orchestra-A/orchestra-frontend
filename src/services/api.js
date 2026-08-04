@@ -281,11 +281,12 @@ export async function createBlueprint(payload, userId) {
  * @param {string|null} projectId - The canonical project ID the user is currently viewing (for context)
  * @returns {Promise<Object|string>} Response data
  */
-export async function sendCloverMessage(question, conversationHistory = [], projectId = null, onChunk = null) {
+export async function sendCloverMessage(question, conversationHistory = [], projectId = null, userId = null, onChunk = null) {
   const payload = {
     conversation_history: conversationHistory,
     question: question,
     project_id: projectId || "",
+    user_id: userId || "",
   };
   const url = `${BASE_URL}/clover`;
   console.log('[API] Calling sendCloverMessage endpoint:', payload);
@@ -304,6 +305,8 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let fullText = "";
+    let suggestedTasks = [];
+    let action = null;
     let buffer = "";
 
     // Artificial queue for typewriter effect
@@ -340,6 +343,12 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
               typeQueue();
             }
           }
+          if (parsed.suggested_tasks) {
+            suggestedTasks = parsed.suggested_tasks;
+          }
+          if (parsed.action) {
+            action = parsed.action;
+          }
         } catch (e) {
           // ignore incomplete or unparseable JSON lines
         }
@@ -367,7 +376,7 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
       await new Promise(r => setTimeout(r, 100));
     }
     
-    return fullText;
+    return { text: fullText, suggestedTasks, action };
   };
 
   try {
