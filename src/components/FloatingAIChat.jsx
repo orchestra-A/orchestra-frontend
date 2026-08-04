@@ -1,20 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Bot, Send, X, MessageSquare } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Bot, Send, X, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { useProject } from '../context/ProjectContext';
+import { useAuth } from '../context/AuthContext';
 import { sendCloverMessage } from '../services/api';
 
 export function FloatingAIChat() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
   
   // Extract projectId if we are on a project route
   const pathParts = location.pathname.split('/');
   const isProjectRoute = pathParts[1] === 'project' && pathParts.length >= 3;
   const currentProjectId = isProjectRoute ? pathParts[2] : null;
 
-  const { projects } = useProject();
+  const { projects, tasks } = useProject();
   const project = projects.find(p => p.id === currentProjectId || p.id === decodeURIComponent(currentProjectId || ''));
   const projectName = project ? project.name : "Project";
 
@@ -102,7 +105,9 @@ export function FloatingAIChat() {
       // Initialize an empty message placeholder for the assistant
       setMessages(prev => [...prev, { role: 'assistant', content: "" }]);
 
-      const data = await sendCloverMessage(userQuery, conversationHistory, canonicalId, (chunk, fullText) => {
+      const userId = currentUser ? (currentUser.user_id || currentUser.id || currentUser.username) : null;
+
+      const data = await sendCloverMessage(userQuery, conversationHistory, canonicalId, userId, (chunk, fullText) => {
         setMessages(prev => {
           const newMessages = [...prev];
           newMessages[newMessages.length - 1] = { role: 'assistant', content: fullText };
@@ -110,20 +115,28 @@ export function FloatingAIChat() {
         });
       });
       
-      // If it returned a static JSON for some reason instead of streaming, handle it safely
-      if (typeof data !== 'string') {
-        let replyContent = '';
-        if (data && typeof data === 'object') {
-          replyContent = data.answer || data.reply || data.response || data.message || JSON.stringify(data);
-        } else {
-          replyContent = String(data);
-        }
-        setMessages(prev => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1] = { role: 'assistant', content: replyContent };
-          return newMessages;
-        });
+      let replyContent = '';
+      let suggestedTasks = [];
+      let action = null;
+      
+      if (data && typeof data === 'object') {
+        replyContent = data.text || data.answer || data.reply || data.response || data.message || JSON.stringify(data);
+        suggestedTasks = data.suggestedTasks || data.suggested_tasks || [];
+        action = data.action || null;
+      } else {
+        replyContent = String(data);
       }
+      
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = { 
+          role: 'assistant', 
+          content: replyContent,
+          suggestedTasks,
+          action
+        };
+        return newMessages;
+      });
     } catch (error) {
       console.error('Clover AI Chat Error:', error);
       setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error connecting to the AI server." }]);
@@ -183,19 +196,57 @@ export function FloatingAIChat() {
                       <Bot className="w-5 h-5 text-white" />
                     </div>
                   )}
-                  <div className={`p-3 rounded-2xl text-[13px] shadow-sm max-w-[85%] whitespace-pre-wrap ${
+                  <div className={`p-3 rounded-2xl max-w-[80%] text-[13px] leading-relaxed shadow-sm ${
                     msg.role === 'user' 
-                      ? 'bg-white dark:bg-[#1E1E22] text-[#1D1E1B] dark:text-white rounded-tr-sm border border-gray-200 dark:border-[#27272A]' 
-                      : 'bg-gradient-to-br from-[#6B905F] to-[#3B5432] text-white rounded-tl-sm'
+                      ? 'bg-[#6B905F] dark:bg-[#6B905F]/80 text-white rounded-tr-none' 
+                      : 'bg-white dark:bg-[#1E1E22] text-[#1D1E1B] dark:text-white/90 rounded-tl-none border border-gray-100 dark:border-[#27272A]'
                   }`}>
                     {msg.role === 'assistant' && msg.content === "" ? (
                       <div className="flex gap-1 items-center h-4 px-1">
-                        <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce"></div>
-                        <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
-                        <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-[#6B905F]/50 dark:bg-white/50 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-[#6B905F]/50 dark:bg-white/50 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-[#6B905F]/50 dark:bg-white/50 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
                       </div>
                     ) : (
-                      msg.content
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    )}
+
+                    {/* Render suggested tasks if any */}
+                    {msg.suggestedTasks && msg.suggestedTasks.length > 0 && (
+                      <div className="mt-3 space-y-2 border-t border-black/5 dark:border-white/5 pt-3">
+                        <p className="text-[10px] font-semibold opacity-60 uppercase tracking-wider mb-1 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Related Tasks
+                        </p>
+                        <div className="flex flex-col gap-1.5">
+                          {msg.suggestedTasks.map((task, tIdx) => (
+                            <div 
+                              key={tIdx}
+                              onClick={() => {
+                                let targetProjectId = task.project_id || currentProjectId;
+                                
+                                // Fallback: look up the task in the global tasks array to find its project_id
+                                if (!targetProjectId && tasks) {
+                                  const foundTask = tasks.find(t => t.id === task.id || t.id === task.task_id);
+                                  if (foundTask) targetProjectId = foundTask.project_id;
+                                }
+
+                                if (targetProjectId) {
+                                  navigate(`/project/${targetProjectId}/workflow`, { state: { selectedTaskId: task.id || task.task_id } });
+                                  setIsOpen(false);
+                                } else {
+                                  console.warn("Routing failed: Missing project ID for task", task);
+                                }
+                              }}
+                              className="bg-[#F4F1EB]/50 dark:bg-black/20 hover:bg-[#F4F1EB] dark:hover:bg-black/40 border border-black/5 dark:border-white/10 rounded-md p-2 cursor-pointer transition-all flex items-center gap-2 group"
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#6B905F] shrink-0" />
+                              <span className="font-medium text-xs truncate group-hover:text-[#6B905F] dark:group-hover:text-[#7ED957] transition-colors">
+                                {task.title || task.name || 'View Task'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
