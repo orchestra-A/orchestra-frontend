@@ -39,6 +39,37 @@ const isAssignedToCurrentUser = (assignedTo, currentUser) => {
   );
 };
 
+const avatarColors = [
+  { bg: 'bg-red-500', ring: 'ring-red-500', shadow: 'shadow-red-500' },
+  { bg: 'bg-green-500', ring: 'ring-green-500', shadow: 'shadow-green-500' },
+  { bg: 'bg-blue-500', ring: 'ring-blue-500', shadow: 'shadow-blue-500' },
+  { bg: 'bg-yellow-500', ring: 'ring-yellow-500', shadow: 'shadow-yellow-500' },
+  { bg: 'bg-purple-500', ring: 'ring-purple-500', shadow: 'shadow-purple-500' },
+  { bg: 'bg-pink-500', ring: 'ring-pink-500', shadow: 'shadow-pink-500' },
+  { bg: 'bg-indigo-500', ring: 'ring-indigo-500', shadow: 'shadow-indigo-500' },
+  { bg: 'bg-teal-500', ring: 'ring-teal-500', shadow: 'shadow-teal-500' },
+  { bg: 'bg-orange-500', ring: 'ring-orange-500', shadow: 'shadow-orange-500' },
+  { bg: 'bg-cyan-500', ring: 'ring-cyan-500', shadow: 'shadow-cyan-500' }
+];
+
+const getAvatarColor = (name) => {
+  if (!name) return { bg: 'bg-gray-500', ring: 'ring-gray-500', shadow: 'shadow-gray-500' };
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.trim().split(/[\s_-]+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+};
+
 export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = null, title = "" }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -53,6 +84,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
   // Filter States
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
 
   const { tasks: globalTasks, changeTaskStatus } = useProject();
   const { currentUser } = useAuth();
@@ -380,37 +412,85 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
 
         <div className="flex flex-col gap-2 flex-1">
           {/* Member Checkbox List */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-wrap relative">
             <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
               <User className="w-3.5 h-3.5" /> Filter by Assignee:
             </span>
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center">
               {uniqueMembers.length > 0 ? (
-                uniqueMembers.map(member => {
-                  const isChecked = selectedMembers.includes(member);
-                  return (
-                    <div
-                      key={member}
-                      onClick={() => {
-                        setSelectedMembers(prev =>
-                          isChecked ? prev.filter(m => m !== member) : [...prev, member]
-                        );
-                      }}
-                      className="flex items-center gap-2 cursor-pointer select-none group"
-                    >
-                      <div 
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                          isChecked 
-                            ? 'bg-[#6B905F] border-[#6B905F]' 
-                            : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
-                        }`}
-                      >
-                        {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                <div className="flex items-center -space-x-1">
+                  {uniqueMembers.slice(0, 8).map(member => {
+                    const isChecked = selectedMembers.includes(member);
+                    const colorObj = getAvatarColor(member);
+                    const bgColor = colorObj.bg;
+                    const ringColor = colorObj.ring;
+                    const shadowColor = colorObj.shadow;
+                    
+                    return (
+                      <div key={member} className="relative group">
+                        <div
+                          onClick={() => {
+                            setSelectedMembers(prev =>
+                              isChecked ? prev.filter(m => m !== member) : [...prev, member]
+                            );
+                          }}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all ring-1 ring-white dark:ring-[#09090B] ${bgColor} ${isChecked ? `shadow-[0_0_16px_var(--tw-shadow-color)] ${shadowColor} z-10 scale-110` : 'hover:z-10 hover:scale-105'}`}
+                        >
+                          {getInitials(member)}
+                        </div>
+                        
+                        {/* Custom Tooltip */}
+                        <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-bold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap z-50 pointer-events-none">
+                          {member}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-white"></div>
+                        </div>
                       </div>
-                      <span className="text-xs font-medium text-gray-700 dark:text-white/80">{member}</span>
+                    );
+                  })}
+                  {uniqueMembers.length > 8 && (
+                    <div className="relative">
+                      <div
+                        onClick={() => setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-white dark:bg-[#1E1E22] text-gray-700 dark:text-white cursor-pointer select-none transition-all ring-2 ring-[#F4F1EB] dark:ring-[#09090B] hover:z-10 hover:scale-105 shadow-sm"
+                      >
+                        +{uniqueMembers.length - 8}
+                      </div>
+                      
+                      {isAssigneeDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setIsAssigneeDropdownOpen(false)} />
+                          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-[#1E1E22] rounded-lg shadow-xl border border-gray-200 dark:border-[#27272A] py-2 min-w-[200px] max-h-[300px] overflow-y-auto page-enter">
+                            {uniqueMembers.slice(8).map(member => {
+                              const isChecked = selectedMembers.includes(member);
+                              const bgColor = getAvatarColor(member);
+                              return (
+                                <div
+                                  key={member}
+                                  onClick={() => {
+                                    setSelectedMembers(prev =>
+                                      isChecked ? prev.filter(m => m !== member) : [...prev, member]
+                                    );
+                                  }}
+                                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                                >
+                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0 ${isChecked ? 'bg-[#6B905F] border-[#6B905F]' : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600'}`}>
+                                    {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                                  </div>
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 ${bgColor}`}>
+                                    {getInitials(member)}
+                                  </div>
+                                  <span className="text-sm font-medium text-gray-700 dark:text-white/80 truncate">
+                                    {member}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  );
-                })
+                  )}
+                </div>
               ) : (
                 <span className="text-xs text-gray-400 italic">No members found</span>
               )}
