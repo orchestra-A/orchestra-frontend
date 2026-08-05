@@ -143,6 +143,7 @@ export function ProjectProvider({ children }) {
           tracked_repos: bp.tracked_repos || [],
           tracked_channels: bp.tracked_channels || [],
           is_archived: bp.is_archived || false,
+          summary: bp.blueprint_summary || bp.summary || '',
         };
 
         projectMap[pId] = projectObj;
