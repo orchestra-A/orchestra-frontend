@@ -97,9 +97,9 @@ export default function Blueprint() {
         });
 
         setBlueprintData({
-          summary: proj.description && proj.description !== 'No description provided.' 
-            ? proj.description 
-            : 'Project architecture and generated task breakdown.',
+          summary: proj.summary 
+            ? proj.summary 
+            : (proj.description && proj.description !== 'No description provided.' ? proj.description : 'Project architecture and generated task breakdown.'),
           tasks: projectTasks,
           raw: null
         });

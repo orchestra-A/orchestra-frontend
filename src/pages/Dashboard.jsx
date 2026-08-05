@@ -170,15 +170,17 @@ export default function Dashboard() {
                       <h3 className="text-[#1D1E1B] dark:text-white/90 font-bold text-sm text-center line-clamp-2 px-1 pb-1">{project.name}</h3>
                     </div>
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownOpenId(dropdownOpenId === project.id ? null : project.id);
-                    }}
-                    className="absolute top-2 right-2 p-1.5 rounded-md bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] text-gray-400 dark:text-white/40 opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#1D1E1B] hover:border-[#6B905F]/30 hover:bg-[#6B905F]/10 dark:hover:bg-white/20 z-10"
-                  >
-                    <MoreVertical className="w-3.5 h-3.5" />
-                  </button>
+                  {project.isCreator && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDropdownOpenId(dropdownOpenId === project.id ? null : project.id);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 rounded-md bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] text-gray-400 dark:text-white/40 opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#1D1E1B] hover:border-[#6B905F]/30 hover:bg-[#6B905F]/10 dark:hover:bg-white/20 z-10"
+                    >
+                      <MoreVertical className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                   {dropdownOpenId === project.id && (
                     <div className="absolute right-0 top-10 w-32 bg-white dark:bg-[#1E1E22] border border-gray-200 dark:border-[#27272A] rounded-md shadow-lg z-50 py-1 flex flex-col">

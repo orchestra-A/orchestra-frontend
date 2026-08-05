@@ -96,15 +96,17 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
 
           {isSidebarExpanded && (
             <div className="absolute right-2 flex items-center gap-1 bg-transparent group-hover:bg-[#6B905F]/10 dark:group-hover:bg-white/10 transition-colors rounded-md p-0.5">
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDropdownOpenId(dropdownOpenId === project.id ? null : project.id);
-                }}
-                className="p-1 rounded-md text-[#1D1E1B]/50 dark:text-white/50 hover:text-[#1D1E1B] hover:bg-[#6B905F]/10 dark:hover:bg-white/20 opacity-0 group-hover:opacity-100 transition-all"
-              >
-                <MoreVertical className="w-3.5 h-3.5" />
-              </div>
+              {project.isCreator && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDropdownOpenId(dropdownOpenId === project.id ? null : project.id);
+                  }}
+                  className="p-1 rounded-md text-[#1D1E1B]/50 dark:text-white/50 hover:text-[#1D1E1B] hover:bg-[#6B905F]/10 dark:hover:bg-white/20 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <MoreVertical className="w-3.5 h-3.5" />
+                </div>
+              )}
               <ChevronRight
                 className={`w-4 h-4 text-[#1D1E1B]/70 dark:text-white/70 transition-transform ${expandedProject === project.id ? 'rotate-90' : ''}`}
               />

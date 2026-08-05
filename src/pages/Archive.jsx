@@ -50,19 +50,27 @@ export default function Archive() {
               </button>
               
               <div className="mt-auto flex gap-2">
-                <button
-                  onClick={() => archiveProject(project.id, false)}
-                  className="flex-1 py-1.5 flex items-center justify-center gap-1.5 bg-[#6B905F] hover:bg-[#5A7A4F] text-white text-xs font-medium rounded-md transition-colors cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Restore
-                </button>
-                <button
-                  onClick={() => setProjectToDelete(project)}
-                  className="px-3 py-1.5 flex items-center justify-center bg-gray-200 dark:bg-[#1E1E22] hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:text-white/70 dark:hover:text-red-400 text-gray-600 rounded-md transition-colors cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {project.isCreator ? (
+                  <>
+                    <button
+                      onClick={() => archiveProject(project.id, false)}
+                      className="flex-1 py-1.5 flex items-center justify-center gap-1.5 bg-[#6B905F] hover:bg-[#5A7A4F] text-white text-xs font-medium rounded-md transition-colors cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Restore
+                    </button>
+                    <button
+                      onClick={() => setProjectToDelete(project)}
+                      className="px-3 py-1.5 flex items-center justify-center bg-gray-200 dark:bg-[#1E1E22] hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:text-white/70 dark:hover:text-red-400 text-gray-600 rounded-md transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="w-full text-center text-[10px] text-gray-500 italic mt-2">
+                    View-only (Requires creator permissions to manage)
+                  </div>
+                )}
               </div>
             </div>
           ))}
