@@ -5,6 +5,19 @@ import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
 import { useState, useEffect } from 'react';
 
+const SolidFolderIcon = ({ color }) => (
+  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-sm">
+    {/* Back flap / Tab with less rounding and dark outline. Y-shifted by -3 for perfect viewBox centering */}
+    <path d="M8 14C8 12.3431 9.34315 11 11 11H25L29 15H53C54.6569 15 56 16.3431 56 18V27H8V14Z" fill={color} opacity="0.65" stroke={color} strokeWidth="2.5" strokeLinejoin="round" />
+    
+    {/* Main Body with less rounding and dark outline */}
+    <path d="M8 22C8 20.3431 9.34315 19 11 19H53C54.6569 19 56 20.3431 56 22V50C56 51.6569 54.6569 53 53 53H11C9.34315 53 8 51.6569 8 50V22Z" fill={color} stroke={color} strokeWidth="2.5" strokeLinejoin="round" />
+    
+    {/* Cell shaded highlight */}
+    <path d="M8 22C8 20.3431 9.34315 19 11 19H53C54.6569 19 56 20.3431 56 22V25H8V22Z" fill="white" opacity="0.25"/>
+  </svg>
+);
+
 // Main Dashboard Page
 // Displays an overview of user projects, current tasks, and recent alerts.
 export default function Dashboard() {
@@ -12,7 +25,7 @@ export default function Dashboard() {
   const { currentUser } = useAuth();
   
   // Consume global project and task data from the ProjectContext
-  const { projects, tasks, deleteProject, archiveProject } = useProject();
+  const { projects, tasks, deleteProject, archiveProject, changeTaskStatus } = useProject();
 
   // Local state for managing project deletion confirmation modal
   const [projectToDelete, setProjectToDelete] = useState(null);
@@ -122,22 +135,40 @@ export default function Dashboard() {
 
               {/* Dynamic Project Cards */}
               {activeProjects.length === 0 ? (
-                <div className="col-span-2 bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-dashed border-gray-300 dark:border-[#27272A] p-8 flex flex-col items-center justify-center text-center">
+                <div className="col-span-2 bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-dashed border-gray-300 dark:border-[#27272A] p-6 flex flex-col items-center justify-center text-center">
                   <FolderOpen className="w-8 h-8 text-gray-400 dark:text-white/40 mb-3 opacity-50" />
                   <h3 className="text-[#1D1E1B] dark:text-white/90 font-medium text-sm mb-1">No projects yet</h3>
                   <p className="text-xs text-gray-500 dark:text-white/50">Click to create your first workflow</p>
                 </div>
               ) : (
-                activeProjects.map(project => (
+                activeProjects.map(project => {
+                  const getInitials = (name) => {
+                    if (!name) return '';
+                    const cleanName = name.replace(/^(project\s*proj-|proj-)/i, '').trim();
+                    const words = cleanName.split(/[-_ ]+/).filter(Boolean);
+                    if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+                    return cleanName.substring(0, 2).toUpperCase();
+                  };
+                  return (
                 <div key={project.id} className="relative group project-dashboard-dropdown">
                   <button
                     onClick={() => navigate(`/project/${project.id}/tasks`)}
-                    className="w-full bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-4 shadow-sm transition-all hover:shadow-md hover:border-[#6B905F] dark:border-[#6B905F]/30 text-left flex flex-col items-center justify-center aspect-square group/btn"
+                    className="w-full bg-white dark:bg-[#09090B] rounded-2xl border border-gray-200 dark:border-[#27272A] p-4 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#6B905F]/50 text-left flex flex-col items-center justify-center aspect-square group/btn relative overflow-hidden"
                   >
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 group-hover/btn:scale-110 transition-transform" style={{ backgroundColor: `${project.color}15` }}>
-                      <FolderOpen className="w-5 h-5" style={{ color: project.color }} />
+                    {/* Soft background glow on hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at center, ${project.color || '#6B905F'}15 0%, transparent 70%)` }} />
+                    
+                    {/* Folder Icon - Absolutely Centered */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center group-hover/btn:scale-110 transition-transform duration-300 relative z-10">
+                        <SolidFolderIcon color={project.color || '#6B905F'} />
+                      </div>
                     </div>
-                    <h3 className="text-[#1D1E1B] dark:text-white/90 font-semibold text-xs text-center line-clamp-2 px-2">{project.name}</h3>
+                    
+                    {/* Project Name - Anchored to Bottom */}
+                    <div className="mt-auto w-full relative z-10">
+                      <h3 className="text-[#1D1E1B] dark:text-white/90 font-bold text-sm text-center line-clamp-2 px-1 pb-1">{project.name}</h3>
+                    </div>
                   </button>
                   {project.isCreator && (
                     <button
@@ -176,7 +207,9 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
-              )))}
+              );
+              })
+              )}
 
 
 
@@ -186,9 +219,9 @@ export default function Dashboard() {
 
         {/* Kanban Board Container */}
         <div className="lg:col-span-2 bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-2xl p-4 border border-gray-200 dark:border-[#27272A]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Middle Column: Behind Tasks Widget */}
-            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-[550px]">
               <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Halted</h2>
@@ -207,7 +240,7 @@ export default function Dashboard() {
             </div>
 
             {/* Right Column: In Progress Tasks Widget */}
-            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-[550px]">
               <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <PlayCircle className="w-4 h-4 text-amber-500" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">In Progress</h2>

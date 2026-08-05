@@ -89,9 +89,9 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
             setExpandedProject(expandedProject === project.id ? null : project.id);
           }}
           className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-[#6B905F]/[0.06] dark:hover:bg-white/5 transition-colors group relative"
-          title={!isSidebarExpanded ? project.name : ''}
+          title={project.name}
         >
-          {isSidebarExpanded && <span className="text-[13px] text-[#1D1E1B] font-medium dark:text-white/90 truncate mr-6">{project.name}</span>}
+          {isSidebarExpanded && <span className="text-[13px] text-[#1D1E1B] font-medium dark:text-white/90 truncate mr-6 text-left flex-1">{project.name}</span>}
           {!isSidebarExpanded && <span className="text-base font-semibold text-[#1D1E1B] dark:text-white/90">{project.name.charAt(0)}</span>}
 
           {isSidebarExpanded && (
