@@ -31,6 +31,28 @@ export default function ProjectTasks() {
     return () => window.removeEventListener('click', handleClose);
   }, []);
 
+  // Global cleanup for drag operations to prevent stuck clones
+  useEffect(() => {
+    const handleDragEndGlobal = () => {
+      const clone = document.getElementById('custom-drag-image');
+      if (clone) clone.remove();
+      
+      // Clean up any lingering opacity classes on the original dragged elements
+      document.querySelectorAll('.opacity-20').forEach(el => {
+        if (el.draggable) el.classList.remove('opacity-20');
+      });
+    };
+
+    window.addEventListener('dragend', handleDragEndGlobal);
+    window.addEventListener('drop', handleDragEndGlobal);
+    
+    return () => {
+      window.removeEventListener('dragend', handleDragEndGlobal);
+      window.removeEventListener('drop', handleDragEndGlobal);
+      handleDragEndGlobal(); // cleanup on unmount/page change
+    };
+  }, []);
+
   const handleContextMenu = (e, task) => {
     e.preventDefault();
     setContextMenu({
@@ -91,12 +113,76 @@ export default function ProjectTasks() {
   });
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
+    let outlineColor = '!outline-gray-300';
+    if (colorClass.includes('red')) outlineColor = '!outline-red-400';
+    if (colorClass.includes('amber')) outlineColor = '!outline-amber-400';
+    if (colorClass.includes('green')) outlineColor = '!outline-green-400';
+    if (colorClass.includes('blue')) outlineColor = '!outline-blue-400';
+    if (colorClass.includes('purple')) outlineColor = '!outline-purple-400';
+    if (colorClass.includes('sky')) outlineColor = '!outline-sky-400';
+
     return (
       <div 
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData('taskId', task.id);
           e.dataTransfer.effectAllowed = 'move';
+          
+          // Hide native drag image
+          const emptyImage = new Image();
+          emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+          e.dataTransfer.setDragImage(emptyImage, 0, 0);
+          
+          // Remove any existing clone
+          const existingClone = document.getElementById('custom-drag-image');
+          if (existingClone) existingClone.remove();
+          
+          // Create custom drag image clone
+          const clone = e.currentTarget.cloneNode(true);
+          const rect = e.currentTarget.getBoundingClientRect();
+          clone.id = 'custom-drag-image';
+          clone.style.width = `${rect.width}px`;
+          clone.style.height = `${rect.height}px`;
+          clone.style.position = 'fixed';
+          clone.style.pointerEvents = 'none'; // Prevent interfering with drop zones
+          clone.style.zIndex = '999999';
+          clone.style.opacity = '0.9';
+          clone.style.backdropFilter = 'blur(4px)';
+          clone.style.WebkitBackdropFilter = 'blur(4px)';
+          clone.style.margin = '0';
+          clone.style.transform = 'scale(1.02)';
+          clone.style.transition = 'transform 0.1s ease';
+          
+          clone.classList.add('outline', 'outline-[1.5px]', 'outline-offset-1', outlineColor, 'shadow-2xl');
+          clone.classList.remove('opacity-20', 'hover:shadow-md');
+          
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+          clone.dataset.offsetX = offsetX;
+          clone.dataset.offsetY = offsetY;
+          
+          clone.style.left = `${e.clientX - offsetX}px`;
+          clone.style.top = `${e.clientY - offsetY}px`;
+          
+          document.body.appendChild(clone);
+          
+          setTimeout(() => {
+            if (e.target) e.target.classList.add('opacity-20');
+          }, 0);
+        }}
+        onDrag={(e) => {
+          const clone = document.getElementById('custom-drag-image');
+          if (clone && (e.clientX !== 0 || e.clientY !== 0)) {
+            const offsetX = parseFloat(clone.dataset.offsetX);
+            const offsetY = parseFloat(clone.dataset.offsetY);
+            clone.style.left = `${e.clientX - offsetX}px`;
+            clone.style.top = `${e.clientY - offsetY}px`;
+          }
+        }}
+        onDragEnd={(e) => {
+          e.currentTarget.classList.remove('opacity-20');
+          const clone = document.getElementById('custom-drag-image');
+          if (clone) clone.remove();
         }}
         onClick={() => navigate(`/project/${projectId}/workflow`, { state: { selectedTaskId: task.id } })}
         onContextMenu={(e) => handleContextMenu(e, task)}
@@ -146,6 +232,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'stopped');
           }}
@@ -178,6 +266,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'in_progress');
           }}
@@ -210,6 +300,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'todo');
           }}
@@ -242,6 +334,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'completed');
           }}
