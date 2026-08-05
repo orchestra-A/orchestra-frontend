@@ -79,7 +79,8 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
   const [selectedTask, setSelectedTask] = useState(null);
   const [rfInstance, setRfInstance] = useState(null);
 
-
+  const [modifyModalOpen, setModifyModalOpen] = useState(false);
+  const [modifyTaskData, setModifyTaskData] = useState({ id: '', title: '', description: '', assigned_to: '', track: '' });
 
   // Filter States
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -312,8 +313,11 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
     event.preventDefault();
     if (node.type !== 'task') return;
     
-    // Workflow menu restriction: only allow status change if task is assigned to current logged-in user
-    if (!isAssignedToCurrentUser(node.data?.assigned_to, currentUser)) {
+    const isBlueprintTab = location.pathname.includes('/blueprint');
+    const isAssigned = isAssignedToCurrentUser(node.data?.assigned_to, currentUser);
+
+    // Workflow menu restriction: only allow menu if task is assigned to current logged-in user OR we are in the modify tab
+    if (!isAssigned && !isBlueprintTab) {
       return;
     }
 
@@ -321,6 +325,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
       id: node.id,
       top: event.clientY,
       left: event.clientX,
+      isAssigned
     });
   };
 
@@ -579,30 +584,55 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
               className="fixed z-50 bg-[#6B905F] dark:bg-[#6B905F] rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px] text-sm overflow-hidden text-white"
               style={{ top: menu.top, left: menu.left }}
             >
-              <button 
-                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
-                onClick={() => handleStatusChange('todo')}
-              >
-                Set Pending
-              </button>
-              <button 
-                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
-                onClick={() => handleStatusChange('in_progress')}
-              >
-                Set In Progress
-              </button>
-              <button 
-                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
-                onClick={() => handleStatusChange('completed')}
-              >
-                Set Completed
-              </button>
-              <button 
-                className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
-                onClick={() => handleStatusChange('stopped')}
-              >
-                Set Halted
-              </button>
+              {menu.isAssigned && (
+                <>
+                  <button 
+                    className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                    onClick={() => handleStatusChange('todo')}
+                  >
+                    Set Pending
+                  </button>
+                  <button 
+                    className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                    onClick={() => handleStatusChange('in_progress')}
+                  >
+                    Set In Progress
+                  </button>
+                  <button 
+                    className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                    onClick={() => handleStatusChange('completed')}
+                  >
+                    Set Completed
+                  </button>
+                  <button 
+                    className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
+                    onClick={() => handleStatusChange('stopped')}
+                  >
+                    Set Halted
+                  </button>
+                </>
+              )}
+              {location.pathname.includes('/blueprint') && (
+                <button 
+                  className={`w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium ${menu.isAssigned ? 'border-t border-white/20 mt-1 pt-2' : ''}`}
+                  onClick={() => {
+                    const node = nodes.find(n => n.id === menu.id);
+                    if (node) {
+                       setModifyTaskData({
+                          id: node.id,
+                          title: node.data?.title || '',
+                          description: node.data?.description || '',
+                          assigned_to: node.data?.assignee || '',
+                          track: node.data?.track || ''
+                       });
+                       setModifyModalOpen(true);
+                    }
+                    closeMenu();
+                  }}
+                >
+                  Modify Task
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -780,6 +810,83 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                     <div className="text-xs italic text-gray-400 dark:text-gray-500 pl-2 select-none">No dependent tasks</div>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modify Task Modal */}
+        {modifyModalOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-[#F4F1EB] dark:bg-[#18181B] border border-gray-200 dark:border-[#27272A] rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+              <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-[#27272A] bg-white dark:bg-[#09090B]">
+                <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Edit2 className="w-4 h-4 text-[#6B905F]" /> Modify Task
+                </h2>
+                <button onClick={() => setModifyModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="p-4 space-y-4 text-sm text-gray-700 dark:text-gray-300 bg-[#F4F1EB] dark:bg-[#18181B]">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Title</label>
+                  <input 
+                    type="text"
+                    value={modifyTaskData.title}
+                    onChange={(e) => setModifyTaskData({...modifyTaskData, title: e.target.value})}
+                    placeholder="Enter task title"
+                    className="w-full bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] transition-all text-[#1D1E1B] dark:text-white/90"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Description</label>
+                  <textarea 
+                    value={modifyTaskData.description}
+                    onChange={(e) => setModifyTaskData({...modifyTaskData, description: e.target.value})}
+                    placeholder="Enter task description"
+                    className="w-full bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] transition-all min-h-[80px] custom-scrollbar text-[#1D1E1B] dark:text-white/90"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Assigned To</label>
+                  <input 
+                    type="text"
+                    value={modifyTaskData.assigned_to}
+                    onChange={(e) => setModifyTaskData({...modifyTaskData, assigned_to: e.target.value})}
+                    placeholder="e.g. mitaali.23bai10781"
+                    className="w-full bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] transition-all text-[#1D1E1B] dark:text-white/90"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Track</label>
+                  <input 
+                    type="text"
+                    value={modifyTaskData.track}
+                    onChange={(e) => setModifyTaskData({...modifyTaskData, track: e.target.value})}
+                    placeholder="e.g. frontend"
+                    className="w-full bg-white dark:bg-[#09090B] border border-gray-300 dark:border-[#27272A] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] transition-all text-[#1D1E1B] dark:text-white/90"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 p-4 bg-gray-50 dark:bg-[#09090B] border-t border-gray-200 dark:border-[#27272A]">
+                <button 
+                  onClick={() => setModifyModalOpen(false)}
+                  className="px-4 py-2 rounded-md text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    // Endpoint not yet created. Close for now.
+                    console.log("Modify task payload:", modifyTaskData);
+                    setModifyModalOpen(false);
+                  }}
+                  className="px-4 py-2 rounded-md text-sm font-medium text-white bg-[#6B905F] hover:bg-[#5A7A50] transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  Confirm <CheckSquare className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
