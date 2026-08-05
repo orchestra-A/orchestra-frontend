@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bot, Send, X, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Bot, Send, X, MessageSquare, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { useProject } from '../context/ProjectContext';
@@ -79,6 +79,68 @@ export function FloatingAIChat() {
     e.preventDefault();
     setIsResizing(true);
     document.body.style.cursor = 'col-resize';
+  };
+
+  const handleActionClick = (actionObj) => {
+    if (!actionObj) return;
+
+    if (typeof actionObj === 'object') {
+      if (actionObj.type === 'switch_project' && actionObj.project_id) {
+        navigate(`/project/${actionObj.project_id}/workflow`);
+        setIsOpen(false);
+        return;
+      }
+      if (actionObj.type === 'open_url' && actionObj.url) {
+        window.open(actionObj.url, '_blank', 'noopener,noreferrer');
+        setIsOpen(false);
+        return;
+      }
+    }
+
+    let dest = '';
+    let pid = currentProjectId;
+    
+    if (typeof actionObj === 'string') {
+      dest = actionObj.toLowerCase();
+    } else if (typeof actionObj === 'object') {
+      const validDestinations = ['dashboard', 'projects', 'todo', 'calendar', 'archive', 'profile', 'settings', 'workspaces', 'help', 'workflow', 'tasks', 'team', 'activity', 'blueprint'];
+      
+      for (const key of Object.keys(actionObj)) {
+        if (validDestinations.includes(key.toLowerCase())) {
+          dest = key.toLowerCase();
+          break;
+        }
+      }
+      
+      if (!dest) {
+        dest = (actionObj.destination || actionObj.action || actionObj.type || actionObj.name || '').toLowerCase();
+      }
+      if (actionObj.project_id) pid = actionObj.project_id;
+    }
+    
+    if (!dest) return;
+
+    if (dest === 'dashboard') {
+      navigate('/');
+      setIsOpen(false);
+      return;
+    }
+    
+    const globalRoutes = ['projects', 'todo', 'calendar', 'archive', 'profile', 'settings', 'workspaces', 'help'];
+    const projectRoutes = ['workflow', 'tasks', 'team', 'activity'];
+    
+    if (globalRoutes.includes(dest)) {
+      navigate(`/${dest}`);
+      setIsOpen(false);
+    } else if (projectRoutes.includes(dest) && pid) {
+      navigate(`/project/${pid}/${dest}`);
+      setIsOpen(false);
+    } else if (dest === 'blueprint' && pid) {
+      navigate(`/blueprint/${pid}`);
+      setIsOpen(false);
+    } else {
+      console.warn("Unknown routing action or missing project ID:", actionObj);
+    }
   };
 
   const handleSend = async () => {
@@ -246,6 +308,28 @@ export function FloatingAIChat() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Render action rerouting button if any */}
+                    {msg.action && (
+                      <div className="mt-3 pt-3 border-t border-black/5 dark:border-white/5">
+                        <button
+                          onClick={() => handleActionClick(msg.action)}
+                          className="w-full py-2 px-3 bg-[#6B905F]/10 hover:bg-[#6B905F]/20 dark:bg-white/5 dark:hover:bg-white/10 text-[#6B905F] dark:text-white/90 text-[11px] font-bold uppercase tracking-wider rounded-md transition-colors flex items-center justify-between group"
+                        >
+                          <span>
+                            {typeof msg.action === 'string' 
+                              ? `Go to ${msg.action}` 
+                              : msg.action.type === 'switch_project'
+                                ? 'Switch Project'
+                                : msg.action.type === 'open_url'
+                                  ? 'Open Link'
+                                  : `Go to ${Object.keys(msg.action).find(k => k !== 'project_id' && k !== 'type') || msg.action.destination || 'Page'}`
+                            }
+                          </span>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </button>
                       </div>
                     )}
                   </div>
