@@ -37,6 +37,34 @@ const getActionSummary = (event, displayActor) => {
   return event.action_summary.replaceAll(event.actor, displayActor);
 };
 
+
+const getAvatarColor = (name) => {
+  const colors = [
+    { bg: 'bg-[#00B8A9]', ring: 'ring-[#00B8A9]', ringOutline: 'ring-[#00B8A9]/40', shadow: 'shadow-[#00B8A9]/50' },
+    { bg: 'bg-[#F6416C]', ring: 'ring-[#F6416C]', ringOutline: 'ring-[#F6416C]/40', shadow: 'shadow-[#F6416C]/50' },
+    { bg: 'bg-[#FF9A00]', ring: 'ring-[#FF9A00]', ringOutline: 'ring-[#FF9A00]/40', shadow: 'shadow-[#FF9A00]/50' },
+    { bg: 'bg-[#6252FA]', ring: 'ring-[#6252FA]', ringOutline: 'ring-[#6252FA]/40', shadow: 'shadow-[#6252FA]/50' },
+    { bg: 'bg-[#FF6A00]', ring: 'ring-[#FF6A00]', ringOutline: 'ring-[#FF6A00]/40', shadow: 'shadow-[#FF6A00]/50' },
+    { bg: 'bg-[#00B4D8]', ring: 'ring-[#00B4D8]', ringOutline: 'ring-[#00B4D8]/40', shadow: 'shadow-[#00B4D8]/50' },
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const getInitials = (name) => {
+  const parts = name.trim().split(/\s+/);
+  let initials = parts.map(n => n[0]).join('');
+  
+  if (initials.length === 1 && /^[^a-zA-Z0-9]$/.test(initials[0]) && parts[0].length > 1) {
+    initials += parts[0][1];
+  }
+  
+  return initials.toUpperCase().substring(0, 2);
+};
+
 export default function ProjectActivity() {
   const { projectId } = useParams();
   const { projects, allUsers } = useProject();
@@ -110,137 +138,129 @@ export default function ProjectActivity() {
     <div className="w-full h-full flex flex-col pb-12">
       <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Activity</h1>
+        
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Sort Order Segmented Control (Separate from other filters) */}
+          <div className="flex items-center bg-gray-100 dark:bg-[#1E1E22] rounded-lg p-1 border border-gray-200 dark:border-[#27272A]">
+            <button
+              onClick={() => setSortOrder('desc')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                sortOrder === 'desc' 
+                  ? 'bg-white dark:bg-[#27272A] text-gray-800 dark:text-white shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              Newest First
+            </button>
+            <button
+              onClick={() => setSortOrder('asc')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                sortOrder === 'asc' 
+                  ? 'bg-white dark:bg-[#27272A] text-gray-800 dark:text-white shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              Oldest First
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Pill Filters Container */}
+      <div className="flex items-center gap-6 mb-6 p-1 flex-wrap justify-end">
+        {/* Platform Pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {platforms.length > 0 && platforms.map(p => {
+            const isChecked = selectedPlatforms.includes(p);
+            return (
+              <div
+                key={p}
+                onClick={() => {
+                  setSelectedPlatforms(prev =>
+                    isChecked ? prev.filter(item => item !== p) : [...prev, p]
+                  );
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize cursor-pointer select-none transition-all border ${
+                  isChecked
+                    ? 'bg-[#6B905F] text-white border-[#6B905F] shadow-sm'
+                    : 'bg-white dark:bg-[#1E1E22] text-gray-600 dark:text-white/60 border-gray-200 dark:border-[#27272A] hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-[#27272A] dark:hover:text-white/80'
+                }`}
+              >
+                {p}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* User Avatars */}
+        <div className="flex items-center">
+          {users.length > 0 && (
+            <div className="flex items-center -space-x-1">
+              {users.map(u => {
+                const isChecked = selectedUsers.includes(u);
+                const colorObj = getAvatarColor(u);
+                const bgColor = colorObj.bg;
+                const ringOutline = colorObj.ringOutline;
+                
+                return (
+                  <div key={u} className="relative group">
+                    <div
+                      onClick={() => {
+                        setSelectedUsers(prev =>
+                          isChecked ? prev.filter(item => item !== u) : [...prev, u]
+                        );
+                      }}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all ${bgColor} ${isChecked ? `ring-[4px] ${ringOutline} z-10 scale-110` : 'ring-1 ring-white dark:ring-[#09090B] hover:z-10 hover:scale-105'}`}
+                    >
+                      {getInitials(u)}
+                    </div>
+                    
+                    {/* Custom Tooltip */}
+                    <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-bold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap z-50 pointer-events-none">
+                      {u}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-white"></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 relative">
         {isFilterActive && (
           <button
             onClick={() => {
               setSelectedPlatforms([]);
               setSelectedUsers([]);
             }}
-            className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors cursor-pointer bg-red-50 dark:bg-red-950/20 px-2.5 py-1 rounded-full border border-red-100 dark:border-red-950/30"
+            className="absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-semibold transition-all bg-[#E74C3C] text-white hover:bg-[#C0392B] cursor-pointer"
           >
             Clear Filters
           </button>
         )}
-      </div>
-
-      {/* Filters (Outside of the canvas box) */}
-      <div className="flex flex-col gap-3.5 mb-6 p-1 bg-transparent text-[#1D1E1B] dark:text-white/90">
-        
-        {/* Sort Order Radio Buttons */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
-            <Clock className="w-3.5 h-3.5" /> Sort Order:
-          </span>
-          <div className="flex items-center gap-6">
-            <div 
-              onClick={() => setSortOrder('desc')}
-              className="flex items-center gap-2 cursor-pointer select-none group text-xs font-medium text-gray-700 dark:text-white/80"
-            >
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                sortOrder === 'desc' 
-                  ? 'bg-[#6B905F] border-[#6B905F]' 
-                  : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
-              }`}>
-                {sortOrder === 'desc' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-              </div>
-              Newest First
-            </div>
-            <div 
-              onClick={() => setSortOrder('asc')}
-              className="flex items-center gap-2 cursor-pointer select-none group text-xs font-medium text-gray-700 dark:text-white/80"
-            >
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                sortOrder === 'asc' 
-                  ? 'bg-[#6B905F] border-[#6B905F]' 
-                  : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
-              }`}>
-                {sortOrder === 'asc' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-              </div>
-              Oldest First
-            </div>
-          </div>
-        </div>
-
-        {/* Platform Checkbox List */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
-            <Activity className="w-3.5 h-3.5" /> Platforms:
-          </span>
-          <div className="flex items-center gap-4 flex-wrap">
-            {platforms.length > 0 ? (
-              platforms.map(p => {
-                const isChecked = selectedPlatforms.includes(p);
-                return (
-                  <div
-                    key={p}
-                    onClick={() => {
-                      setSelectedPlatforms(prev =>
-                        isChecked ? prev.filter(item => item !== p) : [...prev, p]
-                      );
-                    }}
-                    className="flex items-center gap-2 cursor-pointer select-none group"
-                  >
-                    <div 
-                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                        isChecked 
-                          ? 'bg-[#6B905F] border-[#6B905F]' 
-                          : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
-                      }`}
-                    >
-                      {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                    </div>
-                    <span className="text-xs font-medium capitalize text-gray-700 dark:text-white/80">{p}</span>
-                  </div>
-                );
-              })
-            ) : (
-              <span className="text-xs text-gray-400 italic">No platforms active</span>
-            )}
-          </div>
-        </div>
-
-        {/* User Checkbox List */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
-            <User className="w-3.5 h-3.5" /> Users:
-          </span>
-          <div className="flex items-center gap-4 flex-wrap">
-            {users.length > 0 ? (
-              users.map(u => {
-                const isChecked = selectedUsers.includes(u);
-                return (
-                  <div
-                    key={u}
-                    onClick={() => {
-                      setSelectedUsers(prev =>
-                        isChecked ? prev.filter(item => item !== u) : [...prev, u]
-                      );
-                    }}
-                    className="flex items-center gap-2 cursor-pointer select-none group"
-                  >
-                    <div 
-                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                        isChecked 
-                          ? 'bg-[#6B905F] border-[#6B905F]' 
-                          : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 group-hover:border-gray-400 dark:group-hover:border-gray-500'
-                      }`}
-                    >
-                      {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                    </div>
-                    <span className="text-xs font-medium text-gray-700 dark:text-white/80">{u}</span>
-                  </div>
-                );
-              })
-            ) : (
-              <span className="text-xs text-gray-400 italic">No users active</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto pr-4">
+        <div className="w-full h-full overflow-y-auto pr-4">
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-gray-500">Loading activity feed...</div>
+          <div className="relative border-l-2 border-gray-200 dark:border-[#2B3B26] ml-4 space-y-8 animate-pulse pt-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="relative pl-8">
+                <div className="absolute -left-[18px] top-1 bg-white dark:bg-[#0a100a] p-1 rounded-full border border-gray-200 dark:border-[#2B3B26] shadow-sm">
+                  <div className="w-5 h-5 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                </div>
+                <div className="bg-[#F4F1EB] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] p-4 rounded-xl shadow-sm">
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="w-3/4 h-5 bg-gray-200 dark:bg-gray-800 rounded" />
+                    <div className="w-16 h-4 bg-gray-200 dark:bg-gray-800 rounded mt-1" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="w-16 h-6 bg-gray-200 dark:bg-gray-800 rounded-md" />
+                    <div className="w-24 h-6 bg-gray-200 dark:bg-gray-800 rounded-md" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : displayedEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500 bg-[#F4F1EB] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26]">
             <Activity className="w-8 h-8 mb-4 opacity-50" />
@@ -288,6 +308,7 @@ export default function ProjectActivity() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

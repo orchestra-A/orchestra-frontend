@@ -241,7 +241,11 @@ export function ProjectProvider({ children }) {
           })
         : [];
 
-      setProjects(userAssignedProjects);
+      setProjects(prevProjects => {
+        const backendProjectIds = new Set(userAssignedProjects.map(p => p.id));
+        const missingOptimisticProjects = prevProjects.filter(p => !backendProjectIds.has(p.id));
+        return [...userAssignedProjects, ...missingOptimisticProjects];
+      });
     } catch (error) {
       console.error('Failed to load project data:', error);
     } finally {

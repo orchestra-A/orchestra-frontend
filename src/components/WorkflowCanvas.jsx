@@ -40,16 +40,16 @@ const isAssignedToCurrentUser = (assignedTo, currentUser) => {
 };
 
 const avatarColors = [
-  { bg: 'bg-red-500', ring: 'ring-red-500', shadow: 'shadow-red-500' },
-  { bg: 'bg-green-500', ring: 'ring-green-500', shadow: 'shadow-green-500' },
-  { bg: 'bg-blue-500', ring: 'ring-blue-500', shadow: 'shadow-blue-500' },
-  { bg: 'bg-yellow-500', ring: 'ring-yellow-500', shadow: 'shadow-yellow-500' },
-  { bg: 'bg-purple-500', ring: 'ring-purple-500', shadow: 'shadow-purple-500' },
-  { bg: 'bg-pink-500', ring: 'ring-pink-500', shadow: 'shadow-pink-500' },
-  { bg: 'bg-indigo-500', ring: 'ring-indigo-500', shadow: 'shadow-indigo-500' },
-  { bg: 'bg-teal-500', ring: 'ring-teal-500', shadow: 'shadow-teal-500' },
-  { bg: 'bg-orange-500', ring: 'ring-orange-500', shadow: 'shadow-orange-500' },
-  { bg: 'bg-cyan-500', ring: 'ring-cyan-500', shadow: 'shadow-cyan-500' }
+  { bg: 'bg-red-500', ring: 'ring-red-500', ringOutline: 'ring-red-500/40', shadow: 'shadow-red-500' },
+  { bg: 'bg-green-500', ring: 'ring-green-500', ringOutline: 'ring-green-500/40', shadow: 'shadow-green-500' },
+  { bg: 'bg-blue-500', ring: 'ring-blue-500', ringOutline: 'ring-blue-500/40', shadow: 'shadow-blue-500' },
+  { bg: 'bg-yellow-500', ring: 'ring-yellow-500', ringOutline: 'ring-yellow-500/40', shadow: 'shadow-yellow-500' },
+  { bg: 'bg-purple-500', ring: 'ring-purple-500', ringOutline: 'ring-purple-500/40', shadow: 'shadow-purple-500' },
+  { bg: 'bg-pink-500', ring: 'ring-pink-500', ringOutline: 'ring-pink-500/40', shadow: 'shadow-pink-500' },
+  { bg: 'bg-indigo-500', ring: 'ring-indigo-500', ringOutline: 'ring-indigo-500/40', shadow: 'shadow-indigo-500' },
+  { bg: 'bg-teal-500', ring: 'ring-teal-500', ringOutline: 'ring-teal-500/40', shadow: 'shadow-teal-500' },
+  { bg: 'bg-orange-500', ring: 'ring-orange-500', ringOutline: 'ring-orange-500/40', shadow: 'shadow-orange-500' },
+  { bg: 'bg-cyan-500', ring: 'ring-cyan-500', ringOutline: 'ring-cyan-500/40', shadow: 'shadow-cyan-500' }
 ];
 
 const getAvatarColor = (name) => {
@@ -62,12 +62,14 @@ const getAvatarColor = (name) => {
 };
 
 const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.trim().split(/[\s_-]+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+  const parts = name.trim().split(/\s+/);
+  let initials = parts.map(n => n[0]).join('');
+  
+  if (initials.length === 1 && /^[^a-zA-Z0-9]$/.test(initials[0]) && parts[0].length > 1) {
+    initials += parts[0][1];
   }
-  return name.slice(0, 2).toUpperCase();
+  
+  return initials.toUpperCase().substring(0, 2);
 };
 
 export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = null, title = "" }) {
@@ -408,19 +410,16 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
   return (
     <div className="w-full h-full flex flex-col gap-4">
       {/* Workflow Filters Header area (outside the canvas border box) */}
-      <div className="flex items-start gap-8 bg-transparent text-[#1D1E1B] dark:text-white/90 w-full flex-wrap md:flex-nowrap">
+      <div className="flex items-center justify-between gap-4 bg-transparent text-[#1D1E1B] dark:text-white/90 w-full flex-wrap">
         {title && (
-          <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold whitespace-nowrap pt-1">
+          <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold whitespace-nowrap">
             {title}
           </h1>
         )}
 
-        <div className="flex flex-col gap-2 flex-1">
+        <div className="flex items-center gap-6 flex-wrap justify-end flex-1">
           {/* Member Checkbox List */}
-          <div className="flex items-center gap-4 flex-wrap relative">
-            <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider min-w-[130px] flex items-center gap-1.5 select-none">
-              <User className="w-3.5 h-3.5" /> Filter by Assignee:
-            </span>
+          <div className="flex items-center relative">
             <div className="flex items-center">
               {uniqueMembers.length > 0 ? (
                 <div className="flex items-center -space-x-1">
@@ -439,7 +438,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                               isChecked ? prev.filter(m => m !== member) : [...prev, member]
                             );
                           }}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all ring-1 ring-white dark:ring-[#09090B] ${bgColor} ${isChecked ? `shadow-[0_0_16px_var(--tw-shadow-color)] ${shadowColor} z-10 scale-110` : 'hover:z-10 hover:scale-105'}`}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all ${bgColor} ${isChecked ? `ring-[4px] ${colorObj.ringOutline} z-10 scale-110` : 'ring-1 ring-white dark:ring-[#09090B] hover:z-10 hover:scale-105'}`}
                         >
                           {getInitials(member)}
                         </div>

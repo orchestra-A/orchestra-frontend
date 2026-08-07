@@ -57,6 +57,28 @@ export default function Dashboard() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Global cleanup for drag operations to prevent stuck clones
+  useEffect(() => {
+    const handleDragEndGlobal = () => {
+      const clone = document.getElementById('custom-drag-image');
+      if (clone) clone.remove();
+      
+      // Clean up any lingering opacity classes on the original dragged elements
+      document.querySelectorAll('.opacity-20').forEach(el => {
+        if (el.draggable) el.classList.remove('opacity-20');
+      });
+    };
+
+    window.addEventListener('dragend', handleDragEndGlobal);
+    window.addEventListener('drop', handleDragEndGlobal);
+    
+    return () => {
+      window.removeEventListener('dragend', handleDragEndGlobal);
+      window.removeEventListener('drop', handleDragEndGlobal);
+      handleDragEndGlobal(); // cleanup on unmount/page change
+    };
+  }, []);
+
   const activeProjects = projects.filter(p => !p.is_archived);
 
   // Filter tasks to only those belonging to projects the user is a part of
@@ -78,11 +100,79 @@ export default function Dashboard() {
   });
   const inProgressTasks = filteredTasks.filter(t => getStatus(t) === 'in_progress');
 
-  const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => (
-    <div
-      onClick={() => task.project_id ? navigate(`/project/${task.project_id}/workflow`, { state: { selectedTaskId: task.id } }) : navigate('/todo')}
-      className={`rounded-lg border shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer ${colorClass}`}
-    >
+  const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
+    let outlineColor = '!outline-gray-300';
+    if (colorClass.includes('red')) outlineColor = '!outline-red-400';
+    if (colorClass.includes('amber')) outlineColor = '!outline-amber-400';
+    if (colorClass.includes('green')) outlineColor = '!outline-green-400';
+    if (colorClass.includes('blue')) outlineColor = '!outline-blue-400';
+    if (colorClass.includes('purple')) outlineColor = '!outline-purple-400';
+
+    return (
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData('taskId', task.id);
+          e.dataTransfer.effectAllowed = 'move';
+          
+          // Hide native drag image to avoid OS-level transparency and clipping
+          const emptyImage = new Image();
+          emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+          e.dataTransfer.setDragImage(emptyImage, 0, 0);
+          
+          // Remove any existing clone
+          const existingClone = document.getElementById('custom-drag-image');
+          if (existingClone) existingClone.remove();
+          
+          // Create custom drag image clone
+          const clone = e.currentTarget.cloneNode(true);
+          const rect = e.currentTarget.getBoundingClientRect();
+          clone.id = 'custom-drag-image';
+          clone.style.width = `${rect.width}px`;
+          clone.style.height = `${rect.height}px`;
+          clone.style.position = 'fixed';
+          clone.style.pointerEvents = 'none'; // Prevent interfering with drop zones
+          clone.style.zIndex = '999999';
+          clone.style.opacity = '0.85';
+          clone.style.backdropFilter = 'blur(4px)';
+          clone.style.WebkitBackdropFilter = 'blur(4px)';
+          clone.style.margin = '0';
+          
+          // Add bright solid outline with the same color
+          clone.classList.add('outline', 'outline-[1.5px]', 'outline-offset-1', outlineColor, 'shadow-2xl');
+          clone.classList.remove('opacity-20', 'hover:shadow-md');
+          
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+          clone.dataset.offsetX = offsetX;
+          clone.dataset.offsetY = offsetY;
+          
+          clone.style.left = `${e.clientX - offsetX}px`;
+          clone.style.top = `${e.clientY - offsetY}px`;
+          
+          document.body.appendChild(clone);
+          
+          setTimeout(() => {
+            if (e.target) e.target.classList.add('opacity-20');
+          }, 0);
+        }}
+        onDrag={(e) => {
+          const clone = document.getElementById('custom-drag-image');
+          if (clone && (e.clientX !== 0 || e.clientY !== 0)) {
+            const offsetX = parseFloat(clone.dataset.offsetX);
+            const offsetY = parseFloat(clone.dataset.offsetY);
+            clone.style.left = `${e.clientX - offsetX}px`;
+            clone.style.top = `${e.clientY - offsetY}px`;
+          }
+        }}
+        onDragEnd={(e) => {
+          e.currentTarget.classList.remove('opacity-20');
+          const clone = document.getElementById('custom-drag-image');
+          if (clone) clone.remove();
+        }}
+        onClick={() => task.project_id ? navigate(`/project/${task.project_id}/workflow`, { state: { selectedTaskId: task.id } }) : navigate('/todo')}
+        className={`rounded-lg border shadow-sm p-3 transition-shadow cursor-pointer ${colorClass} ${task.isUpdating ? 'animate-pulse pointer-events-none opacity-80' : 'hover:shadow-md'}`}
+      >
       <div className="flex justify-between items-start mb-2">
         <h3 className={`font-semibold ${textClass} text-sm leading-snug`}>{task.title}</h3>
       </div>
@@ -98,6 +188,7 @@ export default function Dashboard() {
       </div>
     </div>
   );
+};
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -112,7 +203,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 pb-4">
 
         {/* Left Column: Projects Overview */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 min-h-0">
           {/* Active Projects Stat Box */}
           <div 
             onClick={() => navigate('/todo')}
@@ -129,9 +220,9 @@ export default function Dashboard() {
           </div>
 
           {/* Individual Projects Grid */}
-          <div className="flex-1">
-            <h2 className="text-[#1D1E1B] dark:text-white/90 font-bold mb-3 text-sm">Your Projects</h2>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="flex-1 min-h-0 flex flex-col">
+            <h2 className="text-[#1D1E1B] dark:text-white/90 font-bold mb-3 text-sm shrink-0">Your Projects</h2>
+            <div className="grid grid-cols-3 gap-3 auto-rows-max overflow-y-auto flex-1 pr-2 pb-2">
 
               {/* Dynamic Project Cards */}
               {activeProjects.length === 0 ? (
@@ -153,21 +244,21 @@ export default function Dashboard() {
                 <div key={project.id} className="relative group project-dashboard-dropdown">
                   <button
                     onClick={() => navigate(`/project/${project.id}/tasks`)}
-                    className="w-full bg-white dark:bg-[#09090B] rounded-2xl border border-gray-200 dark:border-[#27272A] p-4 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#6B905F]/50 text-left flex flex-col items-center justify-center aspect-square group/btn relative overflow-hidden"
+                    className="w-full h-[140px] bg-white dark:bg-[#09090B] rounded-2xl border border-gray-200 dark:border-[#27272A] p-2 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#6B905F]/50 text-left flex flex-col items-center justify-center group/btn relative overflow-hidden"
                   >
                     {/* Soft background glow on hover */}
                     <div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at center, ${project.color || '#6B905F'}15 0%, transparent 70%)` }} />
                     
                     {/* Folder Icon - Absolutely Centered */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center group-hover/btn:scale-110 transition-transform duration-300 relative z-10">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-4">
+                      <div className="w-14 h-14 flex items-center justify-center group-hover/btn:scale-110 transition-transform duration-300 relative z-10">
                         <SolidFolderIcon color={project.color || '#6B905F'} />
                       </div>
                     </div>
                     
                     {/* Project Name - Anchored to Bottom */}
                     <div className="mt-auto w-full relative z-10">
-                      <h3 className="text-[#1D1E1B] dark:text-white/90 font-bold text-sm text-center line-clamp-2 px-1 pb-1">{project.name}</h3>
+                      <h3 className="text-[#1D1E1B] dark:text-white/90 font-bold text-xs text-center line-clamp-2 px-1 pb-1">{project.name}</h3>
                     </div>
                   </button>
                   {project.isCreator && (
@@ -227,7 +318,17 @@ export default function Dashboard() {
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Halted</h2>
                 <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{haltedTasks.length}</span>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              <div 
+                className="flex-1 overflow-y-auto p-3 space-y-3"
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  document.getElementById('custom-drag-image')?.remove();
+                  document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
+                  const taskId = e.dataTransfer.getData('taskId');
+                  if (taskId) changeTaskStatus(taskId, 'stopped');
+                }}
+              >
                 {haltedTasks.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center opacity-70 py-8">
                     <AlertCircle className="w-8 h-8 text-gray-400 dark:text-[#27272A] mb-2" />
@@ -246,7 +347,17 @@ export default function Dashboard() {
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">In Progress</h2>
                 <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{inProgressTasks.length}</span>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              <div 
+                className="flex-1 overflow-y-auto p-3 space-y-3"
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  document.getElementById('custom-drag-image')?.remove();
+                  document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
+                  const taskId = e.dataTransfer.getData('taskId');
+                  if (taskId) changeTaskStatus(taskId, 'in_progress');
+                }}
+              >
                 {inProgressTasks.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center opacity-70 py-8">
                     <PlayCircle className="w-8 h-8 text-gray-400 dark:text-[#27272A] mb-2" />
