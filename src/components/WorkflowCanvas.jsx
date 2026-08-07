@@ -89,7 +89,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
 
-  const { tasks: globalTasks, changeTaskStatus } = useProject();
+  const { tasks: globalTasks, changeTaskStatus, refreshData } = useProject();
   const { currentUser } = useAuth();
   const tasks = tasksOverride || globalTasks;
 
@@ -614,14 +614,14 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                 <button
                   className={`w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium ${menu.isAssigned ? 'border-t border-white/20 mt-1 pt-2' : ''}`}
                   onClick={() => {
-                    const node = nodes.find(n => n.id === menu.id);
-                    if (node) {
+                    const originalTask = projectTasks.find(t => t.id === menu.id);
+                    if (originalTask) {
                       setModifyTaskData({
-                        id: node.id,
-                        title: node.data?.title || '',
-                        description: node.data?.description || '',
-                        assigned_to: node.data?.assignee || '',
-                        track: node.data?.track || ''
+                        id: originalTask.id,
+                        title: originalTask.title || '',
+                        description: originalTask.description || '',
+                        assigned_to: originalTask.assigned_to || '',
+                        track: originalTask.track || ''
                       });
                       setModifyModalOpen(true);
                     }
@@ -872,10 +872,42 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    // Endpoint not yet created. Close for now.
-                    console.log("Modify task payload:", modifyTaskData);
-                    setModifyModalOpen(false);
+                  onClick={async () => {
+                    try {
+                      // Find the original node to ensure we send preexisting data for any empty fields
+                      const originalNode = nodes.find(n => n.id === modifyTaskData.id);
+                      const originalData = originalNode ? originalNode.data : {};
+
+                      const finalPayload = {
+                        title: modifyTaskData.title || originalData.title || '',
+                        description: modifyTaskData.description || originalData.description || '',
+                        assigned_to: modifyTaskData.assigned_to || originalData.assignee || '',
+                        track: modifyTaskData.track || originalData.track || ''
+                      };
+
+                      // Close the modal immediately
+                      setModifyModalOpen(false);
+
+                      // Send to backend
+                      const response = await fetch(`https://orchestra-backend-30fy.onrender.com/tasks/${modifyTaskData.id}/assign`, {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(finalPayload)
+                      });
+
+                      if (response.ok) {
+                        // Refresh the global project context seamlessly instead of reloading the page
+                        if (refreshData) {
+                          await refreshData();
+                        }
+                      } else {
+                         console.error("Failed to modify task on the server:", await response.text());
+                      }
+                    } catch (err) {
+                      console.error("Error modifying task:", err);
+                    }
                   }}
                   className="px-4 py-2 rounded-md text-sm font-medium text-white bg-[#6B905F] hover:bg-[#5A7A50] transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
                 >
