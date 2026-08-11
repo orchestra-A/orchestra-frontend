@@ -7,15 +7,11 @@ export function TaskNode({ data }) {
     switch (status?.toLowerCase()) {
       case 'completed': 
         return { header: '#22c55e', body: '#dcfce7', text: '#166534' }; // Green
-      case 'stopped': 
-      case 'paused': 
-      case 'error':
+      case 'blocked': 
         return { header: '#ef4444', body: '#fde8e8', text: '#991b1b' }; // Red
       case 'in_progress': 
-      case 'ongoing': 
         return { header: '#f59e0b', body: '#fef3c7', text: '#92400e' }; // Yellow
-      case 'todo': 
-      case 'pending': 
+      case 'upcoming': 
       default: 
         return { header: '#0ea5e9', body: '#e0f2fe', text: '#075985' }; // Blue
     }
