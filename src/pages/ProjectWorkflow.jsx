@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useOutletContext } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { WorkflowCanvas } from '../components/WorkflowCanvas';
 
 export default function ProjectWorkflow() {
   const { projectId } = useParams();
+  const { isLoading } = useOutletContext() || {};
   const { projects } = useProject();
 
   const decodedId = decodeURIComponent(projectId || "").trim();
@@ -13,7 +14,7 @@ export default function ProjectWorkflow() {
   return (
     <div className="w-full h-full overflow-hidden flex flex-col">
       <div className="flex-1 min-h-0 relative">
-        <WorkflowCanvas projectId={projectId} title={`${projectName} - Workflow`} />
+        <WorkflowCanvas projectId={projectId} title={`${projectName} - Workflow`} isLoading={isLoading} />
       </div>
     </div>
   );

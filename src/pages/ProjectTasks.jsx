@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AlertCircle, PlayCircle, CalendarClock, CheckCircle2, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 import { X } from 'lucide-react';
@@ -11,7 +11,8 @@ export default function ProjectTasks() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { projects, tasks, changeTaskStatus } = useProject();
+  const { isLoading } = useOutletContext() || {};
+  const { projects, tasks, changeTaskStatus, loading } = useProject();
   const { currentUser } = useAuth();
   const [contextMenu, setContextMenu] = useState(null);
   
@@ -29,6 +30,28 @@ export default function ProjectTasks() {
     const handleClose = () => setContextMenu(null);
     window.addEventListener('click', handleClose);
     return () => window.removeEventListener('click', handleClose);
+  }, []);
+
+  // Global cleanup for drag operations to prevent stuck clones
+  useEffect(() => {
+    const handleDragEndGlobal = () => {
+      const clone = document.getElementById('custom-drag-image');
+      if (clone) clone.remove();
+      
+      // Clean up any lingering opacity classes on the original dragged elements
+      document.querySelectorAll('.opacity-20').forEach(el => {
+        if (el.draggable) el.classList.remove('opacity-20');
+      });
+    };
+
+    window.addEventListener('dragend', handleDragEndGlobal);
+    window.addEventListener('drop', handleDragEndGlobal);
+    
+    return () => {
+      window.removeEventListener('dragend', handleDragEndGlobal);
+      window.removeEventListener('drop', handleDragEndGlobal);
+      handleDragEndGlobal(); // cleanup on unmount/page change
+    };
   }, []);
 
   const handleContextMenu = (e, task) => {
@@ -91,12 +114,76 @@ export default function ProjectTasks() {
   });
 
   const TaskCard = ({ task, colorClass, textClass = "text-[#1D1E1B]" }) => {
+    let outlineColor = '!outline-gray-300';
+    if (colorClass.includes('red')) outlineColor = '!outline-red-400';
+    if (colorClass.includes('amber')) outlineColor = '!outline-amber-400';
+    if (colorClass.includes('green')) outlineColor = '!outline-green-400';
+    if (colorClass.includes('blue')) outlineColor = '!outline-blue-400';
+    if (colorClass.includes('purple')) outlineColor = '!outline-purple-400';
+    if (colorClass.includes('sky')) outlineColor = '!outline-sky-400';
+
     return (
       <div 
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData('taskId', task.id);
           e.dataTransfer.effectAllowed = 'move';
+          
+          // Hide native drag image
+          const emptyImage = new Image();
+          emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+          e.dataTransfer.setDragImage(emptyImage, 0, 0);
+          
+          // Remove any existing clone
+          const existingClone = document.getElementById('custom-drag-image');
+          if (existingClone) existingClone.remove();
+          
+          // Create custom drag image clone
+          const clone = e.currentTarget.cloneNode(true);
+          const rect = e.currentTarget.getBoundingClientRect();
+          clone.id = 'custom-drag-image';
+          clone.style.width = `${rect.width}px`;
+          clone.style.height = `${rect.height}px`;
+          clone.style.position = 'fixed';
+          clone.style.pointerEvents = 'none'; // Prevent interfering with drop zones
+          clone.style.zIndex = '999999';
+          clone.style.opacity = '0.9';
+          clone.style.backdropFilter = 'blur(4px)';
+          clone.style.WebkitBackdropFilter = 'blur(4px)';
+          clone.style.margin = '0';
+          clone.style.transform = 'scale(1.02)';
+          clone.style.transition = 'transform 0.1s ease';
+          
+          clone.classList.add('outline', 'outline-[1.5px]', 'outline-offset-1', outlineColor, 'shadow-2xl');
+          clone.classList.remove('opacity-20', 'hover:shadow-md');
+          
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+          clone.dataset.offsetX = offsetX;
+          clone.dataset.offsetY = offsetY;
+          
+          clone.style.left = `${e.clientX - offsetX}px`;
+          clone.style.top = `${e.clientY - offsetY}px`;
+          
+          document.body.appendChild(clone);
+          
+          setTimeout(() => {
+            if (e.target) e.target.classList.add('opacity-20');
+          }, 0);
+        }}
+        onDrag={(e) => {
+          const clone = document.getElementById('custom-drag-image');
+          if (clone && (e.clientX !== 0 || e.clientY !== 0)) {
+            const offsetX = parseFloat(clone.dataset.offsetX);
+            const offsetY = parseFloat(clone.dataset.offsetY);
+            clone.style.left = `${e.clientX - offsetX}px`;
+            clone.style.top = `${e.clientY - offsetY}px`;
+          }
+        }}
+        onDragEnd={(e) => {
+          e.currentTarget.classList.remove('opacity-20');
+          const clone = document.getElementById('custom-drag-image');
+          if (clone) clone.remove();
         }}
         onClick={() => navigate(`/project/${projectId}/workflow`, { state: { selectedTaskId: task.id } })}
         onContextMenu={(e) => handleContextMenu(e, task)}
@@ -118,6 +205,103 @@ export default function ProjectTasks() {
       </div>
     );
   };
+
+  if (loading || isLoading) {
+    return (
+      <div className="w-full h-full flex flex-col animate-pulse">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-8 w-64 bg-gray-200 dark:bg-[#27272A] rounded mb-2"></div>
+          </div>
+          <div className="h-10 w-32 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+        </div>
+
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 overflow-hidden pb-6">
+          
+          {/* Halted Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-red-400/50"></div>
+              <div className="h-4 w-16 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-red-100 border-red-200 dark:bg-red-950/20 dark:border-red-900/30">
+                  <div className="h-4 w-3/4 bg-red-200 dark:bg-red-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-red-200 dark:bg-red-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-red-200 dark:bg-red-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* In Progress Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-amber-400/50"></div>
+              <div className="h-4 w-20 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-amber-100 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30">
+                  <div className="h-4 w-3/4 bg-amber-200 dark:bg-amber-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-amber-200 dark:bg-amber-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-amber-200 dark:bg-amber-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Upcoming Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-sky-400/50"></div>
+              <div className="h-4 w-20 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-sky-100 border-sky-200 dark:bg-sky-950/20 dark:border-sky-900/30">
+                  <div className="h-4 w-3/4 bg-sky-200 dark:bg-sky-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-sky-200 dark:bg-sky-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-sky-200 dark:bg-sky-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Completed Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-emerald-400/50"></div>
+              <div className="h-4 w-20 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-emerald-100 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/30">
+                  <div className="h-4 w-3/4 bg-emerald-200 dark:bg-emerald-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-emerald-200 dark:bg-emerald-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-emerald-200 dark:bg-emerald-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -146,6 +330,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'stopped');
           }}
@@ -178,6 +364,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'in_progress');
           }}
@@ -210,6 +398,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'todo');
           }}
@@ -242,6 +432,8 @@ export default function ProjectTasks() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
+            document.getElementById('custom-drag-image')?.remove();
+            document.querySelectorAll('.opacity-20').forEach(el => el.classList.remove('opacity-20'));
             const taskId = e.dataTransfer.getData('taskId');
             if (taskId) changeTaskStatus(taskId, 'completed');
           }}

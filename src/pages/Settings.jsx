@@ -30,7 +30,6 @@ export default function Settings() {
 
   const tabs = [
     { id: 'account', label: 'Account', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'appearance', label: 'Appearance', icon: Palette },
   ];
 
@@ -78,37 +77,6 @@ export default function Settings() {
           </div>
         );
       
-      case 'notifications':
-        return (
-          <div className="w-full">
-            <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Notifications</h1>
-
-            <div className="space-y-6">
-              <div className="flex items-center justify-between max-w-md p-5 border border-gray-200 dark:border-[#27272A] rounded-lg bg-[#F4F1EB] dark:bg-[#18181B] shadow-sm">
-                <div>
-                  <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm mb-1">Email Notifications</h3>
-                  <p className="text-xs text-gray-500 dark:text-white/50">Receive emails about your account activity.</p>
-                </div>
-                <div className="w-11 h-6 bg-[#6B905F] dark:bg-[#6B905F] rounded-full relative cursor-pointer transition-colors duration-200 ease-in-out">
-                  <div className="w-4 h-4 bg-[#F4F1EB] rounded-full absolute right-1 top-1 shadow-sm transition-transform duration-200 ease-in-out"></div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between max-w-md p-5 border border-gray-200 dark:border-[#27272A] rounded-lg bg-[#F4F1EB] dark:bg-[#18181B] shadow-sm">
-                <div>
-                  <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm mb-1">Marketing Emails</h3>
-                  <p className="text-xs text-gray-500 dark:text-white/50">Receive emails about new products, features, and more.</p>
-                </div>
-                <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full relative cursor-pointer transition-colors duration-200 ease-in-out">
-                  <div className="w-4 h-4 bg-[#F4F1EB] rounded-full absolute left-1 top-1 shadow-sm border border-gray-100 dark:border-gray-600 transition-transform duration-200 ease-in-out"></div>
-                </div>
-              </div>
-              <button className="px-6 py-2.5 bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white font-medium rounded-lg transition-colors text-sm shadow-sm mt-4">
-                Save Changes
-              </button>
-            </div>
-          </div>
-        );
-
       case 'appearance':
         return (
           <div className="w-full">

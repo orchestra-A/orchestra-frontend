@@ -127,8 +127,6 @@ export default function Profile() {
     { id: 'details', label: 'Profile Details', icon: Contact },
     { id: 'skills', label: 'Skills', icon: Code },
     { id: 'platform', label: 'Workspaces', icon: LayoutGrid },
-    { id: 'visibility', label: 'Visibility', icon: Lock },
-    { id: 'accounts', label: 'Accounts', icon: Fingerprint },
   ];
 
   const renderContent = () => {
@@ -337,58 +335,7 @@ export default function Profile() {
           </div>
         );
 
-      // ── Visibility ────────────────────────────────────────────────────────
-      case 'visibility':
-        return (
-          <div className="w-full">
-            <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Visibility</h1>
-            <div className="space-y-6">
-              {[
-                { label: 'Public Profile', desc: 'Allow anyone to view your profile', state: isPublic, toggle: () => setIsPublic(!isPublic) },
-                { label: 'Show Email', desc: 'Display your email address to others', state: showEmail, toggle: () => setShowEmail(!showEmail) },
-              ].map(({ label, desc, state, toggle }) => (
-                <div key={label} className="flex items-center justify-between max-w-md p-5 border border-gray-200 dark:border-[#27272A] rounded-lg bg-[#F4F1EB] dark:bg-[#18181B] shadow-sm">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm mb-1">{label}</h3>
-                    <p className="text-xs text-gray-500 dark:text-white/50">{desc}</p>
-                  </div>
-                  <div
-                    onClick={toggle}
-                    className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-200 ease-in-out ${state ? 'bg-[#6B905F]' : 'bg-gray-200'}`}
-                  >
-                    <div className={`w-4 h-4 bg-[#F4F1EB] rounded-full absolute left-1 top-1 shadow-sm transition-transform duration-200 ease-in-out ${state ? 'translate-x-5' : 'translate-x-0 border border-gray-100'}`} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
 
-      // ── Accounts ──────────────────────────────────────────────────────────
-      case 'accounts':
-        return (
-          <div className="w-full">
-            <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Account Settings</h1>
-            <div className="space-y-6">
-              <div className="bg-[#F4F1EB] dark:bg-[#18181B] border border-gray-200 dark:border-[#27272A] p-6 rounded-xl shadow-sm">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white/90 mb-2">Password</h2>
-                <p className="text-sm text-gray-500 dark:text-white/50">
-                  Your account is authenticated via OAuth ({currentUser?.platforms_connected?.join(', ') || 'social login'}).
-                  Passwords are managed by your connected provider.
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200 dark:border-[#27272A]">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white/90 mb-2">Account Info</h2>
-                <div className="space-y-2 text-sm text-gray-600 dark:text-white/60">
-                  <p><span className="font-medium">User ID:</span> {currentUser?.user_id || '—'}</p>
-                  <p><span className="font-medium">Username:</span> {currentUser?.username || '—'}</p>
-                  <p><span className="font-medium">Email:</span> {currentUser?.email || '—'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
 
       default:
         return null;

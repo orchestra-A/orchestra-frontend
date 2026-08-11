@@ -1,6 +1,6 @@
 import { UserPlus, MessageCircle, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 
 // Inline GitHub SVG (lucide-react Github export not available in this version)
@@ -32,7 +32,8 @@ function PlatformBadge({ platform }) {
 export default function ProjectTeam() {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { projects, allUsers } = useProject();
+  const { isLoading } = useOutletContext() || {};
+  const { projects, allUsers, loading } = useProject();
 
   const decodedId = decodeURIComponent(projectId || '').trim();
   const project = projects.find((p) => p.id.trim() === decodedId || p.id === projectId);
@@ -46,6 +47,46 @@ export default function ProjectTeam() {
     'bg-blue-500/20 text-blue-700 dark:text-blue-300',
     'bg-amber-500/20 text-amber-700 dark:text-amber-300',
   ];
+
+  if (loading || isLoading) {
+    return (
+      <div className="w-full h-full flex flex-col animate-pulse">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-8 w-64 bg-gray-200 dark:bg-[#27272A] rounded mb-2"></div>
+            <div className="h-4 w-24 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+          </div>
+          <div className="h-10 w-32 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i, idx) => {
+            const avatarColors = [
+              'bg-[#6B905F]/20 dark:bg-[#6B905F]/30',
+              'bg-purple-500/20',
+              'bg-blue-500/20',
+              'bg-amber-500/20',
+            ];
+            const colorClass = avatarColors[idx % avatarColors.length];
+            return (
+              <div key={i} className="bg-[#F4F1EB] dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-xl p-5 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-full flex-shrink-0 ${colorClass}`}></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="h-4 w-3/4 bg-gray-300 dark:bg-[#27272A] rounded mb-2"></div>
+                    <div className="h-3 w-1/2 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <div className="h-5 w-16 bg-[#6B905F]/15 border border-[#6B905F]/25 rounded-full"></div>
+                  <div className="h-5 w-20 bg-[#6B905F]/15 border border-[#6B905F]/25 rounded-full"></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col">
