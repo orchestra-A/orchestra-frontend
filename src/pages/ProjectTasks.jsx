@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AlertCircle, PlayCircle, CalendarClock, CheckCircle2, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 import { X } from 'lucide-react';
@@ -11,7 +11,8 @@ export default function ProjectTasks() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { projects, tasks, changeTaskStatus } = useProject();
+  const { isLoading } = useOutletContext() || {};
+  const { projects, tasks, changeTaskStatus, loading } = useProject();
   const { currentUser } = useAuth();
   const [contextMenu, setContextMenu] = useState(null);
   
@@ -204,6 +205,103 @@ export default function ProjectTasks() {
       </div>
     );
   };
+
+  if (loading || isLoading) {
+    return (
+      <div className="w-full h-full flex flex-col animate-pulse">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-8 w-64 bg-gray-200 dark:bg-[#27272A] rounded mb-2"></div>
+          </div>
+          <div className="h-10 w-32 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+        </div>
+
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 overflow-hidden pb-6">
+          
+          {/* Halted Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-red-400/50"></div>
+              <div className="h-4 w-16 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-red-100 border-red-200 dark:bg-red-950/20 dark:border-red-900/30">
+                  <div className="h-4 w-3/4 bg-red-200 dark:bg-red-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-red-200 dark:bg-red-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-red-200 dark:bg-red-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* In Progress Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-amber-400/50"></div>
+              <div className="h-4 w-20 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-amber-100 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30">
+                  <div className="h-4 w-3/4 bg-amber-200 dark:bg-amber-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-amber-200 dark:bg-amber-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-amber-200 dark:bg-amber-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Upcoming Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-sky-400/50"></div>
+              <div className="h-4 w-20 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-sky-100 border-sky-200 dark:bg-sky-950/20 dark:border-sky-900/30">
+                  <div className="h-4 w-3/4 bg-sky-200 dark:bg-sky-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-sky-200 dark:bg-sky-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-sky-200 dark:bg-sky-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Completed Column */}
+          <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+            <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-emerald-400/50"></div>
+              <div className="h-4 w-20 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+              <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-3">
+              {[1, 2, 3].map((task) => (
+                <div key={task} className="rounded-lg border shadow-sm p-3 bg-emerald-100 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/30">
+                  <div className="h-4 w-3/4 bg-emerald-200 dark:bg-emerald-900/40 rounded"></div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="h-4 w-16 bg-emerald-200 dark:bg-emerald-900/40 rounded-full"></div>
+                    <div className="h-3 w-8 bg-emerald-200 dark:bg-emerald-900/40 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col">
