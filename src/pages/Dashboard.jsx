@@ -1,5 +1,5 @@
 import { FolderOpen, AlertCircle, PlayCircle, Clock, Plus, Trash2, X, MoreVertical, Archive } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
@@ -22,10 +22,11 @@ const SolidFolderIcon = ({ color }) => (
 // Displays an overview of user projects, current tasks, and recent alerts.
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { isLoading } = useOutletContext() || {};
   const { currentUser } = useAuth();
   
   // Consume global project and task data from the ProjectContext
-  const { projects, tasks, deleteProject, archiveProject, changeTaskStatus } = useProject();
+  const { projects, tasks, deleteProject, archiveProject, changeTaskStatus, loading } = useProject();
 
   // Local state for managing project deletion confirmation modal
   const [projectToDelete, setProjectToDelete] = useState(null);
@@ -190,6 +191,103 @@ export default function Dashboard() {
   );
 };
 
+  if (loading || isLoading) {
+    return (
+      <div className="w-full h-full flex flex-col animate-pulse">
+        {/* Welcome Section */}
+        <div className="mb-4 shrink-0">
+          <div className="h-7 w-48 bg-gray-200 dark:bg-[#27272A] rounded mb-0.5 mt-0.5"></div>
+        </div>
+
+        {/* Main Grid: 3 columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 pb-4">
+          
+          {/* Left Column: Projects Overview */}
+          <div className="flex flex-col gap-4 min-h-0">
+            {/* Active Projects Stat Box */}
+            <div className="bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-5 shadow-sm flex flex-col justify-center">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-5 w-24 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+                <div className="w-10 h-10 bg-[#6B905F]/20 dark:bg-[#6B905F]/10 rounded-lg"></div>
+              </div>
+              <div className="h-12 w-16 bg-gray-300 dark:bg-[#27272A] rounded mb-2"></div>
+              <div className="h-4 w-32 bg-gray-200 dark:bg-[#27272A] rounded mt-2"></div>
+            </div>
+
+            {/* Individual Projects Grid */}
+            <div className="flex-1 min-h-0 flex flex-col">
+              <div className="h-5 w-24 bg-gray-300 dark:bg-[#27272A] rounded mb-3 mt-0.5 shrink-0"></div>
+              <div className="grid grid-cols-3 gap-3 auto-rows-max overflow-y-auto flex-1 pr-2 pb-2">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="w-full h-[140px] bg-white dark:bg-[#09090B] rounded-2xl border border-gray-200 dark:border-[#27272A] p-2 shadow-sm flex flex-col items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-4">
+                      <div className="w-12 h-12 bg-[#6B905F]/20 dark:bg-[#6B905F]/10 rounded-md"></div>
+                    </div>
+                    <div className="mt-auto w-full relative z-10 flex justify-center px-1 pb-1">
+                      <div className="h-3 w-16 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (Tasks) Skeleton */}
+          <div className="lg:col-span-2 bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-2xl p-4 border border-gray-200 dark:border-[#27272A] flex flex-col min-h-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
+              
+              {/* Middle Column (Halted) */}
+              <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+                <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
+                  <div className="w-4 h-4 rounded-full bg-red-400/50"></div>
+                  <div className="h-4 w-16 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+                  <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                  {[1, 2].map(task => (
+                    <div key={task} className="rounded-lg border shadow-sm p-3 bg-red-100 border-red-200 dark:bg-red-950/20 dark:border-red-900/30">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="h-4 w-3/4 bg-red-200 dark:bg-red-900/40 rounded"></div>
+                      </div>
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="h-4 w-16 bg-gray-200 dark:bg-[#3F3F46] rounded-full"></div>
+                        <div className="h-3 w-8 bg-red-200 dark:bg-red-900/40 rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column (In Progress) */}
+              <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
+                <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
+                  <div className="w-4 h-4 rounded-full bg-amber-400/50"></div>
+                  <div className="h-4 w-20 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+                  <div className="ml-auto w-6 h-4 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                  {[1, 2, 3].map(task => (
+                    <div key={task} className="rounded-lg border shadow-sm p-3 bg-amber-100 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="h-4 w-3/4 bg-amber-200 dark:bg-amber-900/40 rounded"></div>
+                      </div>
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="h-4 w-16 bg-gray-200 dark:bg-[#3F3F46] rounded-full"></div>
+                        <div className="h-3 w-8 bg-amber-200 dark:bg-amber-900/40 rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* Welcome Section */}
@@ -309,10 +407,10 @@ export default function Dashboard() {
         </div>
 
         {/* Kanban Board Container */}
-        <div className="lg:col-span-2 bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-2xl p-4 border border-gray-200 dark:border-[#27272A]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="lg:col-span-2 bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-2xl p-4 border border-gray-200 dark:border-[#27272A] flex flex-col min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
             {/* Middle Column: Behind Tasks Widget */}
-            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-[550px]">
+            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
               <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Halted</h2>
@@ -341,7 +439,7 @@ export default function Dashboard() {
             </div>
 
             {/* Right Column: In Progress Tasks Widget */}
-            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-[550px]">
+            <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
               <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <PlayCircle className="w-4 h-4 text-amber-500" />
                 <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">In Progress</h2>

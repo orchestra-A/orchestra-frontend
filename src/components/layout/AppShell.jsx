@@ -6,23 +6,7 @@ import { FloatingAIChat } from '../FloatingAIChat';
 import { useProject } from '../../context/ProjectContext';
 import { Loader2 } from 'lucide-react';
 
-function PageSkeleton() {
-  return (
-    <div className="flex flex-col gap-6 w-full h-full p-2 animate-pulse">
-      {/* Top Header/Title area */}
-      <div className="w-48 h-8 bg-gray-200 dark:bg-[#27272A] rounded-lg"></div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
-        <div className="col-span-1 lg:col-span-1 flex flex-col gap-4">
-          <div className="w-full h-32 bg-gray-200 dark:bg-[#27272A] rounded-xl"></div>
-          <div className="w-full h-64 bg-gray-200 dark:bg-[#27272A] rounded-xl"></div>
-        </div>
-        <div className="col-span-1 lg:col-span-2 bg-gray-200 dark:bg-[#27272A] rounded-xl h-[500px]"></div>
-      </div>
-    </div>
-  );
-}
 
 // Main layout wrapper for the authenticated application.
 // Handles the positioning of the Sidebar, Header, and the main scrollable content area (<Outlet />).
@@ -71,7 +55,7 @@ export function AppShell() {
 
         <div className="flex-1 flex overflow-hidden relative">
           <main key={location.pathname} className="flex-1 p-4 overflow-auto animate-fade-in-up">
-            {isLoading ? <PageSkeleton /> : <Outlet />}
+            <Outlet context={{ isLoading }} />
           </main>
 
           {showChat && <FloatingAIChat />}

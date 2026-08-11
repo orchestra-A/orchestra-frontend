@@ -1,12 +1,13 @@
 import { Archive as ArchiveIcon, FolderOpen, RefreshCw, Trash2 } from 'lucide-react';
 import { useProject } from '../context/ProjectContext';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 export default function Archive() {
-  const { projects, archiveProject, deleteProject } = useProject();
+  const { projects, archiveProject, deleteProject, loading } = useProject();
   const archivedProjects = projects.filter(p => p.is_archived);
   const navigate = useNavigate();
+  const { isLoading } = useOutletContext() || {};
   
   const [projectToDelete, setProjectToDelete] = useState(null);
 
@@ -16,6 +17,43 @@ export default function Archive() {
       setProjectToDelete(null);
     }
   };
+
+  if (loading || isLoading) {
+    return (
+      <div className="w-full h-full p-8 overflow-y-auto animate-pulse">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-12 h-12 bg-gray-200 dark:bg-[#1E1E22] rounded-full flex items-center justify-center"></div>
+          <div>
+            <div className="h-7 w-32 bg-gray-200 dark:bg-[#27272A] rounded mb-1"></div>
+            <div className="h-4 w-48 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i, idx) => {
+            const folderColors = [
+              'bg-[#6B905F]/15',
+              'bg-blue-500/15',
+              'bg-purple-500/15',
+              'bg-amber-500/15'
+            ];
+            const colorClass = folderColors[idx % folderColors.length];
+            return (
+              <div key={i} className="bg-[#F4F1EB] dark:bg-[#09090B] rounded-lg border border-gray-200 dark:border-[#27272A] p-5 flex flex-col h-[130px]">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}></div>
+                  <div className="h-4 w-3/4 bg-gray-300 dark:bg-[#27272A] rounded"></div>
+                </div>
+                <div className="mt-auto flex gap-2">
+                  <div className="flex-1 h-[28px] bg-gray-300 dark:bg-[#27272A] rounded-md"></div>
+                  <div className="w-[36px] h-[28px] bg-gray-300 dark:bg-[#27272A] rounded-md"></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full p-8 overflow-y-auto">

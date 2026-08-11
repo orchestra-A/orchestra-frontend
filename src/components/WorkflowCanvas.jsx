@@ -39,40 +39,19 @@ const isAssignedToCurrentUser = (assignedTo, currentUser) => {
   );
 };
 
-const avatarColors = [
-  { bg: 'bg-red-500', ring: 'ring-red-500', ringOutline: 'ring-red-500/40', shadow: 'shadow-red-500' },
-  { bg: 'bg-green-500', ring: 'ring-green-500', ringOutline: 'ring-green-500/40', shadow: 'shadow-green-500' },
-  { bg: 'bg-blue-500', ring: 'ring-blue-500', ringOutline: 'ring-blue-500/40', shadow: 'shadow-blue-500' },
-  { bg: 'bg-yellow-500', ring: 'ring-yellow-500', ringOutline: 'ring-yellow-500/40', shadow: 'shadow-yellow-500' },
-  { bg: 'bg-purple-500', ring: 'ring-purple-500', ringOutline: 'ring-purple-500/40', shadow: 'shadow-purple-500' },
-  { bg: 'bg-pink-500', ring: 'ring-pink-500', ringOutline: 'ring-pink-500/40', shadow: 'shadow-pink-500' },
-  { bg: 'bg-indigo-500', ring: 'ring-indigo-500', ringOutline: 'ring-indigo-500/40', shadow: 'shadow-indigo-500' },
-  { bg: 'bg-teal-500', ring: 'ring-teal-500', ringOutline: 'ring-teal-500/40', shadow: 'shadow-teal-500' },
-  { bg: 'bg-orange-500', ring: 'ring-orange-500', ringOutline: 'ring-orange-500/40', shadow: 'shadow-orange-500' },
-  { bg: 'bg-cyan-500', ring: 'ring-cyan-500', ringOutline: 'ring-cyan-500/40', shadow: 'shadow-cyan-500' }
-];
-
-const getAvatarColor = (name) => {
-  if (!name) return { bg: 'bg-gray-500', ring: 'ring-gray-500', shadow: 'shadow-gray-500' };
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
 
 const getInitials = (name) => {
   const parts = name.trim().split(/\s+/);
   let initials = parts.map(n => n[0]).join('');
-  
+
   if (initials.length === 1 && /^[^a-zA-Z0-9]$/.test(initials[0]) && parts[0].length > 1) {
     initials += parts[0][1];
   }
-  
+
   return initials.toUpperCase().substring(0, 2);
 };
 
-export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = null, title = "" }) {
+export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = null, title = "", isLoading = false }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
@@ -401,8 +380,35 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
     }
   }, [projectId]);
 
-  if (loading) {
-    return <div className="w-full h-full flex items-center justify-center bg-[#F4F1EB] dark:bg-[#09090B] rounded-xl border border-gray-200 dark:border-[#27272A] text-gray-500 dark:text-white/50">Loading workflow...</div>;
+  if (loading || isLoading) {
+    return (
+      <div className="w-full h-full flex flex-col gap-4 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between gap-4 w-full">
+          <div className="h-8 w-64 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+          <div className="flex items-center gap-6">
+            <div className="flex -space-x-1">
+              {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#27272A] ring-2 ring-[#F4F1EB] dark:ring-[#09090B]"></div>)}
+            </div>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-8 w-20 rounded-full bg-gray-200 dark:bg-[#27272A]"></div>)}
+            </div>
+          </div>
+        </div>
+        {/* Canvas Skeleton */}
+        <div className="flex-1 rounded-xl border border-gray-200 dark:border-[#27272A] bg-[#F4F1EB] dark:bg-[#09090B] relative overflow-hidden">
+          {/* Mock Nodes */}
+          <div className="absolute top-1/4 left-1/4 w-48 h-24 bg-white dark:bg-[#1E1E22] border-2 border-gray-200 dark:border-[#27272A] rounded-xl shadow-sm flex flex-col p-3">
+            <div className="h-4 w-3/4 bg-gray-200 dark:bg-[#3F3F46] rounded mb-2"></div>
+            <div className="h-3 w-1/2 bg-gray-200 dark:bg-[#3F3F46] rounded mt-auto"></div>
+          </div>
+          <div className="absolute top-1/2 left-[45%] w-48 h-24 bg-white dark:bg-[#1E1E22] border-2 border-gray-200 dark:border-[#27272A] rounded-xl shadow-sm flex flex-col p-3">
+            <div className="h-4 w-3/4 bg-gray-200 dark:bg-[#3F3F46] rounded mb-2"></div>
+            <div className="h-3 w-1/2 bg-gray-200 dark:bg-[#3F3F46] rounded mt-auto"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const isFilterActive = selectedMembers.length > 0 || selectedStatuses.length > 0;
@@ -425,10 +431,6 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                 <div className="flex items-center -space-x-1">
                   {uniqueMembers.slice(0, 8).map(member => {
                     const isChecked = selectedMembers.includes(member);
-                    const colorObj = getAvatarColor(member);
-                    const bgColor = colorObj.bg;
-                    const ringColor = colorObj.ring;
-                    const shadowColor = colorObj.shadow;
 
                     return (
                       <div key={member} className="relative group">
@@ -438,7 +440,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                               isChecked ? prev.filter(m => m !== member) : [...prev, member]
                             );
                           }}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all ${bgColor} ${isChecked ? `ring-[4px] ${colorObj.ringOutline} z-10 scale-110` : 'ring-1 ring-white dark:ring-[#09090B] hover:z-10 hover:scale-105'}`}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold cursor-pointer select-none transition-all bg-[#F4F1EB]/60 dark:bg-[#09090B]/60 backdrop-blur-md text-[#2B3B26] dark:text-[#7ED957] border-2 border-[#6B905F]/60 ${isChecked ? 'ring-[3px] ring-[#5b804e] ring-offset-2 dark:ring-offset-[#18181B] z-10' : 'hover:z-10 hover:scale-105 hover:border-[#6B905F]'}`}
                         >
                           {getInitials(member)}
                         </div>
@@ -455,7 +457,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                     <div className="relative">
                       <div
                         onClick={() => setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-white dark:bg-[#1E1E22] text-gray-700 dark:text-white cursor-pointer select-none transition-all ring-2 ring-[#F4F1EB] dark:ring-[#09090B] hover:z-10 hover:scale-105 shadow-sm"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-white dark:bg-[#1E1E22] text-gray-700 dark:text-white cursor-pointer select-none transition-all ring-2 ring-[#F4F1EB] dark:ring-[#09090B] hover:z-10 hover:scale-105 shadow-sm"
                       >
                         +{uniqueMembers.length - 8}
                       </div>
@@ -466,7 +468,6 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                           <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-[#1E1E22] rounded-lg shadow-xl border border-gray-200 dark:border-[#27272A] py-2 min-w-[200px] max-h-[300px] overflow-y-auto page-enter">
                             {uniqueMembers.slice(8).map(member => {
                               const isChecked = selectedMembers.includes(member);
-                              const bgColor = getAvatarColor(member);
                               return (
                                 <div
                                   key={member}
@@ -477,10 +478,10 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                                   }}
                                   className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                                 >
-                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0 ${isChecked ? 'bg-[#6B905F] border-[#6B905F]' : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600'}`}>
+                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0 ${isChecked ? 'bg-[#5b804e] border-[#5b804e]' : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600'}`}>
                                     {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                                   </div>
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 ${bgColor}`}>
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 bg-gradient-to-br from-[#79a36b] to-[#5b804e] ${isChecked ? 'ring-2 ring-[#5b804e] ring-offset-1 dark:ring-offset-[#1E1E22]' : ''}`}>
                                     {getInitials(member)}
                                   </div>
                                   <span className="text-sm font-medium text-gray-700 dark:text-white/80 truncate">

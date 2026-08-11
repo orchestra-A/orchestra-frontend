@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useOutletContext } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { MessageSquare, Activity, Clock, User } from 'lucide-react';
 
@@ -38,21 +38,6 @@ const getActionSummary = (event, displayActor) => {
 };
 
 
-const getAvatarColor = (name) => {
-  const colors = [
-    { bg: 'bg-[#00B8A9]', ring: 'ring-[#00B8A9]', ringOutline: 'ring-[#00B8A9]/40', shadow: 'shadow-[#00B8A9]/50' },
-    { bg: 'bg-[#F6416C]', ring: 'ring-[#F6416C]', ringOutline: 'ring-[#F6416C]/40', shadow: 'shadow-[#F6416C]/50' },
-    { bg: 'bg-[#FF9A00]', ring: 'ring-[#FF9A00]', ringOutline: 'ring-[#FF9A00]/40', shadow: 'shadow-[#FF9A00]/50' },
-    { bg: 'bg-[#6252FA]', ring: 'ring-[#6252FA]', ringOutline: 'ring-[#6252FA]/40', shadow: 'shadow-[#6252FA]/50' },
-    { bg: 'bg-[#FF6A00]', ring: 'ring-[#FF6A00]', ringOutline: 'ring-[#FF6A00]/40', shadow: 'shadow-[#FF6A00]/50' },
-    { bg: 'bg-[#00B4D8]', ring: 'ring-[#00B4D8]', ringOutline: 'ring-[#00B4D8]/40', shadow: 'shadow-[#00B4D8]/50' },
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-};
 
 const getInitials = (name) => {
   const parts = name.trim().split(/\s+/);
@@ -67,7 +52,8 @@ const getInitials = (name) => {
 
 export default function ProjectActivity() {
   const { projectId } = useParams();
-  const { projects, allUsers } = useProject();
+  const { projects, allUsers, loading: globalLoading } = useProject();
+  const { isLoading } = useOutletContext() || {};
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -133,6 +119,47 @@ export default function ProjectActivity() {
     });
 
   const isFilterActive = selectedPlatforms.length > 0 || selectedUsers.length > 0;
+  const isPageLoading = globalLoading || loading || isLoading;
+
+  if (isPageLoading) {
+    return (
+      <div className="w-full h-full flex flex-col pb-12 animate-pulse">
+        <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="h-8 w-64 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+          <div className="h-8 w-48 bg-gray-200 dark:bg-[#27272A] rounded"></div>
+        </div>
+        <div className="flex items-center gap-6 mb-6 p-1 flex-wrap justify-end">
+          <div className="flex gap-2">
+            {[1, 2, 3].map(i => <div key={i} className="h-7 w-16 bg-gray-300 dark:bg-[#27272A] rounded-full"></div>)}
+          </div>
+          <div className="flex -space-x-1">
+            {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-[#79a36b]/40 to-[#5b804e]/40 ring-1 ring-white dark:ring-[#09090B]"></div>)}
+          </div>
+        </div>
+        <div className="flex-1 relative">
+          <div className="relative border-l-2 border-gray-200 dark:border-[#2B3B26] ml-4 space-y-8 pt-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="relative pl-8">
+                <div className="absolute -left-[18px] top-1 bg-white dark:bg-[#0a100a] p-1 rounded-full border border-gray-200 dark:border-[#2B3B26] shadow-sm">
+                  <div className="w-5 h-5 bg-gray-300 dark:bg-[#27272A] rounded-full" />
+                </div>
+                <div className="bg-[#F4F1EB] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] p-4 rounded-xl shadow-sm">
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="w-3/4 h-4 bg-gray-300 dark:bg-[#27272A] rounded" />
+                    <div className="w-16 h-3 bg-gray-300 dark:bg-[#27272A] rounded mt-1" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="w-16 h-5 bg-gray-300 dark:bg-[#27272A] rounded-md" />
+                    <div className="w-24 h-5 bg-gray-300 dark:bg-[#27272A] rounded-md" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col pb-12">
@@ -198,9 +225,6 @@ export default function ProjectActivity() {
             <div className="flex items-center -space-x-1">
               {users.map(u => {
                 const isChecked = selectedUsers.includes(u);
-                const colorObj = getAvatarColor(u);
-                const bgColor = colorObj.bg;
-                const ringOutline = colorObj.ringOutline;
                 
                 return (
                   <div key={u} className="relative group">
@@ -210,7 +234,7 @@ export default function ProjectActivity() {
                           isChecked ? prev.filter(item => item !== u) : [...prev, u]
                         );
                       }}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all ${bgColor} ${isChecked ? `ring-[4px] ${ringOutline} z-10 scale-110` : 'ring-1 ring-white dark:ring-[#09090B] hover:z-10 hover:scale-105'}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all bg-gradient-to-br from-[#79a36b] to-[#5b804e] ${isChecked ? 'ring-[3px] ring-[#5b804e] ring-offset-2 dark:ring-offset-[#18181B] z-10' : 'ring-1 ring-white dark:ring-[#09090B] hover:z-10 hover:scale-105'}`}
                     >
                       {getInitials(u)}
                     </div>
@@ -241,27 +265,7 @@ export default function ProjectActivity() {
           </button>
         )}
         <div className="w-full h-full overflow-y-auto pr-4">
-        {loading ? (
-          <div className="relative border-l-2 border-gray-200 dark:border-[#2B3B26] ml-4 space-y-8 animate-pulse pt-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="relative pl-8">
-                <div className="absolute -left-[18px] top-1 bg-white dark:bg-[#0a100a] p-1 rounded-full border border-gray-200 dark:border-[#2B3B26] shadow-sm">
-                  <div className="w-5 h-5 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                </div>
-                <div className="bg-[#F4F1EB] dark:bg-[#121910] border border-gray-200 dark:border-[#2B3B26] p-4 rounded-xl shadow-sm">
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <div className="w-3/4 h-5 bg-gray-200 dark:bg-gray-800 rounded" />
-                    <div className="w-16 h-4 bg-gray-200 dark:bg-gray-800 rounded mt-1" />
-                  </div>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="w-16 h-6 bg-gray-200 dark:bg-gray-800 rounded-md" />
-                    <div className="w-24 h-6 bg-gray-200 dark:bg-gray-800 rounded-md" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : displayedEvents.length === 0 ? (
+        {displayedEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500 bg-[#F4F1EB] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26]">
             <Activity className="w-8 h-8 mb-4 opacity-50" />
             <p>No activity events found for these filters.</p>
