@@ -193,12 +193,19 @@ export function ProjectProvider({ children }) {
       // so all downstream code can use simple exact ID matching.
       // Names are for display only; IDs are the single source of truth.
       const normalizedTasks = allTasks.map((t) => {
+        // Normalize status casing and map backend aliases to the 4 canonical frontend constants
+        let normStatus = (t.status || 'upcoming').toLowerCase().trim();
+        if (normStatus === 'todo') normStatus = 'upcoming';
+        if (normStatus === 'stopped' || normStatus === 'halted') normStatus = 'blocked';
+        
+        const taskWithNormStatus = { ...t, status: normStatus };
+
         const pid = t.project_id;
-        if (!pid) return t;
+        if (!pid) return taskWithNormStatus;
 
         // 1. Already a canonical project ID in the map
         if (projectMap[pid]) {
-          return { ...t, project_id: projectMap[pid].id };
+          return { ...taskWithNormStatus, project_id: projectMap[pid].id };
         }
 
         // 2. Fuzzy match to find canonical ID
@@ -218,10 +225,10 @@ export function ProjectProvider({ children }) {
 
         if (matchingBp) {
           const realId = matchingBp.project_id || matchingBp.id;
-          return { ...t, project_id: realId };
+          return { ...taskWithNormStatus, project_id: realId };
         }
 
-        return t;
+        return taskWithNormStatus;
       });
 
       setTasks(normalizedTasks);

@@ -587,7 +587,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                 <>
                   <button
                     className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
-                    onClick={() => handleStatusChange('todo')}
+                    onClick={() => handleStatusChange('upcoming')}
                   >
                     Set Pending
                   </button>
@@ -605,7 +605,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                   </button>
                   <button
                     className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
-                    onClick={() => handleStatusChange('stopped')}
+                    onClick={() => handleStatusChange('blocked')}
                   >
                     Set Halted
                   </button>
@@ -672,12 +672,12 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                       ? 'bg-[#34D399]'
                       : selectedTask.status === 'in_progress'
                         ? 'bg-[#F59E42]'
-                        : selectedTask.status === 'stopped'
+                        : selectedTask.status === 'blocked'
                           ? 'bg-[#F87171]'
                           : 'bg-[#38BDF8]'
                       }`} />
                     <span className="text-[11px] font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500">
-                      {selectedTask.status === 'stopped' ? 'Halted' : selectedTask.status === 'in_progress' ? 'In Progress' : selectedTask.status === 'completed' ? 'Completed' : 'Upcoming'}
+                      {selectedTask.status === 'blocked' ? 'Halted' : selectedTask.status === 'in_progress' ? 'In Progress' : selectedTask.status === 'completed' ? 'Completed' : 'Upcoming'}
                     </span>
                   </div>
                   <h2 className="text-[15px] font-bold text-[#1D1E1B] dark:text-white/90 leading-snug">
@@ -707,8 +707,8 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'todo')}
-                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${selectedTask.status === 'todo'
+                        onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'upcoming')}
+                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${selectedTask.status === 'upcoming'
                           ? 'bg-[#38BDF8]/10 text-[#38BDF8] border-[#38BDF8] shadow-sm'
                           : 'bg-transparent border-gray-200 dark:border-[#27272A] hover:border-gray-300 dark:hover:border-[#3f3f46] text-gray-700 dark:text-white/80'
                           }`}
@@ -734,8 +734,8 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                         Completed
                       </button>
                       <button
-                        onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'stopped')}
-                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${selectedTask.status === 'stopped'
+                        onClick={() => updateTaskStatusFromPanel(selectedTask.id, 'blocked')}
+                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all text-center ${selectedTask.status === 'blocked'
                           ? 'bg-[#F87171]/10 text-[#F87171] border-[#F87171] shadow-sm'
                           : 'bg-transparent border-gray-200 dark:border-[#27272A] hover:border-gray-300 dark:hover:border-[#3f3f46] text-gray-700 dark:text-white/80'
                           }`}
