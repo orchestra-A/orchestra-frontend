@@ -19,7 +19,7 @@ export default function Onboarding() {
 
   // Account lookup state for "Already have an account?"
   const [showAccountLookup, setShowAccountLookup] = useState(false);
-  const [lookupEmail, setLookupEmail] = useState('');
+  const [lookupUsername, setLookupUsername] = useState('');
   const [matchedAccount, setMatchedAccount] = useState(null);
   const [lookupError, setLookupError] = useState('');
 
@@ -53,17 +53,33 @@ export default function Onboarding() {
   const handleAccountSearch = () => {
     setLookupError('');
     setMatchedAccount(null);
-    if (!lookupEmail.trim()) {
-      setLookupError('Please enter a registered email address.');
+    if (!lookupUsername.trim()) {
+      setLookupError('Please enter a registered username.');
       return;
     }
-    const cleanSearch = lookupEmail.trim().toLowerCase();
-    const found = existingUsers.find(u => u.email && u.email.toLowerCase() === cleanSearch);
+    const cleanSearch = lookupUsername.trim();
+    const found = existingUsers.find(u => u.username && u.username === cleanSearch);
     if (found) {
       setMatchedAccount(found);
     } else {
-      setLookupError('No account found with this email. Please complete the registration below.');
+      setLookupError('No account found with this username. Please complete the registration below.');
     }
+  };
+
+  const handleLinkAccount = async (platformUrl) => {
+    // Delete the temporary user session to prevent database bloat and OAuth hijacking
+    if (currentUser?.id) {
+      try {
+        await fetch(`https://orchestra-backend-30fy.onrender.com/users/${currentUser.id}`, {
+          method: 'DELETE',
+        });
+        console.log(`Deleted temporary onboarding user: ${currentUser.id}`);
+      } catch (err) {
+        console.warn('Failed to delete temporary user:', err);
+      }
+    }
+    sessionStorage.setItem('pre_auth_users', JSON.stringify(existingUsers));
+    window.location.href = platformUrl;
   };
 
   const handleConnectPlatform = (platform) => {
@@ -200,13 +216,13 @@ export default function Onboarding() {
           {/* Account Lookup Section */}
           {showAccountLookup && (
             <div className="p-4 bg-white border border-[#e8e4dc] rounded-2xl mb-6 space-y-3 shadow-sm">
-              <h3 className="text-xs lg:text-sm font-semibold text-[#1c1c1a]">Find your registered account by email</h3>
+              <h3 className="text-xs lg:text-sm font-semibold text-[#1c1c1a]">Find your registered account by username</h3>
               <div className="flex gap-2">
                 <Input
-                  type="email"
-                  placeholder="Enter registered email address"
-                  value={lookupEmail}
-                  onChange={(e) => setLookupEmail(e.target.value)}
+                  type="text"
+                  placeholder="Enter registered username"
+                  value={lookupUsername}
+                  onChange={(e) => setLookupUsername(e.target.value)}
                   className="!bg-[#f9f7f3] border-[#e8e4dc] text-xs lg:text-sm flex-1 h-10"
                 />
                 <Button
@@ -221,40 +237,37 @@ export default function Onboarding() {
               {matchedAccount && (
                 <div className="p-3 bg-[#eef5eb] border border-[#6b8f5e]/40 rounded-xl space-y-2.5 mt-2">
                   <p className="text-xs font-semibold text-[#2d4025]">
-                    Account Found: <strong>{matchedAccount.name || matchedAccount.username || 'Registered User'}</strong> ({matchedAccount.email})
+                    Account Found: <strong>{matchedAccount.name || matchedAccount.username || 'Registered User'}</strong>
                   </p>
                   <p className="text-[11px] text-[#4a4a45]">Log in using your registered integrated platform:</p>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem('pre_auth_users', JSON.stringify(existingUsers));
-                        window.location.href = `https://orchestra-backend-30fy.onrender.com/auth/google`;
-                      }}
-                      className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs h-9 cursor-pointer"
-                    >
-                      Log in with Google
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem('pre_auth_users', JSON.stringify(existingUsers));
-                        window.location.href = `https://orchestra-backend-30fy.onrender.com/auth/github`;
-                      }}
-                      className="bg-[#181717] text-white hover:bg-[#2b2a2a] text-xs h-9 cursor-pointer"
-                    >
-                      Log in with GitHub
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem('pre_auth_users', JSON.stringify(existingUsers));
-                        window.location.href = `https://orchestra-backend-30fy.onrender.com/auth/discord`;
-                      }}
-                      className="bg-[#5865F2] text-white hover:bg-[#4752C4] text-xs h-9 cursor-pointer"
-                    >
-                      Log in with Discord
-                    </Button>
+                    {(matchedAccount.platforms_connected?.includes('google') || matchedAccount.email) && (
+                      <Button
+                        type="button"
+                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/google?user_id=${matchedAccount.id}`)}
+                        className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs h-9 cursor-pointer"
+                      >
+                        Log in with Google
+                      </Button>
+                    )}
+                    {(matchedAccount.platforms_connected?.includes('github') || matchedAccount.github_username) && (
+                      <Button
+                        type="button"
+                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/github?user_id=${matchedAccount.id}`)}
+                        className="bg-[#181717] text-white hover:bg-[#2b2a2a] text-xs h-9 cursor-pointer"
+                      >
+                        Log in with GitHub
+                      </Button>
+                    )}
+                    {(matchedAccount.platforms_connected?.includes('discord') || matchedAccount.discord_id) && (
+                      <Button
+                        type="button"
+                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/discord?user_id=${matchedAccount.id}`)}
+                        className="bg-[#5865F2] text-white hover:bg-[#4752C4] text-xs h-9 cursor-pointer"
+                      >
+                        Log in with Discord
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

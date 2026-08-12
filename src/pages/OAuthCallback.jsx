@@ -89,6 +89,9 @@ export default function OAuthCallback() {
             const hasProfile = Boolean((u.name && u.name.trim()) || (u.username && u.username.trim()));
             if (!hasProfile) return false;
 
+            // 0. Explicit ID match (Backend explicitly authenticated this user)
+            if (userId && (u.id === userId || u.user_id === userId)) return true;
+
             const connectedList = Array.isArray(u.platforms_connected) ? u.platforms_connected : [];
 
             // 1. Email match with registered integrated account
