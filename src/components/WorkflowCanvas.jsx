@@ -440,7 +440,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                               isChecked ? prev.filter(m => m !== member) : [...prev, member]
                             );
                           }}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold cursor-pointer select-none transition-all bg-[#F4F1EB]/60 dark:bg-[#09090B]/60 backdrop-blur-md text-[#2B3B26] dark:text-[#7ED957] border-2 border-[#6B905F]/60 ${isChecked ? 'ring-[3px] ring-[#5b804e] ring-offset-2 dark:ring-offset-[#18181B] z-10' : 'hover:z-10 hover:scale-105 hover:border-[#6B905F]'}`}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold cursor-pointer select-none transition-all bg-[#F4F1EB] dark:bg-[#1E1E22] text-[#2B3B26] dark:text-[#EAE5D9] border border-[#6B905F]/40 dark:border-[#6B905F]/50 ${isChecked ? 'ring-[3px] ring-[#5b804e] dark:ring-[#79a36b] z-10' : 'hover:z-10 hover:scale-105 hover:border-[#6B905F]/70'}`}
                         >
                           {getInitials(member)}
                         </div>
