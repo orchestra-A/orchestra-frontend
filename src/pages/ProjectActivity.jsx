@@ -234,7 +234,7 @@ export default function ProjectActivity() {
                           isChecked ? prev.filter(item => item !== u) : [...prev, u]
                         );
                       }}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white cursor-pointer select-none transition-all bg-gradient-to-br from-[#79a36b] to-[#5b804e] ${isChecked ? 'ring-[3px] ring-[#5b804e] ring-offset-2 dark:ring-offset-[#18181B] z-10' : 'ring-1 ring-white dark:ring-[#09090B] hover:z-10 hover:scale-105'}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold cursor-pointer select-none transition-all bg-[#F4F1EB] dark:bg-[#1E1E22] text-[#2B3B26] dark:text-[#EAE5D9] border border-[#6B905F]/40 dark:border-[#6B905F]/50 ${isChecked ? 'ring-[3px] ring-[#5b804e] dark:ring-[#79a36b] z-10' : 'hover:z-10 hover:scale-105 hover:border-[#6B905F]/70'}`}
                     >
                       {getInitials(u)}
                     </div>
