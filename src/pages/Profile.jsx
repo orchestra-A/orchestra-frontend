@@ -251,11 +251,10 @@ export default function Profile() {
                         <button
                           key={skill}
                           onClick={() => toggleSkill(skill)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                            isSelected
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${isSelected
                               ? 'bg-[#6B905F] text-white border-[#6B905F]'
                               : 'bg-white dark:bg-[#09090B] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-[#27272A] hover:border-[#6B905F] hover:text-[#6B905F]'
-                          }`}
+                            }`}
                         >
                           {skill}
                           {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -269,11 +268,10 @@ export default function Profile() {
                 <button
                   onClick={handleSaveSkills}
                   disabled={selectedSkills.length === 0}
-                  className={`px-6 py-2.5 font-medium rounded-lg transition-colors text-sm shadow-sm ${
-                    selectedSkills.length > 0
+                  className={`px-6 py-2.5 font-medium rounded-lg transition-colors text-sm shadow-sm ${selectedSkills.length > 0
                       ? 'bg-[#6B905F] hover:bg-[#5A7A4F] text-white'
                       : 'bg-gray-300 dark:bg-[#27272A] text-gray-500 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   Save Skills
                 </button>
@@ -301,11 +299,10 @@ export default function Profile() {
                 return (
                   <div
                     key={key}
-                    className={`flex items-center justify-between bg-[#F4F1EB] dark:bg-[#18181B] border rounded-xl px-5 py-4 shadow-sm transition-all ${
-                      isConnected
+                    className={`flex items-center justify-between bg-[#F4F1EB] dark:bg-[#18181B] border rounded-xl px-5 py-4 shadow-sm transition-all ${isConnected
                         ? 'border-[#6B905F]/40 dark:border-[#6B905F]/30'
                         : 'border-gray-200 dark:border-[#27272A]'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${p.color}`}>
@@ -322,7 +319,7 @@ export default function Profile() {
                       </span>
                     ) : (
                       <a
-                        href={`${p.authUrl}?user_id=${currentUser?.user_id || ''}`}
+                        href={`${p.authUrl}?user_id=${currentUser?.id || ''}`}
                         className="text-xs font-medium px-4 py-2 rounded-lg border border-gray-200 dark:border-[#27272A] text-gray-600 dark:text-white/70 hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] transition-colors"
                       >
                         Connect
@@ -372,11 +369,10 @@ export default function Profile() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-4 px-4 py-3 rounded-lg text-[15px] font-medium transition-colors ${
-                  isActive
+                className={`flex items-center gap-4 px-4 py-3 rounded-lg text-[15px] font-medium transition-colors ${isActive
                     ? 'bg-[#F3F4F6] dark:bg-[#27272A] text-[#1D1E1B] dark:text-white/90'
                     : 'text-[#1D1E1B] dark:text-white/50 hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26]/50 hover:text-[#1D1E1B] dark:hover:text-white/70'
-                }`}
+                  }`}
               >
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-gray-700 dark:text-white/80' : 'text-gray-400 dark:text-white/50'} />
                 {tab.label}

@@ -24,7 +24,14 @@ export function Header() {
   const { projects } = useProject();
 
   const [showMissingPopup, setShowMissingPopup] = useState(false);
-  const isMissingPlatforms = currentUser && (!currentUser.github_username || !currentUser.discord_id);
+  const missingPlatforms = [];
+  if (currentUser) {
+    if (!currentUser.email) missingPlatforms.push('Google');
+    if (!currentUser.github_username) missingPlatforms.push('GitHub');
+    if (!currentUser.discord_id) missingPlatforms.push('Discord');
+  }
+  const isMissingPlatforms = missingPlatforms.length > 0;
+  const missingPlatformText = missingPlatforms.join(', ').replace(/, ([^,]*)$/, ' and $1');
 
   useEffect(() => {
     if (isMissingPlatforms && !sessionStorage.getItem('workspacesPrompted')) {
@@ -118,7 +125,7 @@ export function Header() {
                 </button>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-                You haven't connected all your workspaces yet. Connect GitHub and Discord to unlock automatic activity tracking.
+                You haven't connected all your workspaces yet. Connect {missingPlatformText} to unlock automatic activity tracking.
               </p>
               <Button
                 size="sm"
