@@ -168,8 +168,9 @@ export function FloatingAIChat() {
       setMessages(prev => [...prev, { role: 'assistant', content: "" }]);
 
       const userId = currentUser ? (currentUser.user_id || currentUser.id || currentUser.username) : null;
+      const username = currentUser ? (currentUser.username || currentUser.name) : null;
 
-      const data = await sendCloverMessage(userQuery, conversationHistory, canonicalId, userId, (chunk, fullText) => {
+      const data = await sendCloverMessage(userQuery, conversationHistory, canonicalId, userId, username, (chunk, fullText) => {
         setMessages(prev => {
           const newMessages = [...prev];
           newMessages[newMessages.length - 1] = { role: 'assistant', content: fullText };

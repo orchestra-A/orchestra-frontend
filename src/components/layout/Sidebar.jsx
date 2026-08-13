@@ -92,7 +92,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
           title={project.name}
         >
           {isSidebarExpanded && <span className="text-[13px] text-[#1D1E1B] font-medium dark:text-white/90 truncate mr-6 text-left flex-1">{project.name}</span>}
-          {!isSidebarExpanded && <span className="text-base font-semibold text-[#1D1E1B] dark:text-white/90">{project.name.charAt(0)}</span>}
+          {!isSidebarExpanded && <span className="text-base font-semibold text-[#1D1E1B] dark:text-white/90">{project.name.charAt(0).toUpperCase()}</span>}
 
           {isSidebarExpanded && (
             <div className="absolute right-2 flex items-center gap-1 bg-transparent group-hover:bg-[#6B905F]/10 dark:group-hover:bg-white/10 transition-colors rounded-md p-0.5">
