@@ -281,12 +281,13 @@ export async function createBlueprint(payload, userId) {
  * @param {string|null} projectId - The canonical project ID the user is currently viewing (for context)
  * @returns {Promise<Object|string>} Response data
  */
-export async function sendCloverMessage(question, conversationHistory = [], projectId = null, userId = null, onChunk = null) {
+export async function sendCloverMessage(question, conversationHistory = [], projectId = null, userId = null, username = null, onChunk = null) {
   const payload = {
     conversation_history: conversationHistory,
     question: question,
     project_id: projectId || "",
     user_id: userId || "",
+    username: username || "",
   };
   const url = `${BASE_URL}/clover`;
   console.log('[API] Calling sendCloverMessage endpoint:', payload);
