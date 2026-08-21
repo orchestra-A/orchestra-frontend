@@ -413,7 +413,7 @@ export default function Dashboard() {
             <div className="flex flex-col bg-[#F3F7F1]/50 dark:bg-[#09090B] rounded-xl border-2 border-gray-200 dark:border-[#27272A] overflow-hidden shadow-inner h-full">
               <div className="p-3 border-b-2 border-gray-200 dark:border-[#27272A] bg-gray-100 dark:bg-[#18181B] flex items-center gap-2 sticky top-0 z-10">
                 <AlertCircle className="w-4 h-4 text-red-600" />
-                <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Halted</h2>
+                <h2 className="font-bold text-gray-700 dark:text-white/70 text-sm">Backlog</h2>
                 <span className="ml-auto bg-gray-200 dark:bg-[#27272A] text-gray-700 dark:text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-full">{haltedTasks.length}</span>
               </div>
               <div 

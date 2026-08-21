@@ -55,7 +55,22 @@ export default function Profile() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'details');
   const navigate = useNavigate();
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, updateProfile, deleteUserAccount } = useAuth();
+  
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteProfile = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteUserAccount();
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   // Listen for navigation state changes (e.g. clicking the bell while already on the Profile page)
   useEffect(() => {
@@ -135,8 +150,8 @@ export default function Profile() {
       case 'details':
         return (
           <div className="w-full">
-            <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-8">Profile Details</h1>
-            <div className="space-y-6">
+            <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-4">Profile Details</h1>
+            <div className="space-y-4">
               {/* Username (read-only from backend) */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-gray-700 dark:text-white/80">Username</label>
@@ -194,6 +209,16 @@ export default function Profile() {
                   </p>
                 </div>
               )}
+
+              {/* Delete Profile */}
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#27272A]">
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-2 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-500 font-medium rounded-lg border border-red-200 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
+                >
+                  Delete Profile
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -386,6 +411,34 @@ export default function Profile() {
       <div className="flex-1 p-8 overflow-y-auto bg-[#F4F1EB] dark:bg-[#09090B]">
         {renderContent()}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#18181B] rounded-xl shadow-xl w-full max-w-md border border-gray-200 dark:border-[#27272A] p-6 animate-in zoom-in-95 duration-200">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white/90 mb-2">Delete Profile?</h2>
+            <p className="text-sm text-gray-500 dark:text-white/60 mb-6">
+              This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 font-medium text-gray-700 dark:text-white/80 bg-gray-100 dark:bg-[#27272A] rounded-lg hover:bg-gray-200 dark:hover:bg-[#27272A]/80 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProfile}
+                disabled={isDeleting}
+                className="px-4 py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, delete my profile'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -58,6 +58,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
   const [menu, setMenu] = useState(null);
   const location = useLocation();
   const [selectedTask, setSelectedTask] = useState(null);
+  const [consumedTaskId, setConsumedTaskId] = useState(null);
   const [rfInstance, setRfInstance] = useState(null);
 
   const [modifyModalOpen, setModifyModalOpen] = useState(false);
@@ -92,14 +93,15 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
 
   // Read selectedTaskId from navigation state on mount
   useEffect(() => {
-    if (location.state?.selectedTaskId && !selectedTask) {
+    if (location.state?.selectedTaskId && location.state.selectedTaskId !== consumedTaskId) {
       // Find the task inside projectTasks once it's populated
       const task = projectTasks.find(t => t.id === location.state.selectedTaskId);
       if (task) {
         setSelectedTask(task);
+        setConsumedTaskId(location.state.selectedTaskId);
       }
     }
-  }, [location.state?.selectedTaskId, projectTasks]);
+  }, [location.state?.selectedTaskId, projectTasks, consumedTaskId]);
 
   // Pan and zoom to selected task whenever it changes
   useEffect(() => {
@@ -529,7 +531,9 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                       >
                         {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                       </div>
-                      <span className="text-xs font-medium capitalize text-gray-700 dark:text-white/80">{status.replace('_', ' ')}</span>
+                      <span className="text-xs font-medium capitalize text-gray-700 dark:text-white/80">
+                        {status === 'blocked' ? 'Backlog' : status.replace('_', ' ')}
+                      </span>
                     </div>
                   );
                 })
@@ -607,7 +611,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                     className="w-full text-left px-4 py-2 hover:bg-[#5A7A50] font-medium"
                     onClick={() => handleStatusChange('blocked')}
                   >
-                    Set Halted
+                    Set Backlog
                   </button>
                 </>
               )}
@@ -677,7 +681,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                           : 'bg-[#38BDF8]'
                       }`} />
                     <span className="text-[11px] font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500">
-                      {selectedTask.status === 'blocked' ? 'Halted' : selectedTask.status === 'in_progress' ? 'In Progress' : selectedTask.status === 'completed' ? 'Completed' : 'Upcoming'}
+                      {selectedTask.status === 'blocked' ? 'Backlog' : selectedTask.status === 'in_progress' ? 'In Progress' : selectedTask.status === 'completed' ? 'Completed' : 'Upcoming'}
                     </span>
                   </div>
                   <h2 className="text-[15px] font-bold text-[#1D1E1B] dark:text-white/90 leading-snug">
@@ -740,7 +744,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
                           : 'bg-transparent border-gray-200 dark:border-[#27272A] hover:border-gray-300 dark:hover:border-[#3f3f46] text-gray-700 dark:text-white/80'
                           }`}
                       >
-                        Halted
+                        Backlog
                       </button>
                     </div>
                   </div>
