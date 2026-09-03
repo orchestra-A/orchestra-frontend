@@ -14,6 +14,8 @@ import {
 } from '../ui/dropdown-menu';
 import { useAuth } from '../../context/AuthContext';
 import { useProject } from '../../context/ProjectContext';
+import { useToast } from '../../context/ToastContext';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 // Global Top Navigation Bar
 // Contains global search, quick-action buttons (like Blueprint), notifications, and the user profile dropdown.
@@ -22,6 +24,7 @@ export function Header() {
   const location = useLocation();
   const { currentUser, logout } = useAuth();
   const { projects } = useProject();
+  const { toast } = useToast();
 
   const [showMissingPopup, setShowMissingPopup] = useState(false);
   const missingPlatforms = [];
@@ -89,7 +92,19 @@ export function Header() {
       <div className="flex items-center flex-1">
         {getBreadcrumbs()}
         
-
+        {/* Global Toast Notification */}
+        {toast && (
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#1D1E1B] border border-gray-200 dark:border-[#27272A] shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 pointer-events-none">
+            {toast.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 text-red-500" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-[#6B905F]" />
+            )}
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              {toast.message}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Right Section */}

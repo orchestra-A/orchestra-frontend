@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Bell, Lock, User, Palette, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('account');
   const { currentUser, updateProfile } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   
   // State for Account
@@ -23,9 +25,14 @@ export default function Settings() {
   }, [currentUser]);
 
   const handleSaveProfile = async () => {
-    const fullName = `${firstName} ${lastName}`.trim();
-    await updateProfile({ name: fullName });
-    alert("Profile saved successfully!");
+    try {
+      const fullName = `${firstName} ${lastName}`.trim();
+      await updateProfile({ name: fullName });
+      showToast("Profile saved successfully!", 'success');
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to save profile.", 'error');
+    }
   };
 
   const tabs = [

@@ -38,7 +38,7 @@ export async function fetchUsers() {
 export async function fetchProjects() {
   const url = `${BASE_URL}/projects`;
   const directUrl = `https://orchestra-backend-30fy.onrender.com/projects`;
-  
+
   let projectsList = [];
 
   try {
@@ -75,7 +75,7 @@ export async function fetchUserById(userId) {
   if (!userId) return null;
   const users = await fetchUsers();
   const lowerId = userId.toString().toLowerCase();
-  return users.find((u) => 
+  return users.find((u) =>
     (u.user_id && u.user_id.toLowerCase() === lowerId) ||
     (u.email && u.email.toLowerCase() === lowerId) ||
     (u.discord_id && u.discord_id.toString().toLowerCase() === lowerId) ||
@@ -302,6 +302,21 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
   };
 
   const processStream = async (response) => {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      const text = data.text || data.answer || data.reply || data.response || data.message || JSON.stringify(data);
+      if (onChunk) {
+        onChunk(text, text); // trigger the callback once with the full text
+      }
+      return { 
+        text,
+        suggestedTasks: data.suggested_tasks || data.suggestedTasks || [],
+        action: data.action || null
+      };
+    }
+
     if (!response.body) throw new Error("ReadableStream not supported");
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
@@ -323,7 +338,7 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
         typingQueue = typingQueue.slice(1);
         displayedText += char;
         if (onChunk) onChunk(char, displayedText);
-        
+
         // 3-5 words per sec = ~25 characters per sec = ~40ms per character
         await new Promise(r => setTimeout(r, 40));
       }
@@ -363,7 +378,7 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
         break;
       }
       buffer += decoder.decode(value, { stream: true });
-      
+
       let newlineIndex;
       while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
         const line = buffer.slice(0, newlineIndex);
@@ -371,12 +386,12 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
         processLine(line);
       }
     }
-    
+
     // Hold the promise resolution until the UI has finished typing everything!
     while (isTyping || typingQueue.length > 0) {
       await new Promise(r => setTimeout(r, 100));
     }
-    
+
     return { text: fullText, suggestedTasks, action };
   };
 
@@ -391,14 +406,14 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
       }
       return onChunk ? await processStream(directRes) : await directRes.json();
     }
-    
+
     return onChunk ? await processStream(res) : await res.json();
   } catch (err) {
     console.warn('[API] Proxy clover call failed, trying direct endpoint...', err);
     // Add timeout manually for the final fallback if no stream
     const finalOptions = onChunk ? fetchOptions : { ...fetchOptions, timeout: 65000 };
     const directRes = await (onChunk ? fetch('https://orchestra-backend-30fy.onrender.com/clover', finalOptions) : fetchWithTimeout('https://orchestra-backend-30fy.onrender.com/clover', finalOptions));
-    
+
     if (!directRes.ok) {
       throw err;
     }
@@ -529,7 +544,7 @@ export async function deleteProjectBackend(projectId) {
       console.warn(`[API] Proxy delete returned ${res.status}. Falling back to direct URL.`);
       const directUrl = `https://orchestra-backend-30fy.onrender.com/projects/${encodeURIComponent(projectId)}`;
       console.log(`[API] Calling direct URL:`, directUrl);
-      
+
       const directRes = await fetch(directUrl, {
         method: 'DELETE',
         headers: {
@@ -581,8 +596,8 @@ export async function createTaskBackend(taskData) {
     track: taskData.track || 'general',
     assigned_to: taskData.assigned_to || taskData.assignedTo || '',
     status: taskData.status || 'todo',
-    dependencies: Array.isArray(taskData.dependencies) 
-      ? taskData.dependencies 
+    dependencies: Array.isArray(taskData.dependencies)
+      ? taskData.dependencies
       : (Array.isArray(taskData.depends_on) ? taskData.depends_on : [])
   };
 
@@ -607,5 +622,63 @@ export async function createTaskBackend(taskData) {
   try { return JSON.parse(text); } catch { return text; }
 }
 
+/**
+ * Delete a user in backend via DELETE /users/{user_id}.
+ * @param {string} userId - Path param user_id
+ * @returns {Promise<Object>} Response data
+ */
+export async function deleteUserBackend(userId) {
+  const url = `${BASE_URL}/users/${encodeURIComponent(userId)}`;
+  console.log(`[API] Attempting to delete user ${userId} via proxy:`, url);
 
+  const safelyParse = async (response) => {
+    const text = await response.text();
+    console.log(`[API] deleteUser response status: ${response.status}. Body:`, text);
+    if (!text) return { success: true };
+    try { return JSON.parse(text); } catch { return { message: text }; }
+  };
 
+  try {
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      }
+    });
+
+    if (!res.ok) {
+      console.warn(`[API] Proxy delete returned ${res.status}. Falling back to direct URL.`);
+      const directUrl = `https://orchestra-backend-30fy.onrender.com/users/${encodeURIComponent(userId)}`;
+      console.log(`[API] Calling direct URL:`, directUrl);
+
+      const directRes = await fetch(directUrl, {
+        method: 'DELETE',
+        headers: {
+          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+        }
+      });
+      if (!directRes.ok) {
+        const errText = await directRes.text().catch(() => 'No details');
+        console.error(`[API] Direct delete failed with status ${directRes.status}:`, errText);
+        throw new Error(`Delete User API error (${directRes.status}): ${errText}`);
+      }
+      return await safelyParse(directRes);
+    }
+    return await safelyParse(res);
+  } catch (err) {
+    console.warn('[API] Fetch exception in deleteUser. Retrying directly...', err);
+    const directUrl = `https://orchestra-backend-30fy.onrender.com/users/${encodeURIComponent(userId)}`;
+    const directRes = await fetch(directUrl, {
+      method: 'DELETE',
+      headers: {
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      }
+    });
+    if (!directRes.ok) {
+      const errText = await directRes.text().catch(() => 'No details');
+      console.error(`[API] Fallback direct delete failed with status ${directRes.status}:`, errText);
+      throw err;
+    }
+    return await safelyParse(directRes);
+  }
+}

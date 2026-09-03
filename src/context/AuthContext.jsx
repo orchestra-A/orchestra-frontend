@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchUserById, updateUser, fetchUsers } from '../services/api';
-
+import { fetchUserById, updateUser, fetchUsers, deleteUserBackend } from '../services/api';
 const AuthContext = createContext();
 
 // Custom hook to consume the authentication context
@@ -121,12 +120,27 @@ export function AuthProvider({ children }) {
     return updatedUser;
   };
 
+  /**
+   * Delete the user's account from the backend and log them out.
+   */
+  const deleteUserAccount = async () => {
+    if (!currentUser?.user_id) throw new Error('No user logged in.');
+    try {
+      await deleteUserBackend(currentUser.user_id);
+    } catch (err) {
+      console.warn('Failed to delete user account on backend:', err);
+      throw err;
+    }
+    logout();
+  };
+
   const value = {
     currentUser,
     signup,
     logout,
     fetchAndHydrateUser,
     updateProfile,
+    deleteUserAccount,
   };
 
   return (

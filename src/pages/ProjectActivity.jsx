@@ -167,6 +167,17 @@ export default function ProjectActivity() {
         <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} - Activity</h1>
         
         <div className="flex items-center gap-4 flex-wrap">
+          {isFilterActive && (
+            <button
+              onClick={() => {
+                setSelectedPlatforms([]);
+                setSelectedUsers([]);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm text-xs font-semibold transition-all bg-[#E74C3C] text-white hover:bg-[#C0392B] cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
           {/* Sort Order Segmented Control (Separate from other filters) */}
           <div className="flex items-center bg-gray-100 dark:bg-[#1E1E22] rounded-lg p-1 border border-gray-200 dark:border-[#27272A]">
             <button
@@ -253,17 +264,6 @@ export default function ProjectActivity() {
       </div>
 
       <div className="flex-1 relative">
-        {isFilterActive && (
-          <button
-            onClick={() => {
-              setSelectedPlatforms([]);
-              setSelectedUsers([]);
-            }}
-            className="absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-md text-sm font-semibold transition-all bg-[#E74C3C] text-white hover:bg-[#C0392B] cursor-pointer"
-          >
-            Clear Filters
-          </button>
-        )}
         <div className="w-full h-full overflow-y-auto pr-4">
         {displayedEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500 bg-[#F4F1EB] dark:bg-[#121910] rounded-xl border border-gray-200 dark:border-[#2B3B26]">
