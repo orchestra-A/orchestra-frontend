@@ -3,6 +3,7 @@ import { X, Plus, Edit2, Check, Layout, FileText, Loader2, AlertCircle, ShieldAl
 import { useNavigate, useParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { WorkflowCanvas } from '../components/WorkflowCanvas';
 import { createBlueprint, validateTeamMembers, createProjectBackend, updateProjectBackend, createTaskBackend, fetchProjects } from '../services/api';
 
@@ -15,6 +16,7 @@ export default function Blueprint() {
   const { projectId } = useParams();
   const { projects, tasks, addProject, updateProject, refreshData } = useProject();
   const { currentUser } = useAuth();
+  const { showToast } = useToast();
 
   const currentUserId = currentUser?.user_id || currentUser?.id || currentUser?.username || currentUser?.email;
 
@@ -29,13 +31,17 @@ export default function Blueprint() {
   const [techStack, setTechStack] = useState([]);
   const [techInput, setTechInput] = useState('');
 
-  const [members, setMembers] = useState([{ id: 1, value: "" }]);
+  const [members, setMembers] = useState([]);
+  const [memberInput, setMemberInput] = useState('');
+  const [isValidatingMember, setIsValidatingMember] = useState(false);
+  const [memberError, setMemberError] = useState(null);
+
   const [trackedRepos, setTrackedRepos] = useState([{ id: 1, value: "" }]);
   const [trackedChannels, setTrackedChannels] = useState([{ id: 1, value: "" }]);
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isValidatingUsers, setIsValidatingUsers] = useState(false);
-  const [memberError, setMemberError] = useState(null);
+  const [generationTime, setGenerationTime] = useState(0);
+  const [generationError, setGenerationError] = useState(null);
 
   const [blueprintData, setBlueprintData] = useState(null);
   const [activeTab, setActiveTab] = useState('workflow');
@@ -53,6 +59,20 @@ export default function Blueprint() {
     )
   );
 
+  // Timer effect for generation
+  useEffect(() => {
+    let interval;
+    if (isGenerating) {
+      setGenerationTime(0);
+      interval = setInterval(() => {
+        setGenerationTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setGenerationTime(0);
+    }
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
   useEffect(() => {
     if (projectId) {
       const proj = projects.find(p => p.id === projectId || p.name === projectId);
@@ -63,9 +83,10 @@ export default function Blueprint() {
         setTechStack(proj.techStack || []);
 
         if (proj.members && proj.members.length > 0) {
-          setMembers(proj.members);
+          // If previous data was objects with 'value', map them, otherwise assume strings
+          setMembers(proj.members.map(m => typeof m === 'object' ? m.value : m).filter(Boolean));
         } else {
-          setMembers([{ id: 1, value: "" }]);
+          setMembers([]);
         }
 
         if (proj.tracked_repos && proj.tracked_repos.length > 0) {
@@ -115,7 +136,7 @@ export default function Blueprint() {
       setTitle("");
       setDescription("");
       setTechStack([]);
-      setMembers([{ id: 1, value: "" }]);
+      setMembers([]);
       setTrackedRepos([{ id: 1, value: "" }]);
       setTrackedChannels([{ id: 1, value: "" }]);
       setViewState('centered');
@@ -125,41 +146,56 @@ export default function Blueprint() {
   }, [projectId]);
 
   const handleAddTech = (tech) => {
-    const t = tech.trim();
-    if (t && !techStack.includes(t)) {
-      setTechStack([...techStack, t]);
+    if (tech.trim() && !techStack.includes(tech.trim())) {
+      setTechStack([...techStack, tech.trim()]);
     }
-    setTechInput('');
   };
 
   const handleTechKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleAddTech(techInput);
+      setTechInput('');
     }
   };
 
-  const removeTech = (t) => {
-    setTechStack(techStack.filter(item => item !== t));
+  const handleRemoveTech = (tech) => {
+    setTechStack(techStack.filter(t => t !== tech));
   };
 
-  const handleMemberChange = (id, val) => {
-    setMemberError(null);
-    setMembers(members.map(m => m.id === id ? { ...m, value: val } : m));
-  };
+  const handleMemberKeyDown = async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const inputVal = memberInput.trim();
+      if (!inputVal) return;
 
-  const addMember = () => {
-    setMemberError(null);
-    setMembers([...members, { id: Date.now(), value: '' }]);
-  };
+      if (members.includes(inputVal)) {
+        setMemberInput('');
+        return;
+      }
 
-  const removeMember = (id) => {
-    setMemberError(null);
-    if (members.length > 1) {
-      setMembers(members.filter(m => m.id !== id));
-    } else {
-      setMembers([{ id: Date.now(), value: '' }]);
+      setIsValidatingMember(true);
+      setMemberError(null);
+      
+      try {
+        const validation = await validateTeamMembers([inputVal]);
+        if (validation.valid) {
+          setMembers([...members, inputVal]);
+          setMemberInput('');
+        } else {
+          setMemberError("User ID not found");
+        }
+      } catch (err) {
+        console.error("Validation error:", err);
+        setMemberError("Failed to validate user");
+      } finally {
+        setIsValidatingMember(false);
+      }
     }
+  };
+
+  const handleRemoveMember = (member) => {
+    setMembers(members.filter(m => m !== member));
   };
 
   const handleRepoChange = (id, val) => setTrackedRepos(trackedRepos.map(r => r.id === id ? { ...r, value: val } : r));
@@ -177,41 +213,38 @@ export default function Blueprint() {
   };
 
   const handleCreate = async () => {
+    console.log('[handleCreate] Triggered! Current state -> isGenerating:', isGenerating, 'viewState:', viewState);
+    
+    // Prevent multiple clicks from firing while already loading
+    if (isGenerating) {
+      console.log('[handleCreate] Aborting: already generating');
+      return;
+    }
+
+    setGenerationError(null);
+
     // If modifying an existing project, verify creator permissions
     if (projectId && !isCreator) {
+      console.log('[handleCreate] Aborting: Not creator');
       alert(`Only the project creator (${projectCreator}) is allowed to modify this project.`);
       return;
     }
 
-    setMemberError(null);
-    const rawMemberInputs = members.map(m => typeof m === 'string' ? m.trim() : (m.value || '').trim()).filter(Boolean);
+    // Verify creator state exists
+    if (!currentUserId) {
+      console.log('[handleCreate] Aborting: No currentUserId');
+      alert("You must be logged in to create a project.");
+      return;
+    }
+
     const rawRepoInputs = trackedRepos.map(r => typeof r === 'string' ? r.trim() : (r.value || '').trim()).filter(Boolean);
     const rawChannelInputs = trackedChannels.map(c => typeof c === 'string' ? c.trim() : (c.value || '').trim()).filter(Boolean);
-
-    // Validate team user IDs against user table
-    if (rawMemberInputs.length > 0) {
-      setIsValidatingUsers(true);
-      try {
-        const validation = await validateTeamMembers(rawMemberInputs);
-        if (!validation.valid) {
-          const invalidFormatted = validation.invalidMembers.map(m => `"${m}"`).join(', ');
-          const errorMsg = `User ID(s) not found in user table: ${invalidFormatted}. Please replace them with valid user IDs or remove them to proceed.`;
-          setMemberError(errorMsg);
-          alert(errorMsg);
-          return;
-        }
-      } catch (err) {
-        console.warn('User validation check warning:', err);
-      } finally {
-        setIsValidatingUsers(false);
-      }
-    }
 
     const payload = {
       name: title || 'Untitled Project',
       description: description || '',
       tech_stack: techStack,
-      members: rawMemberInputs,
+      members: members,
       tracked_repos: rawRepoInputs,
       tracked_channels: rawChannelInputs,
       created_by: currentUserId || null,
@@ -220,6 +253,7 @@ export default function Blueprint() {
     const isExistingBackendProject = projectId && projects.some(p => p.id === projectId && !p.id.startsWith('proj_'));
 
     if (isExistingBackendProject) {
+      console.log('[handleCreate] Modifying existing backend project');
       // Modifying existing verified backend project: Call POST /blueprint to regenerate blueprint & PATCH /projects/{project_id}
       setIsGenerating(true);
       setViewState('split');
@@ -241,6 +275,7 @@ export default function Blueprint() {
           await updateProjectBackend(projectId, { ...payload, summary: summaryContent });
         } catch (patchErr) {
           console.warn('[Blueprint] Backend project update error:', patchErr);
+          showToast('Failed to save project updates in the background.', 'error');
         }
 
         // Note: We don't need to manually create tasks here.
@@ -256,10 +291,12 @@ export default function Blueprint() {
           raw: null
         });
       } finally {
+        console.log('[handleCreate] Finishing existing backend project modification');
         setIsGenerating(false);
         setIsEditing(false);
       }
     } else {
+      console.log('[handleCreate] Creating new project. Setting isGenerating to true');
       // Creating new project: Call POST /blueprint (backend handles creating project and tasks in DB)
       setIsGenerating(true);
       setViewState('split');
@@ -326,12 +363,9 @@ export default function Blueprint() {
         navigate(`/blueprint/${finalProjectId}`, { replace: true });
       } catch (err) {
         console.error('Failed to generate blueprint from backend:', err);
-        setBlueprintData({
-          tasks: [],
-          summary: `Failed to load blueprint details: ${err.message}`,
-          raw: null
-        });
+        setGenerationError(`Failed to load blueprint details: ${err.message}`);
       } finally {
+        console.log('[handleCreate] Finishing new project creation');
         setIsGenerating(false);
         setIsEditing(false);
       }
@@ -433,53 +467,54 @@ export default function Blueprint() {
         {/* Members */}
         <div>
           <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Members:</label>
-          {memberError && (
-            <div className="mb-2 p-2 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 rounded-md flex items-start gap-2 text-red-600 dark:text-red-400 text-[11px]">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
-              <span>{memberError}</span>
-            </div>
-          )}
-          {isEditing ? (
-            <div className="space-y-1 mb-1">
-              {members.map((m) => (
-                <div key={m.id} className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-[#6B905F] dark:text-[#6B905F] font-semibold w-[80px] shrink-0">User/E-Mail:</span>
-                  <input
-                    type="text"
-                    value={typeof m === 'string' ? m : (m?.value || '')}
-                    onChange={e => handleMemberChange(m.id || m, e.target.value)}
-                    placeholder="Enter user_id or email"
-                    className="flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm"
-                  />
-                  <button onClick={() => removeMember(m.id)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 p-1 rounded-md transition-colors shrink-0">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={addMember}
-                className="w-full py-1 bg-[#6B905F]/10 dark:bg-[#6B905F]/10 text-[#6B905F] dark:text-[#6B905F] font-semibold text-[11px] rounded-md hover:bg-[#6B905F]/20 dark:hover:bg-[#6B905F]/20 transition-colors flex items-center justify-center gap-1 border border-[#6B905F]/30 dark:border-[#6B905F]/30 mt-1 shadow-sm"
-              >
-                <Plus className="w-3 h-3" /> Add Member
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-1 bg-[#F3F7F1] dark:bg-[#18181B] p-2 rounded-md border border-transparent">
-              {members.filter(m => (typeof m === 'string' ? m : (m?.value || '')).trim()).length > 0 ? (
-                members.filter(m => (typeof m === 'string' ? m : (m?.value || '')).trim()).map((m, idx) => {
-                  const val = typeof m === 'string' ? m : (m?.value || '');
-                  return (
-                    <div key={typeof m === 'object' ? (m.id || idx) : idx} className="text-[12px] text-gray-700 dark:text-white/90 font-medium flex items-center gap-1.5">
-                      <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></div>
-                      {val}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-[11px] text-gray-500 dark:text-white/50 italic">No members added</div>
+          {isEditing && (
+            <div className="flex flex-col gap-1.5 mb-1.5">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={memberInput}
+                  onChange={e => {
+                    setMemberInput(e.target.value);
+                    setMemberError(null);
+                  }}
+                  onKeyDown={handleMemberKeyDown}
+                  disabled={isValidatingMember}
+                  placeholder="Type username and press enter"
+                  className={`flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border rounded-md px-2 py-1.5 text-[12px] focus:outline-none focus:ring-1 transition-colors shadow-sm ${
+                    memberError 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 dark:border-[#27272A] focus:border-[#6B905F] focus:ring-[#6B905F]'
+                  }`}
+                />
+                {isValidatingMember && (
+                  <div className="absolute right-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#6B905F]" />
+                  </div>
+                )}
+              </div>
+              {memberError && (
+                <span className="text-[10px] text-red-500 font-medium ml-1">
+                  {memberError}
+                </span>
               )}
             </div>
           )}
+
+          <div className="flex flex-wrap gap-1">
+            {members.map(m => (
+              <span key={m} className="flex items-center gap-1 bg-[#6B905F]/10 dark:bg-[#6B905F]/10 text-[#6B905F] dark:text-[#6B905F] border border-[#6B905F]/30 dark:border-[#6B905F]/30 px-1.5 py-0.5 rounded text-[11px] font-semibold shadow-sm">
+                {m}
+                {isEditing && (
+                  <button onClick={() => handleRemoveMember(m)} className="hover:bg-[#6B905F] dark:bg-[#6B905F]/20 rounded-full p-0.5 transition-colors">
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                )}
+              </span>
+            ))}
+            {members.length === 0 && !isEditing && (
+              <span className="text-[11px] text-gray-500 dark:text-white/50 italic">None specified</span>
+            )}
+          </div>
         </div>
 
         {/* Tracked Repos */}
@@ -584,10 +619,10 @@ export default function Blueprint() {
             </button>
             <button
               onClick={handleCreate}
-              disabled={isValidatingUsers || isGenerating}
+              disabled={isValidatingMember || isGenerating}
               className="flex-1 py-1.5 bg-[#6B905F] dark:bg-[#6B905F] text-white font-semibold text-[13px] rounded-md hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] transition-colors shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
-              {isValidatingUsers ? (
+              {isValidatingMember ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Validating...</>
               ) : viewState === 'centered' ? (
                 "Create"
@@ -694,8 +729,29 @@ export default function Blueprint() {
           {isGenerating ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
               <Loader2 className="w-8 h-8 animate-spin text-[#6B905F] mb-3" />
-              <p className="font-semibold text-[13px]">Generating Blueprint...</p>
-              <p className="text-[11px] mt-1 opacity-70">Structuring workflow and compiling details</p>
+              <p className="font-semibold text-[13px]">
+                Generating Blueprint...
+              </p>
+              <p className="text-[12px] font-medium mt-1.5 flex items-center gap-1.5">
+                Time elapsed:
+                <span className="font-mono bg-gray-100 dark:bg-[#27272A] px-1.5 py-0.5 rounded text-[#6B905F]">
+                  {Math.floor(generationTime / 60).toString().padStart(2, '0')}:{(generationTime % 60).toString().padStart(2, '0')}
+                </span>
+              </p>
+              <p className="text-[11px] mt-2 opacity-70">Structuring workflow and compiling details</p>
+            </div>
+          ) : generationError ? (
+            <div className="w-full h-full flex flex-col items-center justify-center text-red-500 dark:text-red-400 px-6 text-center">
+              <AlertCircle className="w-12 h-12 mb-3 opacity-80" />
+              <h3 className="font-bold text-[15px] mb-1">Something went wrong</h3>
+              <p className="text-[13px] opacity-90 max-w-md">{generationError}</p>
+              
+              <button 
+                onClick={handleCreate}
+                className="mt-6 px-4 py-2 bg-red-100 dark:bg-red-950/40 hover:bg-red-200 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300 text-sm font-semibold rounded-md border border-red-200 dark:border-red-800 transition-colors shadow-sm flex items-center gap-2"
+              >
+                Try Again
+              </button>
             </div>
           ) : blueprintData ? (
             activeTab === 'workflow' ? (

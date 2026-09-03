@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { fetchTasks, fetchUsers, fetchProjects, updateTaskStatus, deleteProjectBackend, updateProjectBackend } from '../services/api';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 const ProjectContext = createContext();
 
@@ -9,9 +10,33 @@ export function useProject() {
   return useContext(ProjectContext);
 }
 
-// Provider component that manages global state for Projects, Tasks, and Team Data.
 export function ProjectProvider({ children }) {
   const { currentUser } = useAuth();
+  const { showToast } = useToast();
+  
+  // Helper to extract clean error messages from JSON strings or API errors
+  const formatError = (err, fallback) => {
+    let msg = err.message || fallback;
+    
+    let codeStr = "";
+    const codeMatch = msg.match(/\((\d{3})\)/);
+    if (codeMatch) {
+      codeStr = ` (Error ${codeMatch[1]})`;
+    }
+
+    // Try to extract JSON if it was appended to the error message (e.g. `API error (404): {"error":"..."}`)
+    const jsonMatch = msg.match(/({.*})/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.error) return parsed.error + codeStr;
+        if (parsed.message) return parsed.message + codeStr;
+      } catch (e) {
+        // ignore parsing errors
+      }
+    }
+    return msg;
+  };
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);       // All tasks for the current user's projects
   const [allUsers, setAllUsers] = useState([]);  // All backend users (for team enrichment)
@@ -316,6 +341,7 @@ export function ProjectProvider({ children }) {
       await loadData();
     } catch (err) {
       console.error(`[ProjectContext] Failed to delete project ${id}:`, err);
+      showToast(formatError(err, 'Failed to delete project'), 'error');
     }
   };
 
@@ -326,6 +352,7 @@ export function ProjectProvider({ children }) {
       await loadData();
     } catch (err) {
       console.error('Failed to archive project:', err);
+      showToast(formatError(err, 'Failed to archive project'), 'error');
     }
   };
 
@@ -350,6 +377,7 @@ export function ProjectProvider({ children }) {
       setTasks(prevTasks =>
         prevTasks.map(t => (t.id === taskId ? { ...t, status: oldStatus, isUpdating: false } : t))
       );
+      showToast(formatError(error, 'Failed to update task status'), 'error');
       throw error;
     }
   };
