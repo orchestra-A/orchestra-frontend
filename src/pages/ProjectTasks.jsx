@@ -66,6 +66,9 @@ export default function ProjectTasks() {
   const decodedId = decodeURIComponent(projectId || "").trim();
   const project = projects.find(p => p.id.trim() === decodedId || p.id === projectId);
   const projectName = project ? project.name : "Project";
+  
+  const currentUserId = currentUser ? (currentUser.user_id || currentUser.id || currentUser.username || currentUser.email) : null;
+  const isCreator = project && currentUserId && (project.created_by === currentUserId);
 
   // Filter all tasks for this project using canonical project IDs
   // Task project_ids are normalized to canonical IDs by ProjectContext
@@ -318,9 +321,6 @@ export default function ProjectTasks() {
             </div>
           )}
         </div>
-        <Button className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white">
-          <Plus className="w-4 h-4 mr-2" /> Add Task
-        </Button>
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 overflow-hidden pb-6">

@@ -718,9 +718,11 @@ export default function Blueprint() {
           </div>
 
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
+            {isCreator && (
+              <button className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white flex items-center px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors shadow-sm">
+                <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Task
+              </button>
+            )}
           </div>
         </div>
 

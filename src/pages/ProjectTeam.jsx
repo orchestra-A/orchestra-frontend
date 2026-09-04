@@ -2,6 +2,7 @@ import { UserPlus, MessageCircle, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
+import { useAuth } from '../context/AuthContext';
 
 // Inline GitHub SVG (lucide-react Github export not available in this version)
 const GithubIcon = ({ className }) => (
@@ -38,6 +39,10 @@ export default function ProjectTeam() {
   const decodedId = decodeURIComponent(projectId || '').trim();
   const project = projects.find((p) => p.id.trim() === decodedId || p.id === projectId);
   const projectName = project ? project.name : 'Project';
+  
+  const { currentUser } = useAuth();
+  const currentUserId = currentUser ? (currentUser.user_id || currentUser.id || currentUser.username || currentUser.email) : null;
+  const isCreator = project && currentUserId && (project.created_by === currentUserId);
 
   const rawTeam = project?.teamMembers || project?.members || [];
 
@@ -95,9 +100,11 @@ export default function ProjectTeam() {
           <h1 className="text-[#1D1E1B] dark:text-white/90 text-2xl font-bold">{projectName} — Team</h1>
           <p className="text-sm text-gray-500 dark:text-white/50 mt-1">{rawTeam.length} member{rawTeam.length !== 1 ? 's' : ''}</p>
         </div>
-        <Button className="bg-[#F4F1EB] dark:bg-[#09090B] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#27272A] hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] shadow-sm">
-          <UserPlus className="w-4 h-4 mr-2" /> Add Member
-        </Button>
+        {isCreator && (
+          <Button className="bg-[#F4F1EB] dark:bg-[#09090B] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#27272A] hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] shadow-sm">
+            <UserPlus className="w-4 h-4 mr-2" /> Add Member
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

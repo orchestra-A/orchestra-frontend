@@ -120,7 +120,18 @@ export async function updateUser(userId, payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Failed to update user: ${res.status}`);
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    let errMsg = `Failed to update user: ${res.status}`;
+    try {
+      const parsed = JSON.parse(errText);
+      if (parsed.detail) errMsg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail);
+      else if (parsed.error) errMsg = parsed.error;
+    } catch (e) {
+      if (errText) errMsg = errText;
+    }
+    throw new Error(errMsg);
+  }
   return res.json();
 }
 

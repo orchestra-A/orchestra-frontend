@@ -293,7 +293,7 @@ export default function Dashboard() {
       {/* Welcome Section */}
       <div className="mb-4 shrink-0">
         <h1 className="text-[#1D1E1B] dark:text-white/90 text-lg font-bold mb-0.5">
-          Welcome back{currentUser?.username ? `, ${currentUser.username}` : ''}
+          Welcome back{currentUser?.name ? `, ${currentUser.name.split(' ')[0]}` : (currentUser?.username ? `, ${currentUser.username}` : '')}
         </h1>
       </div>
 

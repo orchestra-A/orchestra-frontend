@@ -111,13 +111,15 @@ export function AuthProvider({ children }) {
     if (!currentUser?.user_id) throw new Error('No user logged in.');
     try {
       await updateUser(currentUser.user_id, updates);
+      
+      const updatedUser = { ...currentUser, ...updates };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      return updatedUser;
     } catch (err) {
-      console.warn('Backend profile update failed, updating locally only:', err);
+      console.warn('Backend profile update failed:', err);
+      throw err;
     }
-    const updatedUser = { ...currentUser, ...updates };
-    setCurrentUser(updatedUser);
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-    return updatedUser;
   };
 
   /**
