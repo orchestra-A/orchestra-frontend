@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, User, Contact, LayoutGrid, Lock, Fingerprint, Code, Search, Check, X,
-  MessageCircle, Globe, ExternalLink,
+  MessageCircle, Globe, ExternalLink, Edit2, Save
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 // Inline GitHub SVG (lucide-react Github export not available in this version)
 const GithubIcon = ({ className }) => (
@@ -56,9 +57,40 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'details');
   const navigate = useNavigate();
   const { currentUser, updateProfile, deleteUserAccount } = useAuth();
+  const { showToast } = useToast();
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+
+  useEffect(() => {
+    if (currentUser) {
+      setEditName(currentUser.name || '');
+      setEditUsername(currentUser.username || '');
+      setEditEmail(currentUser.email || '');
+    }
+  }, [currentUser]);
+
+  const handleSaveProfile = async () => {
+    try {
+      const updates = {};
+      if (editName !== (currentUser.name || '')) updates.name = editName;
+      if (editUsername !== (currentUser.username || '')) updates.username = editUsername;
+      if (editEmail !== (currentUser.email || '')) updates.email = editEmail;
+      
+      if (Object.keys(updates).length > 0) {
+        await updateProfile(updates);
+      }
+      setIsEditingProfile(false);
+      showToast('Profile updated successfully', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to update profile', 'error');
+    }
+  };
 
   const handleDeleteProfile = async () => {
     setIsDeleting(true);
@@ -150,24 +182,94 @@ export default function Profile() {
       case 'details':
         return (
           <div className="w-full">
-            <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90 mb-4">Profile Details</h1>
-            <div className="space-y-4">
-              {/* Username (read-only from backend) */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-white/80">Username</label>
-                <div className="w-full max-w-md px-4 py-2.5 bg-gray-100 dark:bg-[#27272A] border border-gray-200 dark:border-[#27272A] rounded-lg text-sm text-gray-500 dark:text-white/50 select-all">
-                  {currentUser?.username || '—'}
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-[26px] font-bold text-gray-800 dark:text-white/90">Profile Details</h1>
+              {!isEditingProfile ? (
+                <button
+                  onClick={() => setIsEditingProfile(true)}
+                  className="px-3 py-1.5 bg-[#6B905F]/10 dark:bg-[#6B905F]/20 text-[#6B905F] dark:text-[#7ED957] text-sm font-semibold rounded-md border border-[#6B905F]/20 flex items-center gap-1.5 hover:bg-[#6B905F]/20 transition-colors"
+                >
+                  <Edit2 className="w-4 h-4" /> Edit Profile
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setIsEditingProfile(false);
+                      setEditName(currentUser?.name || '');
+                      setEditUsername(currentUser?.username || '');
+                      setEditEmail(currentUser?.email || '');
+                    }}
+                    className="px-3 py-1.5 bg-gray-100 dark:bg-[#27272A] text-gray-700 dark:text-white/80 text-sm font-semibold rounded-md hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveProfile}
+                    className="px-3 py-1.5 bg-[#6B905F] text-white text-sm font-semibold rounded-md flex items-center gap-1.5 hover:bg-[#5A7A4F] transition-colors"
+                  >
+                    <Save className="w-4 h-4" /> Save
+                  </button>
                 </div>
-                <p className="text-xs text-gray-400 dark:text-white/30">Set by your OAuth provider. Cannot be changed here.</p>
+              )}
+            </div>
+            <div className="space-y-4">
+              {/* Name */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-white/80">Name</label>
+                {isEditingProfile ? (
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full max-w-md px-4 py-2 bg-white dark:bg-[#18181B] border border-gray-300 dark:border-[#27272A] rounded-lg text-sm text-gray-900 dark:text-white/90 focus:outline-none focus:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F]"
+                    placeholder="Enter your name"
+                  />
+                ) : (
+                  <div className="w-full max-w-md px-4 py-2.5 bg-gray-100 dark:bg-[#27272A] border border-gray-200 dark:border-[#27272A] rounded-lg text-sm text-gray-500 dark:text-white/50 select-all">
+                    {currentUser?.name || '—'}
+                  </div>
+                )}
               </div>
 
-              {/* Email (read-only from backend) */}
+              {/* Username */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-white/80">Username</label>
+                {isEditingProfile ? (
+                  <input
+                    type="text"
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                    className="w-full max-w-md px-4 py-2 bg-white dark:bg-[#18181B] border border-gray-300 dark:border-[#27272A] rounded-lg text-sm text-gray-900 dark:text-white/90 focus:outline-none focus:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F]"
+                  />
+                ) : (
+                  <>
+                    <div className="w-full max-w-md px-4 py-2.5 bg-gray-100 dark:bg-[#27272A] border border-gray-200 dark:border-[#27272A] rounded-lg text-sm text-gray-500 dark:text-white/50 select-all">
+                      {currentUser?.username || '—'}
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-white/30">Set by your OAuth provider. Can be changed if needed.</p>
+                  </>
+                )}
+              </div>
+
+              {/* Email */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-gray-700 dark:text-white/80">Email</label>
-                <div className="w-full max-w-md px-4 py-2.5 bg-gray-100 dark:bg-[#27272A] border border-gray-200 dark:border-[#27272A] rounded-lg text-sm text-gray-500 dark:text-white/50 select-all">
-                  {currentUser?.email || '—'}
-                </div>
-                <p className="text-xs text-gray-400 dark:text-white/30">Synced from your connected account.</p>
+                {isEditingProfile ? (
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full max-w-md px-4 py-2 bg-white dark:bg-[#18181B] border border-gray-300 dark:border-[#27272A] rounded-lg text-sm text-gray-900 dark:text-white/90 focus:outline-none focus:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F]"
+                  />
+                ) : (
+                  <>
+                    <div className="w-full max-w-md px-4 py-2.5 bg-gray-100 dark:bg-[#27272A] border border-gray-200 dark:border-[#27272A] rounded-lg text-sm text-gray-500 dark:text-white/50 select-all">
+                      {currentUser?.email || '—'}
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-white/30">Synced from your connected account.</p>
+                  </>
+                )}
               </div>
 
               {/* GitHub username */}
@@ -378,10 +480,10 @@ export default function Profile() {
         {/* User avatar + name in sidebar */}
         <div className="flex items-center gap-3 mb-8 p-3 bg-[#6B905F]/10 dark:bg-[#6B905F]/10 rounded-xl border border-[#6B905F]/20">
           <div className="w-10 h-10 rounded-full bg-[#6B905F] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-            {(currentUser?.username || 'U').substring(0, 2).toUpperCase()}
+            {(currentUser?.name || currentUser?.username || 'U').substring(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-800 dark:text-white/90 truncate">{currentUser?.username || 'User'}</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-white/90 truncate">{currentUser?.name || currentUser?.username || 'User'}</p>
             <p className="text-xs text-gray-500 dark:text-white/50 truncate">{currentUser?.email || ''}</p>
           </div>
         </div>
