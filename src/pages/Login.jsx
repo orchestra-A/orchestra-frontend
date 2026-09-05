@@ -1,7 +1,103 @@
 import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, Clover } from 'lucide-react';
+import { ArrowLeft, Clover, Zap, ChevronDown, Loader2 } from 'lucide-react';
 import { fetchUsers } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+
+// ─── DEV BYPASS LOGIN (localhost only) ───────────────────────────────────────
+// Shows only when running on localhost. Fetches real users from the backend
+// and lets you log in as any of them without going through OAuth.
+// This prevents being redirected to the Vercel deployment after login.
+function DevBypassLogin() {
+  const { signup } = useAuth();
+  const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [selected, setSelected] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    fetchUsers()
+      .then((u) => {
+        // Only show users that have completed onboarding (have a username/name)
+        const onboarded = u.filter((usr) => usr.username || usr.name);
+        setUsers(onboarded);
+        if (onboarded.length > 0) setSelected(onboarded[0].user_id || onboarded[0].id);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleBypassLogin = async () => {
+    const user = users.find((u) => (u.user_id || u.id) === selected);
+    if (!user) return;
+    setLoggingIn(true);
+    // Simulate a real auth token (not a real JWT, just a dev marker)
+    localStorage.setItem('authToken', `dev_bypass_${user.user_id || user.id}`);
+    localStorage.setItem('onboarded', 'true');
+    await signup({ ...user, id: user.user_id || user.id, user_id: user.user_id || user.id });
+    setLoggingIn(false);
+    navigate('/', { replace: true });
+  };
+
+  if (loading) return null;
+  if (users.length === 0) return (
+    <div className="fixed bottom-4 right-4 z-[999] bg-yellow-900/90 border border-yellow-500/40 rounded-xl px-4 py-3 text-yellow-300 text-xs shadow-xl backdrop-blur">
+      ⚡ Dev Mode — No onboarded users found in backend
+    </div>
+  );
+
+  return (
+    <div className="fixed bottom-4 right-4 z-[999]">
+      {open ? (
+        <div className="bg-[#0f1117] border border-[#6b8f5e]/50 rounded-2xl p-4 shadow-2xl w-72 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-[#6b8f5e]" />
+              <span className="text-white text-sm font-bold">Dev Bypass Login</span>
+            </div>
+            <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-white text-lg leading-none cursor-pointer">×</button>
+          </div>
+          <p className="text-gray-400 text-xs mb-3">Localhost only — skips OAuth redirect</p>
+          <div className="relative mb-3">
+            <select
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
+              className="w-full bg-[#1a1d23] border border-[#27272A] text-white text-sm rounded-lg px-3 py-2.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#6b8f5e]"
+            >
+              {users.map((u) => (
+                <option key={u.user_id || u.id} value={u.user_id || u.id}>
+                  {u.username || u.name} {u.email ? `(${u.email})` : ''}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          </div>
+          <button
+            onClick={handleBypassLogin}
+            disabled={loggingIn}
+            className="w-full bg-[#6b8f5e] hover:bg-[#5a7a4f] text-white text-sm font-semibold rounded-lg py-2.5 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+          >
+            {loggingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+            {loggingIn ? 'Logging in...' : 'Login as this user'}
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 bg-[#0f1117] border border-[#6b8f5e]/50 hover:border-[#6b8f5e] text-[#6b8f5e] text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl transition-all cursor-pointer hover:bg-[#6b8f5e]/10 backdrop-blur"
+        >
+          <Zap className="w-3.5 h-3.5" />
+          Dev Login
+        </button>
+      )}
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+const IS_LOCALHOST = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -125,6 +221,7 @@ export default function Login() {
         </div>
 
       </div>
+      {IS_LOCALHOST && <DevBypassLogin />}
     </div>
   );
 }
