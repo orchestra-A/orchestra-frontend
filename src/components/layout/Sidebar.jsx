@@ -74,6 +74,9 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
 
   useEffect(() => {
     console.log(`[App Action] Sidebar expanded state changed to: ${isSidebarExpanded}`);
+    if (!isSidebarExpanded) {
+      setDropdownOpenId(null);
+    }
   }, [isSidebarExpanded]);
 
   const getIsActive = (path) => {
@@ -114,7 +117,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
           )}
         </button>
 
-        {dropdownOpenId === project.id && (
+        {isSidebarExpanded && dropdownOpenId === project.id && (
           <div className="absolute right-8 top-8 w-32 bg-white dark:bg-[#1E1E22] border border-gray-200 dark:border-[#27272A] rounded-md shadow-lg z-50 py-1 flex flex-col">
             <button
               onClick={(e) => {

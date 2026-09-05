@@ -241,9 +241,9 @@ export function FloatingAIChat() {
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 h-14 bg-[#6B905F] hover:bg-[#5A7A4F] text-white rounded-full shadow-lg flex items-center justify-center z-50 transition-all duration-300 hover:scale-105 group px-4 overflow-hidden"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center">
             <MessageSquare className="w-6 h-6 shrink-0" />
-            <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 group-hover:max-w-[200px] group-hover:ml-1 text-sm font-medium">
+            <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 group-hover:max-w-[200px] group-hover:ml-2 text-sm font-medium">
               Chat with AI
             </span>
           </div>
@@ -251,7 +251,7 @@ export function FloatingAIChat() {
       )}
 
       {isOpen && (
-        <div className="fixed bottom-0 right-0 h-[600px] flex z-50">
+        <div className="relative h-full flex z-40 shrink-0">
           {/* Drag Handle */}
           <div 
             onPointerDown={handlePointerDown}

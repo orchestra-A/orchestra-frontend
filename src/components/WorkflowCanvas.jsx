@@ -295,6 +295,9 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
   const onNodeContextMenu = (event, node) => {
     event.preventDefault();
     if (node.type !== 'task') return;
+    
+    // Only show context menu if the task is already selected
+    if (!selectedTask || selectedTask.id !== node.id) return;
 
     const isBlueprintTab = location.pathname.includes('/blueprint');
     const isAssigned = isAssignedToCurrentUser(node.data?.assigned_to, currentUser);
@@ -576,6 +579,7 @@ export function WorkflowCanvas({ projectId = "proj_marketing", tasksOverride = n
             onNodeContextMenu={onNodeContextMenu}
             onNodeClick={onNodeClick}
             onPaneClick={closeMenu}
+            onMoveStart={closeMenu}
             onInit={setRfInstance}
             fitView
             fitViewOptions={{ padding: 0.1 }}
