@@ -1,4 +1,4 @@
-import { Search, Bell, User, Settings, HelpCircle, LogOut, ChevronRight, X } from 'lucide-react';
+import { Search, Link2, User, Settings, HelpCircle, LogOut, ChevronRight, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
@@ -122,7 +122,7 @@ export function Header() {
             onClick={() => navigate('/profile', { state: { activeTab: 'platform' } })}
             className="relative p-2 hover:bg-gray-100 dark:hover:bg-[#2B3B26] rounded-md transition-colors cursor-pointer"
           >
-            <Bell className="w-[18px] h-[18px] text-gray-600 dark:text-white/70" />
+            <Link2 className="w-[18px] h-[18px] text-gray-600 dark:text-white/70" />
             {isMissingPlatforms && (
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#E74C3C] rounded-full shadow-[0_0_0_2px_#F4F1EB] dark:shadow-[0_0_0_2px_#09090B]"></span>
             )}
