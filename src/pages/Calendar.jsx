@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Calendar() {
   const { tasks, projects, loading } = useProject();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { isLoading } = useOutletContext() || {};
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -67,7 +69,16 @@ export default function Calendar() {
   const todayStr = formatDateStr(new Date());
 
   // Pre-calculate task spans to avoid redundant date math
-  const tasksWithSpans = tasks.filter(t => t.deadline).map(t => {
+  const activeProjects = projects.filter(p => !p.is_archived);
+  const accessibleProjectIds = new Set(activeProjects.map(p => p.id));
+  const currentUsername = currentUser?.username?.toLowerCase() || '';
+
+  const tasksWithSpans = tasks.filter(t => {
+    if (!t.deadline) return false;
+    if (!t.project_id || !accessibleProjectIds.has(t.project_id)) return false;
+    if (!t.assigned_to || t.assigned_to.toLowerCase() !== currentUsername) return false;
+    return true;
+  }).map(t => {
     const datePart = t.deadline.toString().split('T')[0];
     const parts = datePart.split('-');
     const deadlineDate = new Date(parts[0], parts[1] - 1, parts[2]);
