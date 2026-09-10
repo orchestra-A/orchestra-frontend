@@ -42,6 +42,7 @@ export default function Blueprint() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationTime, setGenerationTime] = useState(0);
   const [generationError, setGenerationError] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   const [blueprintData, setBlueprintData] = useState(null);
   const [activeTab, setActiveTab] = useState('workflow');
@@ -256,11 +257,12 @@ export default function Blueprint() {
       console.log('[handleCreate] Modifying existing backend project');
       // Modifying existing verified backend project: Call POST /blueprint to regenerate blueprint & PATCH /projects/{project_id}
       setIsGenerating(true);
+      setLoadingMessage('Initializing...');
       setViewState('split');
 
       try {
         // 1. Call POST /blueprint with new changes
-        const blueprintRes = await createBlueprint(payload, currentUserId);
+        const blueprintRes = await createBlueprint(payload, currentUserId, setLoadingMessage);
         const tasksList = blueprintRes.tasks || [];
         const summaryContent = blueprintRes.summary || blueprintRes.description || (typeof blueprintRes === 'string' ? blueprintRes : "Updated blueprint.");
 
@@ -299,11 +301,12 @@ export default function Blueprint() {
       console.log('[handleCreate] Creating new project. Setting isGenerating to true');
       // Creating new project: Call POST /blueprint (backend handles creating project and tasks in DB)
       setIsGenerating(true);
+      setLoadingMessage('Initializing...');
       setViewState('split');
 
       try {
         // 1. Call POST /blueprint (Backend creates project record & tasks directly in database)
-        const data = await createBlueprint(payload, currentUserId);
+        const data = await createBlueprint(payload, currentUserId, setLoadingMessage);
         console.log('[Blueprint] POST /blueprint server response:', data);
 
         const tasksList = data.tasks || [];
@@ -740,6 +743,11 @@ export default function Blueprint() {
                   {Math.floor(generationTime / 60).toString().padStart(2, '0')}:{(generationTime % 60).toString().padStart(2, '0')}
                 </span>
               </p>
+              {loadingMessage && (
+                <p className="text-[12px] mt-3 font-semibold text-[#6B905F] dark:text-[#6B905F] animate-pulse">
+                  {loadingMessage}
+                </p>
+              )}
               <p className="text-[11px] mt-2 opacity-70">Structuring workflow and compiling details</p>
             </div>
           ) : generationError ? (

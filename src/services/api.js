@@ -226,7 +226,7 @@ async function fetchWithTimeout(resource, options = {}) {
  * @param {string} userId - Creator user_id query param
  * @returns {Promise<Object>} Response data
  */
-export async function createBlueprint(payload, userId) {
+export async function createBlueprint(payload, userId, onStatusUpdate = null) {
   const effectiveUserId = userId || payload.created_by || null;
   const queryParam = effectiveUserId ? `?user_id=${encodeURIComponent(effectiveUserId)}` : '';
   const url = `${BASE_URL}/blueprint${queryParam}`;
@@ -237,51 +237,92 @@ export async function createBlueprint(payload, userId) {
     created_by: effectiveUserId
   };
 
-  console.log('[API] Calling createBlueprint endpoint (120s timeout):', url, bodyPayload);
-  try {
-    const res = await fetchWithTimeout(url, {
-      method: 'POST',
-      timeout: 120000,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-      },
-      body: JSON.stringify(bodyPayload),
-    });
+  const fetchOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+    },
+    body: JSON.stringify(bodyPayload),
+  };
 
-    if (!res.ok) {
-      // Fallback to direct backend URL if proxy fails
-      const directRes = await fetchWithTimeout(directUrl, {
-        method: 'POST',
-        timeout: 120000,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-        },
-        body: JSON.stringify(bodyPayload),
-      });
-      if (!directRes.ok) {
-        const errText = await directRes.text().catch(() => 'No details');
-        throw new Error(`Blueprint API error (${directRes.status}): ${errText}`);
+  console.log('[API] Calling createBlueprint endpoint (SSE stream):', url, bodyPayload);
+
+  const processStream = async (response) => {
+    if (!response.ok) {
+      const errText = await response.text().catch(() => 'No details');
+      throw new Error(`Blueprint API error (${response.status}): ${errText}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await response.json();
+    }
+
+    if (!response.body) throw new Error("ReadableStream not supported");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+    let finalProject = null;
+
+    const processLine = (line) => {
+      line = line.trim();
+      if (line.startsWith('data:')) {
+        const dataStr = line.replace(/^data:\s*/, '').trim();
+        if (dataStr === '[DONE]') return;
+        
+        let parsed;
+        try {
+          parsed = JSON.parse(dataStr);
+        } catch (e) {
+          return; // ignore unparseable JSON lines
+        }
+        
+        if (parsed.error) {
+          throw new Error(parsed.error);
+        }
+        if (parsed.status && onStatusUpdate) {
+          onStatusUpdate(parsed.status);
+        }
+        if (parsed.done && parsed.project) {
+          finalProject = parsed.project;
+        }
       }
-      return await directRes.json();
+    };
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        if (buffer.trim()) processLine(buffer);
+        break;
+      }
+      buffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex;
+      while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+        processLine(line);
+      }
     }
-    return await res.json();
+
+    if (!finalProject) {
+      throw new Error("Stream closed before receiving final project data.");
+    }
+    return finalProject;
+  };
+
+  try {
+    const res = await fetch(url, fetchOptions);
+    return await processStream(res);
   } catch (err) {
-    console.warn('[API] Proxy blueprint call failed, trying direct endpoint...', err);
-    const directRes = await fetchWithTimeout(directUrl, {
-      method: 'POST',
-      timeout: 120000,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-      },
-      body: JSON.stringify(bodyPayload),
-    });
-    if (!directRes.ok) {
-      throw err;
+    if (err.message && err.message.includes("Stream closed")) throw err;
+    if (err.message && !err.message.includes("Failed to fetch") && !err.message.includes("NetworkError")) {
+      throw err; // Re-throw parsed stream errors
     }
-    return await directRes.json();
+    console.warn('[API] Proxy blueprint call failed, trying direct endpoint...', err);
+    const directRes = await fetch(directUrl, fetchOptions);
+    return await processStream(directRes);
   }
 }
 

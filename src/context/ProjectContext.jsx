@@ -85,7 +85,6 @@ export function ProjectProvider({ children }) {
         addAlias(currentUser.username);
         addAlias(currentUser.email);
         addAlias(currentUser.id);
-        addAlias(currentUser.name);
         addAlias(currentUser.github_username);
         addAlias(currentUser.discord_id);
 
@@ -106,7 +105,6 @@ export function ProjectProvider({ children }) {
             addAlias(u.username);
             addAlias(u.email);
             addAlias(u.id);
-            addAlias(u.name);
           }
         });
       }
@@ -114,7 +112,7 @@ export function ProjectProvider({ children }) {
       const isUserMatch = (val) => {
         if (!val) return false;
         if (Array.isArray(val)) return val.some(item => isUserMatch(item));
-        if (typeof val === 'object') return isUserMatch(val.id || val.username || val.name || val.email || val.user_id);
+        if (typeof val === 'object') return isUserMatch(val.id || val.username || val.email || val.user_id);
         const str = val.toString().trim().toLowerCase();
         if (userAliases.has(str)) return true;
         const cleanStr = str.replace(/[^a-z0-9]/g, '');
