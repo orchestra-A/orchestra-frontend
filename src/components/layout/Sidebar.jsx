@@ -31,12 +31,15 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
     }
   }, [activeArchivedProject, expandedProject]);
 
-  // Dynamic count of all non-completed tasks across the user's projects
+  // Dynamic count of tasks assigned to the current user that are not completed,
+  // matching the same filter used on the Todo page.
   // Task project_ids are normalized to canonical IDs by ProjectContext
   const projectIds = new Set(activeProjects.map(p => p.id));
+  const currentUsername = currentUser?.username?.toLowerCase() || '';
   const myTasksCount = (tasks || []).filter(t => {
     if (!t.project_id || t.status === 'completed') return false;
-    return projectIds.has(t.project_id);
+    if (!projectIds.has(t.project_id)) return false;
+    return t.assigned_to && t.assigned_to.toLowerCase() === currentUsername;
   }).length;
 
   // Delete project handler - redirects to home if the currently viewed project is deleted
@@ -254,7 +257,7 @@ export function Sidebar({ sidebarCollapsed, setSidebarCollapsed, isHoveringSideb
             <span className="flex-1 text-left">To Do</span>
           )}
           {isSidebarExpanded && (
-            <Badge variant="secondary" className="bg-[#F59E42]/20 text-[#F59E42] border-0 text-[10px] px-1.5 h-5">
+            <Badge variant="secondary" className="bg-white/20 text-white border-0 text-[10px] px-1.5 h-5">
               {myTasksCount}
             </Badge>
           )}
