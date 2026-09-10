@@ -30,9 +30,12 @@ export default function Todo() {
   // Show ALL non-completed tasks from every project the user belongs to
   // Task project_ids are normalized to canonical IDs by ProjectContext
   const projectIds = new Set(projects.map(p => p.id));
+  const currentUsername = currentUser?.username?.toLowerCase() || '';
+  
   const myTasks = tasks.filter(t => {
     if (t.status === 'completed') return false;
-    return projectIds.has(t.project_id);
+    if (!projectIds.has(t.project_id)) return false;
+    return t.assigned_to && t.assigned_to.toLowerCase() === currentUsername;
   });
 
   // Resolve a task's project_id to the project display name

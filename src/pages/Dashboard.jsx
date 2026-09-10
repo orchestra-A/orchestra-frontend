@@ -85,7 +85,13 @@ export default function Dashboard() {
   // Filter tasks to only those belonging to projects the user is a part of
   // Projects array is already filtered by ProjectContext to only include accessible ones
   const accessibleProjectIds = new Set(activeProjects.map(p => p.id));
-  const filteredTasks = tasks.filter(t => t.project_id && accessibleProjectIds.has(t.project_id));
+  const currentUsername = currentUser?.username?.toLowerCase() || '';
+  const filteredTasks = tasks.filter(t => 
+    t.project_id && 
+    accessibleProjectIds.has(t.project_id) && 
+    t.assigned_to && 
+    t.assigned_to.toLowerCase() === currentUsername
+  );
 
   // Resolve a task's project_id to the project display name
   const resolveProjectName = (taskProjectId) => {
