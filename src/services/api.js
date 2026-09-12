@@ -630,51 +630,6 @@ export async function deleteProjectBackend(projectId) {
 }
 
 /**
- * Create a new task in the tasks table via POST /tasks.
- * Calls backend DIRECTLY (no proxy) to avoid duplicate creation from retry logic.
- * @param {Object} taskData - Task payload { id, title, description, project_id, track, assigned_to, status, dependencies }
- * @returns {Promise<Object>} Response data
- */
-export async function createTaskBackend(taskData) {
-  const directUrl = 'https://orchestra-backend-30fy.onrender.com/tasks';
-
-  const taskId = taskData.id || taskData.task_id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-
-  const payload = {
-    id: taskId,
-    title: taskData.title || taskData.name || 'Untitled Task',
-    description: taskData.description || '',
-    project_id: taskData.project_id || taskData.projectId || '',
-    track: taskData.track || 'general',
-    assigned_to: taskData.assigned_to || taskData.assignedTo || '',
-    status: taskData.status || 'todo',
-    dependencies: Array.isArray(taskData.dependencies)
-      ? taskData.dependencies
-      : (Array.isArray(taskData.depends_on) ? taskData.depends_on : [])
-  };
-
-  console.log('[API] Calling createTaskBackend DIRECT endpoint:', directUrl, payload);
-
-  const res = await fetch(directUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const text = await res.text();
-  console.log(`[API] createTaskBackend response (status ${res.status}):`, text);
-
-  if (!res.ok) {
-    throw new Error(`Create Task API error (${res.status}): ${text}`);
-  }
-
-  try { return JSON.parse(text); } catch { return text; }
-}
-
-/**
  * Delete a user in backend via DELETE /users/{user_id}.
  * @param {string} userId - Path param user_id
  * @returns {Promise<Object>} Response data
@@ -733,4 +688,90 @@ export async function deleteUserBackend(userId) {
     }
     return await safelyParse(directRes);
   }
+}
+
+/**
+ * Add a teammate and rebalance tasks via POST /add_member
+ * @param {Object} payload - { name: "username", skills: ["..."], project_id: "..." }
+ */
+export async function addMemberBackend(payload) {
+  const url = `${BASE_URL}/add_member`;
+  const directUrl = `https://orchestra-backend-30fy.onrender.com/add_member`;
+
+  const safelyParse = async (response) => {
+    const text = await response.text();
+    if (!text) return { success: true };
+    try { return JSON.parse(text); } catch { return { message: text }; }
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      return await safelyParse(res);
+    }
+  } catch (e) {
+    // proxy failed
+  }
+
+  // fallback
+  const directRes = await fetch(directUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  
+  if (!directRes.ok) {
+    throw new Error(`Failed to add member, status: ${directRes.status}`);
+  }
+  
+  return await safelyParse(directRes);
+}
+
+/**
+ * Create a new task in the tasks table via POST /tasks.
+ * Calls backend DIRECTLY (no proxy) to avoid duplicate creation from retry logic.
+ * @param {Object} taskData - Task payload { id, title, description, project_id, track, assigned_to, status, dependencies }
+ * @returns {Promise<Object>} Response data
+ */
+export async function createTaskBackend(taskData) {
+  const directUrl = 'https://orchestra-backend-30fy.onrender.com/tasks';
+
+  const taskId = taskData.id || taskData.task_id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+  const payload = {
+    id: taskId,
+    title: taskData.title || taskData.name || 'Untitled Task',
+    description: taskData.description || '',
+    project_id: taskData.project_id || taskData.projectId || '',
+    track: taskData.track || 'general',
+    assigned_to: taskData.assigned_to || taskData.assignedTo || '',
+    status: taskData.status || 'todo',
+    dependencies: Array.isArray(taskData.dependencies)
+      ? taskData.dependencies
+      : (Array.isArray(taskData.depends_on) ? taskData.depends_on : [])
+  };
+
+  console.log('[API] Calling createTaskBackend DIRECT endpoint:', directUrl, payload);
+
+  const res = await fetch(directUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await res.text();
+  console.log(`[API] createTaskBackend response (status ${res.status}):`, text);
+
+  if (!res.ok) {
+    throw new Error(`Create Task API error (${res.status}): ${text}`);
+  }
+
+  try { return JSON.parse(text); } catch { return text; }
 }

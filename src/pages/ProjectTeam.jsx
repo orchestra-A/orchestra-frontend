@@ -1,8 +1,10 @@
+import React, { useState } from 'react';
 import { UserPlus, MessageCircle, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
+import { addMemberBackend } from '../services/api';
 
 // Inline GitHub SVG (lucide-react Github export not available in this version)
 const GithubIcon = ({ className }) => (
@@ -34,7 +36,12 @@ export default function ProjectTeam() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { isLoading } = useOutletContext() || {};
-  const { projects, allUsers, loading } = useProject();
+  const { projects, allUsers, loading, refreshData } = useProject();
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newMemberUsername, setNewMemberUsername] = useState('');
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [addError, setAddError] = useState('');
 
   const decodedId = decodeURIComponent(projectId || '').trim();
   const project = projects.find((p) => p.id.trim() === decodedId || p.id === projectId);
@@ -52,6 +59,53 @@ export default function ProjectTeam() {
     'bg-blue-500/20 text-blue-700 dark:text-blue-300',
     'bg-amber-500/20 text-amber-700 dark:text-amber-300',
   ];
+
+  const handleAddMemberSubmit = async () => {
+    const un = newMemberUsername.trim();
+    if (!un) return;
+
+    // Validate against allUsers
+    const matchedUser = allUsers.find(u => 
+      u.username?.toLowerCase() === un.toLowerCase() || 
+      u.user_id?.toLowerCase() === un.toLowerCase() ||
+      u.email?.toLowerCase() === un.toLowerCase()
+    );
+
+    if (!matchedUser) {
+      setAddError("User not found. Please ensure they have created an account.");
+      return;
+    }
+
+    const skills = matchedUser.skills || [];
+
+    setIsAddingMember(true);
+    setAddError('');
+
+    try {
+      const response = await addMemberBackend({
+        name: matchedUser.username || matchedUser.name || un,
+        skills: skills,
+        project_id: decodedId
+      });
+
+      console.log(`[Add Member] Successfully added ${matchedUser.username || un}!`);
+      console.log(`[Add Member] AI Response:`, response);
+      if (response.moved?.length > 0) {
+        console.log(`[Add Member] AI rebalanced ${response.assigned_to_new_member} tasks (${response.points_taken} points) to them out of ${response.considered} considered.`);
+        console.table(response.moved);
+      }
+
+      await refreshData();
+      setIsAddModalOpen(false);
+      setNewMemberUsername('');
+      navigate(`/project/${projectId}/workflow`);
+    } catch (err) {
+      console.error(err);
+      setAddError(err.message || 'Failed to add member.');
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
 
   if (loading || isLoading) {
     return (
@@ -101,11 +155,62 @@ export default function ProjectTeam() {
           <p className="text-sm text-gray-500 dark:text-white/50 mt-1">{rawTeam.length} member{rawTeam.length !== 1 ? 's' : ''}</p>
         </div>
         {isCreator && (
-          <Button className="bg-[#F4F1EB] dark:bg-[#09090B] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#27272A] hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] shadow-sm">
+          <Button 
+            className="bg-[#F4F1EB] dark:bg-[#09090B] text-gray-700 dark:text-white/90 border border-gray-300 dark:border-[#27272A] hover:bg-[#F3F7F1] dark:hover:bg-[#2B3B26] shadow-sm"
+            onClick={() => setIsAddModalOpen(true)}
+          >
             <UserPlus className="w-4 h-4 mr-2" /> Add Member
           </Button>
         )}
       </div>
+
+      {/* Add Member Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#18181B] border border-gray-200 dark:border-[#27272A] rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+            <h2 className="text-xl font-bold text-[#1D1E1B] dark:text-white/90 mb-4">Add Team Member</h2>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Username</label>
+              <input
+                type="text"
+                value={newMemberUsername}
+                onChange={(e) => { setNewMemberUsername(e.target.value); setAddError(''); }}
+                className="w-full bg-gray-50 dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-lg px-4 py-2.5 text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:border-[#6B905F]"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newMemberUsername.trim()) {
+                    handleAddMemberSubmit();
+                  }
+                }}
+              />
+              {addError && <p className="text-red-500 text-xs mt-2">{addError}</p>}
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => { setIsAddModalOpen(false); setNewMemberUsername(''); setAddError(''); }}
+                disabled={isAddingMember}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="bg-[#6B905F] hover:bg-[#5A7A4F] text-white" 
+                onClick={handleAddMemberSubmit}
+                disabled={isAddingMember || !newMemberUsername.trim()}
+              >
+                {isAddingMember ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                    Adding...
+                  </span>
+                ) : 'Add'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {rawTeam.map((member, idx) => {

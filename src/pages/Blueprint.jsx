@@ -43,6 +43,7 @@ export default function Blueprint() {
   const [generationTime, setGenerationTime] = useState(0);
   const [generationError, setGenerationError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [formErrors, setFormErrors] = useState({ title: false, description: false, members: false });
 
   const [blueprintData, setBlueprintData] = useState(null);
   const [activeTab, setActiveTab] = useState('workflow');
@@ -143,6 +144,7 @@ export default function Blueprint() {
       setViewState('centered');
       setIsEditing(true);
       setMemberError(null);
+      setFormErrors({ title: false, description: false, members: false });
     }
   }, [projectId]);
 
@@ -224,6 +226,60 @@ export default function Blueprint() {
 
     setGenerationError(null);
 
+    // Capture unentered tech
+    let currentTechStack = [...techStack];
+    if (techInput.trim()) {
+      const tech = techInput.trim();
+      if (!currentTechStack.includes(tech)) {
+        currentTechStack.push(tech);
+        setTechStack(currentTechStack);
+      }
+      setTechInput('');
+    }
+
+    // Capture unentered member
+    let currentMembers = [...members];
+    if (memberInput.trim()) {
+      const inputVal = memberInput.trim();
+      if (!currentMembers.includes(inputVal)) {
+        setIsValidatingMember(true);
+        setMemberError(null);
+        try {
+          const validation = await validateTeamMembers([inputVal]);
+          if (validation.valid) {
+            currentMembers.push(inputVal);
+            setMembers(currentMembers);
+            setMemberInput('');
+          } else {
+            setMemberError("User ID not found");
+            setIsValidatingMember(false);
+            return; // Abort creation if member is invalid
+          }
+        } catch (err) {
+          console.error("Validation error:", err);
+          setMemberError("Failed to validate user");
+          setIsValidatingMember(false);
+          return; // Abort creation if validation fails
+        }
+        setIsValidatingMember(false);
+      } else {
+        setMemberInput('');
+      }
+    }
+
+    // Verify required fields
+    const errors = {
+      title: !title?.trim(),
+      description: !description?.trim(),
+      members: currentMembers.length === 0
+    };
+    
+    if (errors.title || errors.description || errors.members) {
+      setFormErrors(errors);
+      console.log('[handleCreate] Aborting: Missing required fields');
+      return;
+    }
+
     // If modifying an existing project, verify creator permissions
     if (projectId && !isCreator) {
       console.log('[handleCreate] Aborting: Not creator');
@@ -244,8 +300,8 @@ export default function Blueprint() {
     const payload = {
       name: title || 'Untitled Project',
       description: description || '',
-      tech_stack: techStack,
-      members: members,
+      tech_stack: currentTechStack,
+      members: currentMembers,
       tracked_repos: rawRepoInputs,
       tracked_channels: rawChannelInputs,
       created_by: currentUserId || null,
@@ -396,12 +452,16 @@ export default function Blueprint() {
         <div>
           <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Project Title:</label>
           {isEditing ? (
-            <input
-              type="text"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              className="w-full bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors shadow-sm"
-            />
+            <>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                onFocus={() => setFormErrors(prev => ({ ...prev, title: false }))}
+                className={`w-full bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border rounded-md px-2 py-1 text-[12px] focus:outline-none focus:ring-1 transition-colors shadow-sm ${formErrors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-[#27272A] focus:border-[#6B905F] dark:focus:border-[#6B905F] focus:ring-[#6B905F] dark:ring-[#6B905F]'}`}
+              />
+              {formErrors.title && <p className="text-red-500 text-xs mt-1">Please fill in the project title.</p>}
+            </>
           ) : (
             <div className="text-[12px] text-[#1D1E1B] dark:text-white/90 bg-[#F3F7F1] dark:bg-[#18181B] px-2 py-1 rounded-md border border-transparent font-medium">{title || "Untitled Project"}</div>
           )}
@@ -411,12 +471,16 @@ export default function Blueprint() {
         <div>
           <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Description:</label>
           {isEditing ? (
-            <textarea
-              rows={2}
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="w-full bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border border-gray-300 dark:border-[#27272A] rounded-md px-2 py-1 text-[12px] focus:outline-none focus:border-[#6B905F] dark:border-[#6B905F] focus:ring-1 focus:ring-[#6B905F] dark:ring-[#6B905F] transition-colors resize-none shadow-sm"
-            />
+            <>
+              <textarea
+                rows={2}
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                onFocus={() => setFormErrors(prev => ({ ...prev, description: false }))}
+                className={`w-full bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border rounded-md px-2 py-1 text-[12px] focus:outline-none focus:ring-1 transition-colors resize-none shadow-sm ${formErrors.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-[#27272A] focus:border-[#6B905F] dark:focus:border-[#6B905F] focus:ring-[#6B905F] dark:ring-[#6B905F]'}`}
+              />
+              {formErrors.description && <p className="text-red-500 text-xs mt-1">Please fill in the project description.</p>}
+            </>
           ) : (
             <div className="text-[12px] text-gray-700 dark:text-white/80 bg-[#F3F7F1] dark:bg-[#18181B] px-2 py-1 rounded-md border border-transparent min-h-[36px] whitespace-pre-wrap">{description || "No description."}</div>
           )}
@@ -424,7 +488,9 @@ export default function Blueprint() {
 
         {/* Tech Stack */}
         <div>
-          <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Tech Stack:</label>
+          <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            Tech Stack: <span className="opacity-50 font-normal">(Optional)</span>
+          </label>
           {isEditing && (
             <div className="flex gap-1.5 mb-1.5">
               <input
@@ -455,7 +521,7 @@ export default function Blueprint() {
               <span key={t} className="flex items-center gap-1 bg-[#6B905F]/10 dark:bg-[#6B905F]/10 text-[#6B905F] dark:text-[#6B905F] border border-[#6B905F]/30 dark:border-[#6B905F]/30 px-1.5 py-0.5 rounded text-[11px] font-semibold shadow-sm">
                 {t}
                 {isEditing && (
-                  <button onClick={() => removeTech(t)} className="hover:bg-[#6B905F] dark:bg-[#6B905F]/20 rounded-full p-0.5 transition-colors">
+                  <button type="button" onClick={() => handleRemoveTech(t)} className="hover:bg-[#6B905F] dark:bg-[#6B905F]/20 rounded-full p-0.5 transition-colors">
                     <X className="w-2.5 h-2.5" />
                   </button>
                 )}
@@ -480,11 +546,12 @@ export default function Blueprint() {
                     setMemberInput(e.target.value);
                     setMemberError(null);
                   }}
+                  onFocus={() => setFormErrors(prev => ({ ...prev, members: false }))}
                   onKeyDown={handleMemberKeyDown}
                   disabled={isValidatingMember}
                   placeholder="Type username and press enter"
                   className={`flex-1 bg-white dark:bg-[#18181B] text-[#1D1E1B] dark:text-white/90 border rounded-md px-2 py-1.5 text-[12px] focus:outline-none focus:ring-1 transition-colors shadow-sm ${
-                    memberError 
+                    memberError || (formErrors.members && members.length === 0)
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
                       : 'border-gray-300 dark:border-[#27272A] focus:border-[#6B905F] focus:ring-[#6B905F]'
                   }`}
@@ -495,9 +562,9 @@ export default function Blueprint() {
                   </div>
                 )}
               </div>
-              {memberError && (
+              {(memberError || (formErrors.members && members.length === 0)) && (
                 <span className="text-[10px] text-red-500 font-medium ml-1">
-                  {memberError}
+                  {memberError || "Please add at least one member."}
                 </span>
               )}
             </div>
@@ -508,7 +575,7 @@ export default function Blueprint() {
               <span key={m} className="flex items-center gap-1 bg-[#6B905F]/10 dark:bg-[#6B905F]/10 text-[#6B905F] dark:text-[#6B905F] border border-[#6B905F]/30 dark:border-[#6B905F]/30 px-1.5 py-0.5 rounded text-[11px] font-semibold shadow-sm">
                 {m}
                 {isEditing && (
-                  <button onClick={() => handleRemoveMember(m)} className="hover:bg-[#6B905F] dark:bg-[#6B905F]/20 rounded-full p-0.5 transition-colors">
+                  <button type="button" onClick={() => handleRemoveMember(m)} className="hover:bg-[#6B905F] dark:bg-[#6B905F]/20 rounded-full p-0.5 transition-colors">
                     <X className="w-2.5 h-2.5" />
                   </button>
                 )}
@@ -522,7 +589,9 @@ export default function Blueprint() {
 
         {/* Tracked Repos */}
         <div>
-          <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Tracked Repos:</label>
+          <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            Tracked Repos: <span className="opacity-50 font-normal">(Optional)</span>
+          </label>
           {isEditing ? (
             <div className="space-y-1 mb-1">
               {trackedRepos.map((r) => (
@@ -568,7 +637,9 @@ export default function Blueprint() {
 
         {/* Tracked Channels */}
         <div>
-          <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Tracked Channels:</label>
+          <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            Tracked Channels: <span className="opacity-50 font-normal">(Optional)</span>
+          </label>
           {isEditing ? (
             <div className="space-y-1 mb-1">
               {trackedChannels.map((c) => (
