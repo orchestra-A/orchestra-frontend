@@ -29,7 +29,7 @@ const todayStr = formatDateStr(new Date());
 const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 
 // ─── Mini Calendar ──────────────────────────────────────────────────────────
-function MiniCalendar({ currentDate, setCurrentDate }) {
+function MiniCalendar({ currentDate, setCurrentDate, onDateClick, selectedDate }) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -50,6 +50,7 @@ function MiniCalendar({ currentDate, setCurrentDate }) {
 
   const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
   const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const selectedStr = selectedDate ? formatDateStr(selectedDate) : null;
 
   return (
     <div className="flex flex-col mb-6 bg-white dark:bg-[#18181B] rounded-xl border border-gray-100 dark:border-[#27272A] p-4 shadow-sm">
@@ -65,9 +66,22 @@ function MiniCalendar({ currentDate, setCurrentDate }) {
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((c, i) => {
-          const isToday = c.current && formatDateStr(c.fullDate) === todayStr;
+          const isToday    = c.current && formatDateStr(c.fullDate) === todayStr;
+          const isSelected = c.current && selectedStr && formatDateStr(c.fullDate) === selectedStr && !isToday;
           return (
-            <div key={i} onClick={() => c.current && setCurrentDate(c.fullDate)} className={`h-7 w-7 flex items-center justify-center text-[11px] rounded-full mx-auto ${isToday ? 'bg-[#6B905F] text-white font-bold shadow-sm' : c.current ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer' : 'text-gray-300 dark:text-gray-600'}`}>
+            <div
+              key={i}
+              onClick={() => {
+                if (!c.current) return;
+                setCurrentDate(c.fullDate);
+                if (onDateClick) onDateClick(c.fullDate);
+              }}
+              className={`h-7 w-7 flex items-center justify-center text-[11px] rounded-full mx-auto transition-colors
+                ${ isToday    ? 'bg-[#6B905F] text-white font-bold shadow-sm cursor-pointer'
+                  : isSelected ? 'bg-[#6B905F]/20 text-[#6B905F] font-bold ring-1 ring-[#6B905F] cursor-pointer'
+                  : c.current  ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer'
+                  : 'text-gray-300 dark:text-gray-600' }`}
+            >
               {c.date}
             </div>
           );
@@ -153,6 +167,7 @@ export default function Calendar() {
   const { isLoading } = useOutletContext() || {};
 
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date()); // clicked date for sidebar
   const [view, setView] = useState('month'); // 'month' | 'week'
   const [weekOffset, setWeekOffset] = useState(0); // weeks from today
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, task: null });
@@ -217,7 +232,18 @@ export default function Calendar() {
 
   const prevWeek = () => setWeekOffset(o => o - 1);
   const nextWeek = () => setWeekOffset(o => o + 1);
-  const goToday  = () => setWeekOffset(0);
+  const goToday  = () => { setWeekOffset(0); setSelectedDate(new Date()); };
+
+  // Navigate to the week containing the clicked date and show its tasks in the sidebar
+  const handleDateClick = (date) => {
+    setSelectedDate(date);
+    const todayDate  = new Date();
+    const todaySun   = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() - todayDate.getDay());
+    const clickedSun = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
+    const weekDiff   = Math.round((clickedSun.getTime() - todaySun.getTime()) / (7 * 86400000));
+    setWeekOffset(weekDiff);
+    setView('week');
+  };
 
   // ── Shared task computation ───────────────────────────────────────────────
   // Spanning logic: task spans from (deadline − 14 days, adjusted to prev Friday) → deadline
@@ -247,14 +273,18 @@ export default function Calendar() {
   });
 
 
-  // Today's tasks for sidebar
-  const todayTs = dayStart(new Date());
-  const todayTasks = tasksWithSpans
-    .filter(t => t.startTime <= todayTs + 86400000 - 1 && t.deadlineTime >= todayTs)
+  // Sidebar tasks — for the selected date (defaults to today)
+  const selectedTs = dayStart(selectedDate);
+  const selectedDayTasks = tasksWithSpans
+    .filter(t => t.startTime <= selectedTs + 86400000 - 1 && t.deadlineTime >= selectedTs)
     .sort((a, b) => {
       const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
       return (order[(a.priority || '').toUpperCase()] ?? 3) - (order[(b.priority || '').toUpperCase()] ?? 3);
     });
+  const isSelectedToday = formatDateStr(selectedDate) === todayStr;
+  const sidebarDateLabel = isSelectedToday
+    ? `Today — ${selectedDate.toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric' })}`
+    : selectedDate.toLocaleDateString('default', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
 
   const resolveProjectName = (id) => {
     if (!id) return '?';
@@ -378,19 +408,25 @@ export default function Calendar() {
                     })}
                   </div>
 
-                  {/* Date numbers overlay — always on top of task pills */}
+                  {/* Date numbers overlay — clickable date numbers on top of task pills */}
                   <div className="absolute inset-0 grid grid-cols-7 gap-px pointer-events-none z-30">
                     {week.map((cell, ci) => {
-                      const isToday = formatDateStr(cell.fullDate) === todayStr;
+                      const isToday    = formatDateStr(cell.fullDate) === todayStr;
+                      const isSelected = formatDateStr(cell.fullDate) === formatDateStr(selectedDate) && !isToday;
                       return (
                         <div key={ci} className="p-1.5 flex justify-end items-start">
-                          <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${
-                            isToday
-                              ? 'bg-[#6B905F] text-white shadow-sm'
-                              : cell.isCurrentMonth
-                              ? 'text-[#1D1E1B] dark:text-white/90'
-                              : 'text-gray-400 dark:text-white/30'
-                          }`}>
+                          <span
+                            onClick={() => handleDateClick(cell.fullDate)}
+                            className={`pointer-events-auto text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full cursor-pointer transition-colors ${
+                              isToday
+                                ? 'bg-[#6B905F] text-white shadow-sm'
+                                : isSelected
+                                ? 'bg-[#6B905F]/20 text-[#6B905F] font-bold ring-1 ring-[#6B905F]'
+                                : cell.isCurrentMonth
+                                ? 'text-[#1D1E1B] dark:text-white/90 hover:bg-gray-200 dark:hover:bg-[#27272A]'
+                                : 'text-gray-400 dark:text-white/30 hover:bg-gray-100 dark:hover:bg-[#27272A]'
+                            }`}
+                          >
                             {cell.date}
                           </span>
                         </div>
@@ -568,24 +604,34 @@ export default function Calendar() {
     <div className="w-full h-full flex flex-col md:flex-row gap-6 bg-white dark:bg-[#09090B] p-2">
 
       {/* ── Left Sidebar ── */}
-      {view === 'week' && (
-        <div className="w-full md:w-[300px] flex flex-col shrink-0">
-          <MiniCalendar currentDate={currentDate} setCurrentDate={setCurrentDate} />
+      <div className="w-full md:w-[300px] flex flex-col shrink-0">
 
-          {/* Today's tasks list */}
+        {/* Mini calendar — only shown in week view */}
+        {view === 'week' && (
+          <MiniCalendar
+            currentDate={currentDate}
+            setCurrentDate={setCurrentDate}
+            onDateClick={handleDateClick}
+            selectedDate={selectedDate}
+          />
+        )}
+
+        {/* Selected day tasks list */}
         <div className="flex flex-col rounded-xl border border-gray-100 dark:border-[#27272A] bg-white dark:bg-[#18181B] shadow-sm overflow-hidden flex-1">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 dark:border-[#27272A] bg-gray-50 dark:bg-[#18181B]">
-            <div className="w-2 h-2 rounded-full bg-[#6B905F]" />
+            <div className={`w-2 h-2 rounded-full ${isSelectedToday ? 'bg-[#6B905F]' : 'bg-blue-400'}`} />
             <span className="text-xs font-bold text-[#1D1E1B] dark:text-white/90 uppercase tracking-wide">
-              Today &mdash; {new Date().toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric' })}
+              {sidebarDateLabel}
             </span>
           </div>
 
-          {todayTasks.length === 0 ? (
-            <div className="px-4 py-6 text-xs text-gray-400 dark:text-white/30 text-center">No tasks due today.</div>
+          {selectedDayTasks.length === 0 ? (
+            <div className="px-4 py-6 text-xs text-gray-400 dark:text-white/30 text-center">
+              No tasks due {isSelectedToday ? 'today' : 'on this day'}.
+            </div>
           ) : (
             <div className="flex flex-col divide-y divide-gray-50 dark:divide-[#27272A] overflow-y-auto custom-scrollbar">
-              {todayTasks.map(task => {
+              {selectedDayTasks.map(task => {
                 const colors = getTaskColor(task.priority);
                 return (
                   <div
@@ -613,7 +659,6 @@ export default function Calendar() {
           )}
         </div>
       </div>
-      )}
 
       {/* ── Main Area ── */}
       <div className="flex-1 flex flex-col min-w-0">
