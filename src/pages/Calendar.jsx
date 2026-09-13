@@ -262,11 +262,26 @@ export default function Calendar() {
     const deadlineDate = new Date(Number(y), Number(mo) - 1, Number(d));
     const deadlineTime = dayStart(deadlineDate);
 
+    let spanDays = 7;
+    const pts = parseInt(t.points, 10);
+    if (!isNaN(pts) && pts > 0) {
+      if (pts <= 2) spanDays = 3;
+      else if (pts <= 5) spanDays = 7;
+      else if (pts <= 13) spanDays = 14;
+      else {
+        // Fibonacci sequence starting from 1
+        const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597];
+        let idx = 5; // index of 13
+        while (idx < fibs.length - 1 && pts > fibs[idx]) {
+          idx++;
+        }
+        // Each increment after 13 adds 14 days
+        spanDays = 14 + (idx - 5) * 14;
+      }
+    }
+
     const startDate = new Date(deadlineDate);
-    startDate.setDate(startDate.getDate() - 14);
-    const dow = startDate.getDay();
-    const diffToFriday = dow >= 5 ? dow - 5 : dow + 2;
-    startDate.setDate(startDate.getDate() - diffToFriday);
+    startDate.setDate(startDate.getDate() - spanDays);
     const startTime = dayStart(startDate);
 
     return { ...t, startTime, deadlineTime };

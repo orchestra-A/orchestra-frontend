@@ -64,12 +64,8 @@ export default function ProjectTeam() {
     const un = newMemberUsername.trim();
     if (!un) return;
 
-    // Validate against allUsers
-    const matchedUser = allUsers.find(u => 
-      u.username?.toLowerCase() === un.toLowerCase() || 
-      u.user_id?.toLowerCase() === un.toLowerCase() ||
-      u.email?.toLowerCase() === un.toLowerCase()
-    );
+    // Validate against allUsers (strict case-sensitive username match only)
+    const matchedUser = allUsers.find(u => u.username === un);
 
     if (!matchedUser) {
       setAddError("User not found. Please ensure they have created an account.");
@@ -83,7 +79,7 @@ export default function ProjectTeam() {
 
     try {
       const response = await addMemberBackend({
-        name: matchedUser.username || matchedUser.name || un,
+        username: matchedUser.username || matchedUser.name || un,
         skills: skills,
         project_id: decodedId
       });
@@ -215,12 +211,7 @@ export default function ProjectTeam() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {rawTeam.map((member, idx) => {
           const memberStr = typeof member === 'string' ? member.trim() : (member.name || member.id || member.username || member.value || '');
-          const matchedUser = allUsers?.find(u => 
-            (u.username && u.username.toLowerCase() === memberStr.toLowerCase()) ||
-            (u.user_id && u.user_id.toLowerCase() === memberStr.toLowerCase()) ||
-            (u.name && u.name.toLowerCase() === memberStr.toLowerCase()) ||
-            (u.email && u.email.toLowerCase() === memberStr.toLowerCase())
-          ) || {};
+          const matchedUser = allUsers?.find(u => u.username === memberStr) || {};
 
           const name = matchedUser.name || matchedUser.username || memberStr || 'Team Member';
           const email = matchedUser.email || (typeof member === 'object' ? member.email : '');

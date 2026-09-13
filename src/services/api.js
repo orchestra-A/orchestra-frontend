@@ -183,24 +183,15 @@ export async function validateTeamMembers(memberInputs = []) {
   for (const input of cleanInputs) {
     const lowerInput = input.toLowerCase();
     const matchedUser = users.find(u =>
-      (u.user_id && u.user_id.toLowerCase() === lowerInput) ||
-      (u.username && u.username.toLowerCase() === lowerInput) ||
-      (u.email && u.email.toLowerCase() === lowerInput) ||
-      (u.discord_id && u.discord_id.toString().toLowerCase() === lowerInput) ||
-      (u.github_username && u.github_username.toLowerCase() === lowerInput) ||
-      (u.id && u.id.toString().toLowerCase() === lowerInput)
+      (u.username && u.username === input) ||
+      (u.user_id && u.user_id === input) ||
+      (u.email && u.email.toLowerCase() === lowerInput)
     );
 
     if (matchedUser) {
-      validMembers.push(matchedUser.user_id || matchedUser.username || input);
+      validMembers.push(matchedUser.username || matchedUser.user_id || input);
     } else {
-      // If user list loaded and user not found, mark invalid
-      if (users.length > 0) {
-        invalidMembers.push(input);
-      } else {
-        // Fallback if user table couldn't be loaded: accept input
-        validMembers.push(input);
-      }
+      invalidMembers.push(input);
     }
   }
 
@@ -270,14 +261,14 @@ export async function createBlueprint(payload, userId, onStatusUpdate = null) {
       if (line.startsWith('data:')) {
         const dataStr = line.replace(/^data:\s*/, '').trim();
         if (dataStr === '[DONE]') return;
-        
+
         let parsed;
         try {
           parsed = JSON.parse(dataStr);
         } catch (e) {
           return; // ignore unparseable JSON lines
         }
-        
+
         if (parsed.error) {
           throw new Error(parsed.error);
         }
@@ -362,7 +353,7 @@ export async function sendCloverMessage(question, conversationHistory = [], proj
       if (onChunk) {
         onChunk(text, text); // trigger the callback once with the full text
       }
-      return { 
+      return {
         text,
         suggestedTasks: data.suggested_tasks || data.suggestedTasks || [],
         action: data.action || null
@@ -692,7 +683,7 @@ export async function deleteUserBackend(userId) {
 
 /**
  * Add a teammate and rebalance tasks via POST /add_member
- * @param {Object} payload - { name: "username", skills: ["..."], project_id: "..." }
+ * @param {Object} payload - { username: "username", skills: ["..."], project_id: "..." }
  */
 export async function addMemberBackend(payload) {
   const url = `${BASE_URL}/add_member`;
@@ -723,11 +714,11 @@ export async function addMemberBackend(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  
+
   if (!directRes.ok) {
     throw new Error(`Failed to add member, status: ${directRes.status}`);
   }
-  
+
   return await safelyParse(directRes);
 }
 
@@ -774,4 +765,54 @@ export async function createTaskBackend(taskData) {
   }
 
   try { return JSON.parse(text); } catch { return text; }
+}
+
+/**
+ * Smart add one task to an existing project via POST /add_tasks.
+ * AI picks assignee, points, track, and dependencies.
+ * @param {Object} payload - { project_id, title, description, track (optional), assigned_to (optional) }
+ * @returns {Promise<Object>} Response data
+ */
+export async function addSmartTaskBackend(payload) {
+  const url = `${BASE_URL}/add_tasks`;
+  const directUrl = `https://orchestra-backend-30fy.onrender.com/add_tasks`;
+
+  const safelyParse = async (response) => {
+    const text = await response.text();
+    if (!text) return { success: true };
+    try { return JSON.parse(text); } catch { return { message: text }; }
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      return await safelyParse(res);
+    }
+  } catch (e) {
+    // proxy failed
+  }
+
+  // fallback
+  const directRes = await fetch(directUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ORCHESTRA_AI_API_KEY || ''
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!directRes.ok) {
+    const errText = await directRes.text().catch(() => 'No details');
+    throw new Error(`Failed to add smart task, status: ${directRes.status}, details: ${errText}`);
+  }
+
+  return await safelyParse(directRes);
 }

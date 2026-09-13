@@ -244,7 +244,7 @@ export default function Onboarding() {
                     {(matchedAccount.platforms_connected?.includes('google') || matchedAccount.email) && (
                       <Button
                         type="button"
-                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/google?user_id=${matchedAccount.id}`)}
+                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/google`)}
                         className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs h-9 cursor-pointer"
                       >
                         Log in with Google
@@ -253,7 +253,7 @@ export default function Onboarding() {
                     {(matchedAccount.platforms_connected?.includes('github') || matchedAccount.github_username) && (
                       <Button
                         type="button"
-                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/github?user_id=${matchedAccount.id}`)}
+                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/github`)}
                         className="bg-[#181717] text-white hover:bg-[#2b2a2a] text-xs h-9 cursor-pointer"
                       >
                         Log in with GitHub
@@ -262,7 +262,7 @@ export default function Onboarding() {
                     {(matchedAccount.platforms_connected?.includes('discord') || matchedAccount.discord_id) && (
                       <Button
                         type="button"
-                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/discord?user_id=${matchedAccount.id}`)}
+                        onClick={() => handleLinkAccount(`https://orchestra-backend-30fy.onrender.com/auth/discord`)}
                         className="bg-[#5865F2] text-white hover:bg-[#4752C4] text-xs h-9 cursor-pointer"
                       >
                         Log in with Discord

@@ -303,9 +303,24 @@ export function FloatingAIChat() {
                             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10 space-y-2">
                               <p className="text-xs font-semibold text-gray-900 dark:text-white/90">Suggested Tasks:</p>
                               {msg.suggestedTasks.map((task, tIdx) => (
-                                <div key={tIdx} className="bg-gray-50 dark:bg-black/20 p-2 rounded-md border border-gray-100 dark:border-white/5">
-                                  <p className="font-medium text-gray-800 dark:text-white/80">{task.title}</p>
-                                  {task.description && <p className="text-xs text-gray-500 dark:text-white/50 mt-0.5">{task.description}</p>}
+                                <div 
+                                  key={tIdx} 
+                                  className="bg-[#F4F1EB]/50 dark:bg-black/20 hover:bg-[#F4F1EB] dark:hover:bg-black/40 border border-black/5 dark:border-white/10 p-2 rounded-md cursor-pointer transition-all flex items-start gap-2 group"
+                                  onClick={() => {
+                                    const targetProjectId = task.project_id || currentProjectId;
+                                    if (targetProjectId) {
+                                      navigate(`/project/${targetProjectId}/workflow`, { state: { selectedTaskId: task.id || task.task_id } });
+                                      setIsOpen(false);
+                                    } else {
+                                      console.warn("Routing failed: Missing project ID for task", task);
+                                    }
+                                  }}
+                                >
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#6B905F] shrink-0 mt-1.5" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-xs text-gray-800 dark:text-white/80 group-hover:text-[#6B905F] dark:group-hover:text-[#7ED957] transition-colors truncate">{task.title}</p>
+                                    {task.description && <p className="text-[10px] text-gray-500 dark:text-white/50 mt-0.5 line-clamp-2">{task.description}</p>}
+                                  </div>
                                 </div>
                               ))}
                             </div>

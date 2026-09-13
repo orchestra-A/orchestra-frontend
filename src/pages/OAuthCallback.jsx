@@ -57,8 +57,16 @@ export default function OAuthCallback() {
         return;
       }
 
-      if (status === 'error') {
-        navigate('/login?error=OAuthFailed', { replace: true });
+      const hasError = status === 'error' || searchParams.has('error');
+      
+      if (hasError) {
+        if (localStorage.getItem('onboarded') === 'true') {
+          // User canceled an integration link while already logged in
+          navigate('/', { replace: true });
+        } else {
+          // Failed login/signup
+          navigate('/login?error=OAuthFailed', { replace: true });
+        }
         return;
       }
 
@@ -96,8 +104,8 @@ export default function OAuthCallback() {
 
             // 1. Email match with registered integrated account
             if (email && u.email && u.email.toLowerCase() === email.toLowerCase()) {
-              // If platform is already connected OR account has completed profile
-              if (connectedList.includes(platform) || u.user_id) return true;
+              // If platform is already connected
+              if (connectedList.includes(platform)) return true;
             }
 
             // 2. Platform-specific username / ID checks
@@ -138,6 +146,10 @@ export default function OAuthCallback() {
       // New user or platform not yet integrated → onboarding
       console.log('[OAuthCallback] Platform not integrated. Routing to /onboarding');
       localStorage.removeItem('onboarded');
+      
+      if (platform) {
+        sessionStorage.setItem('pending_link_platform', platform);
+      }
 
       if (userId || email || username) {
         await signup({

@@ -5,7 +5,7 @@ import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { WorkflowCanvas } from '../components/WorkflowCanvas';
-import { createBlueprint, validateTeamMembers, createProjectBackend, updateProjectBackend, createTaskBackend, fetchProjects } from '../services/api';
+import { createBlueprint, validateTeamMembers, createProjectBackend, updateProjectBackend, createTaskBackend, fetchProjects, addSmartTaskBackend } from '../services/api';
 
 const techOptions = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Tailwind CSS', 'Next.js', 'PostgreSQL', 'MongoDB', 'Docker'];
 
@@ -47,6 +47,15 @@ export default function Blueprint() {
 
   const [blueprintData, setBlueprintData] = useState(null);
   const [activeTab, setActiveTab] = useState('workflow');
+
+  // Add Task Modal State
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskTrack, setNewTaskTrack] = useState('');
+  const [newTaskAssignedTo, setNewTaskAssignedTo] = useState('');
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [addTaskError, setAddTaskError] = useState(null);
 
   // Check if logged-in user is the creator of the selected project
   const currentProject = projectId ? projects.find(p => p.id === projectId) : null;
@@ -183,7 +192,8 @@ export default function Blueprint() {
       try {
         const validation = await validateTeamMembers([inputVal]);
         if (validation.valid) {
-          setMembers([...members, inputVal]);
+          const canonicalUsername = validation.validMembers[0] || inputVal;
+          setMembers([...members, canonicalUsername]);
           setMemberInput('');
         } else {
           setMemberError("User ID not found");
@@ -247,7 +257,8 @@ export default function Blueprint() {
         try {
           const validation = await validateTeamMembers([inputVal]);
           if (validation.valid) {
-            currentMembers.push(inputVal);
+            const canonicalUsername = validation.validMembers[0] || inputVal;
+            currentMembers.push(canonicalUsername);
             setMembers(currentMembers);
             setMemberInput('');
           } else {
@@ -428,6 +439,51 @@ export default function Blueprint() {
         setIsGenerating(false);
         setIsEditing(false);
       }
+    }
+  };
+
+  const handleAddTaskSubmit = async () => {
+    if (!newTaskTitle.trim() || !newTaskDescription.trim() || !projectId) return;
+
+    setIsAddingTask(true);
+    setAddTaskError(null);
+
+    try {
+      let finalAssignedTo = newTaskAssignedTo.trim();
+      
+      if (finalAssignedTo) {
+        const validation = await validateTeamMembers([finalAssignedTo]);
+        if (!validation.valid) {
+          setAddTaskError("Assigned user not found. Please enter a valid username.");
+          setIsAddingTask(false);
+          return;
+        }
+        finalAssignedTo = validation.validMembers[0] || finalAssignedTo;
+      }
+
+      const payload = {
+        project_id: projectId,
+        title: newTaskTitle.trim(),
+        description: newTaskDescription.trim(),
+        track: newTaskTrack.trim() || "",
+        assigned_to: finalAssignedTo || "",
+      };
+
+      const res = await addSmartTaskBackend(payload);
+      console.log("[Add Task] Smart add task response:", res);
+
+      await refreshData();
+      setIsAddTaskModalOpen(false);
+      setNewTaskTitle('');
+      setNewTaskDescription('');
+      setNewTaskTrack('');
+      setNewTaskAssignedTo('');
+      showToast('success', 'Task added successfully.');
+    } catch (err) {
+      console.error("[Add Task] error:", err);
+      setAddTaskError(err.message || 'Failed to add task.');
+    } finally {
+      setIsAddingTask(false);
     }
   };
 
@@ -793,7 +849,10 @@ export default function Blueprint() {
 
           <div className="flex gap-1.5">
             {isCreator && (
-              <button className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white flex items-center px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors shadow-sm">
+              <button 
+                onClick={() => setIsAddTaskModalOpen(true)}
+                className="bg-[#6B905F] dark:bg-[#6B905F] hover:bg-[#5A7A4F] dark:hover:bg-[#6B905F] text-white flex items-center px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors shadow-sm"
+              >
                 <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Task
               </button>
             )}
@@ -904,6 +963,100 @@ export default function Blueprint() {
           )}
         </div>
       </div>
+
+      {/* Add Task Modal */}
+      {isAddTaskModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#18181B] border border-gray-200 dark:border-[#27272A] rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+            <h2 className="text-xl font-bold text-[#1D1E1B] dark:text-white/90 mb-4">Add Task</h2>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
+              Enter task details. Orchestra AI will automatically infer the rest and rebalance if necessary.
+            </p>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Task Title *</label>
+                <input
+                  type="text"
+                  value={newTaskTitle}
+                  onChange={(e) => { setNewTaskTitle(e.target.value); setAddTaskError(''); }}
+                  className="w-full bg-gray-50 dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-lg px-4 py-2.5 text-[13px] text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-1 focus:ring-[#6B905F] focus:border-[#6B905F]"
+                  autoFocus
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Description *</label>
+                <textarea
+                  value={newTaskDescription}
+                  onChange={(e) => { setNewTaskDescription(e.target.value); setAddTaskError(''); }}
+                  rows={2}
+                  className="w-full bg-gray-50 dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-lg px-4 py-2.5 text-[13px] text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-1 focus:ring-[#6B905F] focus:border-[#6B905F] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Track <span className="opacity-50 font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={newTaskTrack}
+                  onChange={(e) => setNewTaskTrack(e.target.value)}
+                  placeholder="e.g. backend"
+                  className="w-full bg-gray-50 dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-lg px-4 py-2.5 text-[13px] text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-1 focus:ring-[#6B905F] focus:border-[#6B905F]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Assigned To <span className="opacity-50 font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={newTaskAssignedTo}
+                  onChange={(e) => setNewTaskAssignedTo(e.target.value)}
+                  placeholder="e.g. Arnav"
+                  className="w-full bg-gray-50 dark:bg-[#09090B] border border-gray-200 dark:border-[#27272A] rounded-lg px-4 py-2.5 text-[13px] text-[#1D1E1B] dark:text-white/90 focus:outline-none focus:ring-1 focus:ring-[#6B905F] focus:border-[#6B905F]"
+                />
+              </div>
+              
+              {addTaskError && <p className="text-red-500 text-xs mt-2">{addTaskError}</p>}
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button 
+                type="button"
+                className="px-4 py-2 bg-transparent text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm font-medium"
+                onClick={() => { 
+                  setIsAddTaskModalOpen(false); 
+                  setNewTaskTitle(''); 
+                  setNewTaskDescription(''); 
+                  setNewTaskTrack('');
+                  setNewTaskAssignedTo('');
+                  setAddTaskError(null); 
+                }}
+                disabled={isAddingTask}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button"
+                className="px-4 py-2 bg-[#6B905F] hover:bg-[#5A7A4F] text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center min-w-[80px]"
+                onClick={handleAddTaskSubmit}
+                disabled={isAddingTask || !newTaskTitle.trim() || !newTaskDescription.trim()}
+              >
+                {isAddingTask ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    Adding...
+                  </span>
+                ) : 'Add Task'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -41,6 +41,7 @@ export function ProjectProvider({ children }) {
   const [tasks, setTasks] = useState([]);       // All tasks for the current user's projects
   const [allUsers, setAllUsers] = useState([]);  // All backend users (for team enrichment)
   const [loading, setLoading] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState(Date.now());
 
   const loadData = useCallback(async () => {
     try {
@@ -280,9 +281,28 @@ export function ProjectProvider({ children }) {
       console.error('Failed to load project data:', error);
     } finally {
       setLoading(false);
+      setLastFetchTime(Date.now());
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    // If it's the very first mount or currentUser changes, we should load data
+    // For subsequent background refreshes, the timeout will call it
+    if (Date.now() - lastFetchTime < 1000) {
+      // Small debounce hack: if lastFetchTime just updated, we likely just fetched it.
+      // But we need to ensure the initial load runs if we just mounted
+      // Actually, let's just use a separate effect for initial load or just let the timeout handle background
+    }
+
+    const timerId = setTimeout(() => {
+      console.log('[ProjectContext] Auto-refreshing data (5 min timer)...');
+      loadData();
+    }, 5 * 60 * 1000);
+
+    return () => clearTimeout(timerId);
+  }, [lastFetchTime, loadData]);
+
+  // Initial load when user changes
   useEffect(() => {
     loadData();
   }, [loadData]);
