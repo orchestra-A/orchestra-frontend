@@ -160,13 +160,14 @@ export default function Todo() {
   const { currentUser } = useAuth();
   const { isLoading } = useOutletContext() || {};
 
-  // Show tasks assigned to current user that are not completed
-  const projectIds = new Set(projects.map(p => p.id));
+  // Show tasks assigned to current user that are not completed and belong to active projects
+  const activeProjects = projects.filter(p => !p.is_archived);
+  const activeProjectIds = new Set(activeProjects.map(p => p.id));
   const currentUsername = currentUser?.username?.toLowerCase() || '';
 
   const myTasks = tasks.filter(t => {
     if (t.status === 'completed') return false;
-    if (!projectIds.has(t.project_id)) return false;
+    if (!activeProjectIds.has(t.project_id)) return false;
     return t.assigned_to && t.assigned_to.toLowerCase() === currentUsername;
   });
 
